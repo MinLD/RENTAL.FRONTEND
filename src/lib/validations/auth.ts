@@ -33,3 +33,26 @@ export const registerSchema = z
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
+
+export const requestPasswordResetSchema = z.object({
+  identifier: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập email hoặc số điện thoại."),
+});
+
+export type RequestPasswordResetFormValues = z.infer<
+  typeof requestPasswordResetSchema
+>;
+
+export const resetPasswordSchema = z
+  .object({
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu mới."),
+    password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự."),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp.",
+    path: ["confirmPassword"],
+  });
+
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;

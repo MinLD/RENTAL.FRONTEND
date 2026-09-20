@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
-      <section className="w-full max-w-xl rounded border border-border bg-surface px-6 py-10 text-center shadow-sm sm:px-10">
+      <section className="w-full max-w-xl  px-6 py-10 text-center  sm:px-10">
         <p className="text-sm font-bold uppercase tracking-[0.28em] text-primary">
           404
         </p>
@@ -20,9 +20,6 @@ export default function NotFound() {
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild>
             <Link href="/">Về trang chủ</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/support">Liên hệ hỗ trợ</Link>
           </Button>
         </div>
       </section>

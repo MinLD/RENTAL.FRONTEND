@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/services/auth-server";
+import { getCurrentUser } from "@/services/session-service";
 import { AuthLinks } from "./auth-links";
 import { UserMenu } from "./user-menu";
 

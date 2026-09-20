@@ -20,7 +20,7 @@ const buildApiUrl = (endpoint: string) => {
     throw new Error("API endpoints must be relative paths.");
   }
 
-  if (endpoint.startsWith("/api/auth/")) {
+  if (endpoint.startsWith("/api/auth/") || endpoint.startsWith("/api/mock/")) {
     return endpoint;
   }
 

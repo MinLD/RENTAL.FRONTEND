@@ -48,3 +48,28 @@ export type LoginResponse = {
 export type RegisterResponse = {
   accountId: string;
 };
+
+export type RequestPasswordResetRequest = {
+  identifier: string;
+};
+
+export type RequestPasswordResetResponse = {
+  expiresInSeconds: number;
+  maskedContact: string;
+  resendInSeconds: number;
+};
+
+export type VerifyPasswordResetCodeRequest = {
+  code: string;
+  identifier: string;
+};
+
+export type VerifyPasswordResetCodeResponse = {
+  resetToken: string;
+};
+
+export type ResetPasswordRequest = {
+  confirmPassword: string;
+  password: string;
+  resetToken: string;
+};
