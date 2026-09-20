@@ -1,7 +1,7 @@
 export default function HomePage() {
   return (
     <div className="flex flex-1 items-center justify-center p-6">
-      <div className="text-center">
+      <div className="w-full max-w-2xl text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
           DPRENTAL Frontend
         </h1>

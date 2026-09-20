@@ -20,7 +20,7 @@ export function Footer() {
           <section aria-labelledby="footer-brand-heading" className="lg:pr-8">
             <h2 className="flex items-center gap-2" id="footer-brand-heading">
               <span className="text-base font-bold tracking-tight">
-                VINAR<span className="text-primary">ENTAL</span>
+                DP<span className="text-primary">RENTAL</span>
               </span>
               <span className="rounded border border-border/20 bg-surface/5 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-navy-foreground/70">
                 Sàn giao dịch
@@ -35,7 +35,7 @@ export function Footer() {
                 <span className="font-semibold text-navy-foreground">
                   Đơn vị chủ quản:
                 </span>{" "}
-                Công ty Cổ Phần Thiết Bị Công Trường VinaRental
+                Công ty Cổ Phần Thiết Bị Công Trường DPRENTAL
               </p>
               <p>
                 <span className="font-semibold text-navy-foreground">
@@ -145,8 +145,8 @@ export function Footer() {
 
         <div className="flex flex-col gap-3 border-t border-border/20 py-4 text-xs text-navy-foreground/60 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {currentYear} VinaRental Corp. Bản quyền thuộc Sàn Giao Dịch Thiết
-            Bị Công Trường VinaRental. Giữ toàn quyền.
+            © {currentYear} DPRENTAL Corp. Bản quyền thuộc Sàn Giao Dịch Thiết
+            Bị Công Trường DPRENTAL. Giữ toàn quyền.
           </p>
           <nav aria-label="Liên kết pháp lý">
             <ul className="flex flex-wrap items-center gap-y-2">

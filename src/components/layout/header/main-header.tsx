@@ -3,18 +3,19 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Bell, ShoppingCart } from "lucide-react";
 import { MobileMenu } from "./mobile-menu";
+import { HeaderAuthSlot } from "./header-auth-slot";
 
 export function MainHeader() {
   return (
     <div className="border-b border-border bg-background">
       <Container className="flex min-h-14 flex-wrap items-center gap-3 py-2 md:gap-4 lg:h-14 lg:flex-nowrap lg:py-0">
         <Link
-          aria-label="VINARENTAL - Trang chủ"
+          aria-label="DPRENTAL - Trang chủ"
           className="w-32 shrink-0 leading-none"
           href="/"
         >
           <span className="block text-lg font-bold tracking-tight text-foreground">
-            VINAR<span className="text-primary">ENTAL</span>
+            DP<span className="text-primary">RENTAL</span>
           </span>
           <span className="mt-1 block text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
             Sàn thiết bị công trường
@@ -112,18 +113,9 @@ export function MainHeader() {
             </span>
           </Link>
 
-          <Link
-            className="hidden px-2 py-2 text-xs font-medium text-foreground transition-colors hover:text-primary sm:inline-flex"
-            href="/register"
-          >
-            Đăng ký
-          </Link>
-          <Link
-            className="inline-flex h-8 items-center rounded bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            href="/login"
-          >
-            Đăng nhập
-          </Link>
+          <div className="hidden w-[220px] shrink-0 justify-end sm:flex">
+            <HeaderAuthSlot />
+          </div>
 
           <MobileMenu />
         </div>
