@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildBackendApiUrl } from "@/services/backend-api";
 
 const GOOGLE_LOGIN_ENDPOINT = "/api/v1/auth/google/login";
-const GOOGLE_CALLBACK_PATH = "/auth/callback/google";
 
 function getSafeReturnUrl(request: NextRequest) {
   const returnUrl = request.nextUrl.searchParams.get("returnUrl");
@@ -26,18 +25,12 @@ function getSafeReturnUrl(request: NextRequest) {
 }
 
 export function GET(request: NextRequest) {
-  const frontendCallbackUrl = new URL(
-    GOOGLE_CALLBACK_PATH,
+  const frontendReturnUrl = new URL(
+    getSafeReturnUrl(request),
     request.nextUrl.origin,
   );
-
-  frontendCallbackUrl.searchParams.set("returnUrl", getSafeReturnUrl(request));
-
   const backendGoogleLoginUrl = new URL(buildBackendApiUrl(GOOGLE_LOGIN_ENDPOINT));
-  backendGoogleLoginUrl.searchParams.set(
-    "returnUrl",
-    frontendCallbackUrl.toString(),
-  );
+  backendGoogleLoginUrl.searchParams.set("returnUrl", frontendReturnUrl.toString());
 
   return NextResponse.redirect(backendGoogleLoginUrl);
 }

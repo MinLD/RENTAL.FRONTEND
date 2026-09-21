@@ -110,3 +110,17 @@ export function clearAuthCookies(response: NextResponse) {
     });
   }
 }
+
+export function setAuthCookies(
+  response: NextResponse,
+  tokens: Record<(typeof AUTH_COOKIE_NAMES)[number], string>,
+) {
+  for (const cookieName of AUTH_COOKIE_NAMES) {
+    response.cookies.set(cookieName, tokens[cookieName], {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+}
