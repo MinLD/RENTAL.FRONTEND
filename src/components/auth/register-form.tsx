@@ -16,7 +16,10 @@ import {
   registerSchema,
   type RegisterFormValues,
 } from "@/lib/validations/auth";
-import { register as registerAccount } from "@/services/auth-service";
+import {
+  getGoogleLoginUrl,
+  register as registerAccount,
+} from "@/services/auth-service";
 import { cn } from "@/utils/cn";
 
 const accountTypes = [
@@ -65,6 +68,10 @@ export function RegisterForm() {
           : "Không thể đăng ký. Vui lòng thử lại.",
       );
     }
+  }
+
+  function handleGoogleLogin() {
+    window.location.assign(getGoogleLoginUrl("/"));
   }
 
   return (
@@ -212,7 +219,12 @@ export function RegisterForm() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <Button className="w-full uppercase" type="button" variant="secondary">
+      <Button
+        className="w-full cursor-pointer uppercase hover:bg-primary/5"
+        onClick={handleGoogleLogin}
+        type="button"
+        variant="secondary"
+      >
         <Image
           alt=""
           aria-hidden="true"

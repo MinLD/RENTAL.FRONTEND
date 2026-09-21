@@ -17,6 +17,14 @@ const PASSWORD_RESET_ENDPOINTS = {
   verify: "/api/mock/auth/password-reset/verify",
 } as const;
 
+export function getGoogleLoginUrl(returnUrl = "/") {
+  const searchParams = new URLSearchParams({
+    returnUrl,
+  });
+
+  return `/api/auth/google/login?${searchParams.toString()}`;
+}
+
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   return apiClientJson<LoginResponse>("/api/auth/login", {
     json: {

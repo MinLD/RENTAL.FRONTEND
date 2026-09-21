@@ -13,7 +13,7 @@ import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
-import { login } from "@/services/auth-service";
+import { getGoogleLoginUrl, login } from "@/services/auth-service";
 
 export function LoginForm() {
   const router = useRouter();
@@ -45,6 +45,10 @@ export function LoginForm() {
           : "Không thể đăng nhập. Vui lòng thử lại.",
       );
     }
+  }
+
+  function handleGoogleLogin() {
+    window.location.assign(getGoogleLoginUrl("/"));
   }
 
   return (
@@ -120,7 +124,12 @@ export function LoginForm() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <Button className="w-full uppercase" type="button" variant="secondary">
+      <Button
+        className="w-full cursor-pointer uppercase hover:bg-primary/5"
+        onClick={handleGoogleLogin}
+        type="button"
+        variant="secondary"
+      >
         <Image
           alt=""
           aria-hidden="true"
