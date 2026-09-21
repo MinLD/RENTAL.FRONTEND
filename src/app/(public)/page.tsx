@@ -1,12 +1,19 @@
+import { HomeHeroSection } from "@/components/home/home-hero-section";
+import { Container } from "@/components/layout/container";
+import {
+  HOME_HERO_SLIDES,
+  HOME_PROMO_BANNERS,
+} from "@/config/homepage";
+
 export default function HomePage() {
   return (
-    <div className="flex flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-2xl text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          DPRENTAL Frontend
-        </h1>
-        <p className="mt-2 text-neutral-600">The application is running.</p>
-      </div>
+    <div className="flex flex-1 flex-col bg-[#f5f7fa] py-6">
+      <Container>
+        <HomeHeroSection
+          promotions={HOME_PROMO_BANNERS}
+          slides={HOME_HERO_SLIDES}
+        />
+      </Container>
     </div>
   );
 }
