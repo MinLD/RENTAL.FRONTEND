@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
-import { Truck, Users } from "lucide-react";
+import { Mail, Truck, Users } from "lucide-react";
 
 export function TopBar() {
   return (
@@ -34,20 +34,7 @@ export function TopBar() {
             className="hidden min-w-0 items-center gap-1.5 sm:flex"
             href="mailto:hotro@vinarental.vn"
           >
-            <svg
-              aria-hidden="true"
-              className="size-3.5 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="m4 7 8 6 8-6M5 19h14a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-              />
-            </svg>
+            <Mail size="20" />
             <span className="truncate">hotro@vinarental.vn</span>
           </a>
         </div>

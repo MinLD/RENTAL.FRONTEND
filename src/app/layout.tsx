@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 
+import { ToastProvider } from "@/providers/toast-provider";
+import { TopLoaderProvider } from "@/providers/top-loader-provider";
+
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -17,7 +20,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={beVietnamPro.variable}>
-      <body>{children}</body>
+      <body>
+        <TopLoaderProvider />
+        <ToastProvider />
+        {children}
+      </body>
     </html>
   );
 }

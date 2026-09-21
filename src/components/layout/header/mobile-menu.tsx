@@ -30,6 +30,16 @@ export function MobileMenu() {
       return;
     }
 
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyPaddingRight = document.body.style.paddingRight;
+
+    document.body.style.overflow = "hidden";
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
@@ -39,6 +49,8 @@ export function MobileMenu() {
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.paddingRight = originalBodyPaddingRight;
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
@@ -82,13 +94,13 @@ export function MobileMenu() {
         >
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <Link
-              aria-label="VINARENTAL - Trang chủ"
+              aria-label="DPRENTAL - Trang chủ"
               className="leading-none"
               href="/"
               onClick={() => setIsOpen(false)}
             >
               <span className="block text-lg font-bold tracking-tight text-foreground">
-                VINAR<span className="text-primary">ENTAL</span>
+                DPR<span className="text-primary">ENTAL</span>
               </span>
               <span className="mt-1 block text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
                 Sàn thiết bị công trường
