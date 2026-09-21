@@ -113,7 +113,7 @@ export function MainHeader() {
             </span>
           </Link>
 
-          <div className="hidden w-[220px] shrink-0 justify-end sm:flex">
+          <div className="hidden  shrink-0 justify-end sm:flex">
             <HeaderAuthSlot />
           </div>
 
