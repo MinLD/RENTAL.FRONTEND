@@ -45,6 +45,15 @@ export type LoginResponse = {
   userId?: string | null;
 };
 
+export type GoogleExchangeRequest = {
+  ticket: string;
+};
+
+export type GoogleExchangeResponse = {
+  accessToken: string;
+  refreshToken: string;
+};
+
 export type RegisterResponse = {
   accountId: string;
 };
