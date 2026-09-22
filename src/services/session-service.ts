@@ -1,6 +1,8 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 
+import { mergeAuthCookiesIntoCookieHeader } from "@/services/auth-cookie";
+import { refreshBackendSession } from "@/services/auth-refresh";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import type { AuthUser, CurrentUserResponse } from "@/types/auth";
 
@@ -11,13 +13,19 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     const requestHeaders = await headers();
     const cookieHeader = requestHeaders.get("cookie");
 
-    const response = await fetch(buildBackendApiUrl(AUTH_ME_ENDPOINT), {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
-    });
+    let response = await fetchCurrentUser(cookieHeader);
+
+    if (response.status === 401) {
+      const refreshResponse = await refreshBackendSession(cookieHeader);
+
+      if (!refreshResponse.ok) {
+        return null;
+      }
+
+      response = await fetchCurrentUser(
+        mergeAuthCookiesIntoCookieHeader(cookieHeader, refreshResponse.headers),
+      );
+    }
 
     if (!response.ok) {
       return null;
@@ -30,6 +38,16 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     return null;
   }
 });
+
+function fetchCurrentUser(cookieHeader: string | null) {
+  return fetch(buildBackendApiUrl(AUTH_ME_ENDPOINT), {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    },
+  });
+}
 
 function mapCurrentUserResponse(response: CurrentUserResponse): AuthUser {
   const primaryOrganization = response.organizations?.[0];

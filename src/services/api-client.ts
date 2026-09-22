@@ -3,8 +3,6 @@ type ApiClientInit = Omit<RequestInit, "body"> & {
   json?: unknown;
 };
 
-let refreshSessionPromise: Promise<void> | null = null;
-
 const getApiBaseUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -86,17 +84,7 @@ export async function authApiClient(
   endpoint: string,
   init?: ApiClientInit,
 ): Promise<Response> {
-  try {
-    return await request(endpoint, init, buildAuthenticatedApiUrl);
-  } catch (error) {
-    if (!(error instanceof ApiClientError) || error.status !== 401) {
-      throw error;
-    }
-
-    await refreshAuthSession();
-
-    return request(endpoint, init, buildAuthenticatedApiUrl);
-  }
+  return request(endpoint, init, buildAuthenticatedApiUrl);
 }
 
 async function request(
@@ -141,18 +129,6 @@ async function request(
   }
 
   return response;
-}
-
-async function refreshAuthSession() {
-  refreshSessionPromise ??= apiClient("/api/auth/refresh", {
-    method: "POST",
-  })
-    .then(() => undefined)
-    .finally(() => {
-      refreshSessionPromise = null;
-    });
-
-  return refreshSessionPromise;
 }
 
 export async function apiClientJson<TResponse>(
