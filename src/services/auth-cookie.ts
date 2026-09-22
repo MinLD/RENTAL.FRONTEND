@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 
+import { getJwtMaxAge } from "@/services/auth-token";
+
 export const AUTH_COOKIE_NAMES = ["accessToken", "refreshToken"] as const;
 
 type CookieAttributes = {
   expires?: Date;
   maxAge?: number;
 };
+
+type AuthCookieValues = Partial<
+  Record<(typeof AUTH_COOKIE_NAMES)[number], string>
+>;
 
 function splitSetCookieHeader(header: string) {
   return header.split(/,(?=\s*[^;,]+=)/g).map((value) => value.trim());
@@ -37,6 +43,27 @@ function getCookieValue(setCookieHeader: string, cookieName: string) {
   }
 
   return setCookieHeader.slice(prefix.length).split(";")[0] ?? null;
+}
+
+function parseCookieHeader(cookieHeader: string | null | undefined) {
+  const cookies = new Map<string, string>();
+
+  if (!cookieHeader) {
+    return cookies;
+  }
+
+  for (const cookie of cookieHeader.split(";")) {
+    const [rawName, ...rawValueParts] = cookie.trim().split("=");
+    const value = rawValueParts.join("=");
+
+    if (!rawName || !value) {
+      continue;
+    }
+
+    cookies.set(rawName, value);
+  }
+
+  return cookies;
 }
 
 function getCookieAttributes(setCookieHeader: string): CookieAttributes {
@@ -72,25 +99,21 @@ export function copyAuthCookies(
   backendHeaders: Headers,
   response: NextResponse,
 ) {
-  const setCookieHeaders = getSetCookieHeaders(backendHeaders);
+  const authCookies = getAuthCookieValues(backendHeaders);
 
   for (const cookieName of AUTH_COOKIE_NAMES) {
-    const setCookieHeader = setCookieHeaders.find((header) =>
+    const value = authCookies[cookieName];
+
+    if (!value) {
+      continue;
+    }
+
+    const setCookieHeader = getSetCookieHeaders(backendHeaders).find((header) =>
       header.startsWith(`${cookieName}=`),
     );
 
-    if (!setCookieHeader) {
-      continue;
-    }
-
-    const value = getCookieValue(setCookieHeader, cookieName);
-
-    if (value === null) {
-      continue;
-    }
-
     response.cookies.set(cookieName, value, {
-      ...getCookieAttributes(setCookieHeader),
+      ...(setCookieHeader ? getCookieAttributes(setCookieHeader) : {}),
       httpOnly: true,
       path: "/",
       sameSite: "lax",
@@ -116,11 +139,62 @@ export function setAuthCookies(
   tokens: Record<(typeof AUTH_COOKIE_NAMES)[number], string>,
 ) {
   for (const cookieName of AUTH_COOKIE_NAMES) {
+    const maxAge =
+      cookieName === "accessToken"
+        ? getJwtMaxAge(tokens[cookieName])
+        : undefined;
+
     response.cookies.set(cookieName, tokens[cookieName], {
       httpOnly: true,
+      ...(maxAge !== undefined ? { maxAge } : {}),
       path: "/",
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
   }
+}
+
+export function getAuthCookieValues(backendHeaders: Headers): AuthCookieValues {
+  const setCookieHeaders = getSetCookieHeaders(backendHeaders);
+  const authCookies: AuthCookieValues = {};
+
+  for (const cookieName of AUTH_COOKIE_NAMES) {
+    const setCookieHeader = setCookieHeaders.find((header) =>
+      header.startsWith(`${cookieName}=`),
+    );
+
+    if (!setCookieHeader) {
+      continue;
+    }
+
+    const value = getCookieValue(setCookieHeader, cookieName);
+
+    if (value === null) {
+      continue;
+    }
+
+    authCookies[cookieName] = value;
+  }
+
+  return authCookies;
+}
+
+export function mergeAuthCookiesIntoCookieHeader(
+  cookieHeader: string | null | undefined,
+  backendHeaders: Headers,
+) {
+  const cookies = parseCookieHeader(cookieHeader);
+  const authCookies = getAuthCookieValues(backendHeaders);
+
+  for (const cookieName of AUTH_COOKIE_NAMES) {
+    const value = authCookies[cookieName];
+
+    if (value) {
+      cookies.set(cookieName, value);
+    }
+  }
+
+  return Array.from(cookies.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
 }
