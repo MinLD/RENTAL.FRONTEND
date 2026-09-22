@@ -104,12 +104,27 @@ wait_for_frontend_health() {
   fail 'Frontend không đạt trạng thái healthy; không tự rollback image.'
 }
 
-smoke_test_frontend() {
-  local domain="$1"
+reload_caddy() {
+  "${compose_command[@]}" exec -T caddy \
+    caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || \
+    fail 'không thể reload Caddy với route Frontend mới.'
+}
 
-  curl --fail --silent --show-error --max-time "$HTTP_TIMEOUT_SECONDS" \
-    "https://${domain}/" >/dev/null || \
-    fail 'frontend công khai qua Caddy/Cloudflare thất bại; không tự rollback image.'
+wait_for_public_frontend() {
+  local domain="$1"
+  local attempt
+
+  for ((attempt = 1; attempt <= HEALTH_ATTEMPTS; attempt++)); do
+    if curl --fail --silent --show-error --max-time "$HTTP_TIMEOUT_SECONDS" \
+      "https://${domain}/" >/dev/null; then
+      return 0
+    fi
+    printf 'Đang chờ Frontend public qua Caddy/Cloudflare (%s/%s)...\n' \
+      "$attempt" "$HEALTH_ATTEMPTS"
+    sleep "$HEALTH_INTERVAL_SECONDS"
+  done
+
+  fail 'frontend công khai qua Caddy/Cloudflare thất bại; không tự rollback image.'
 }
 
 [ "$#" -eq 1 ] || usage
@@ -134,6 +149,7 @@ update_release_image "$frontend_image"
 "${compose_command[@]}" up -d --no-deps --force-recreate frontend
 
 wait_for_frontend_health
-smoke_test_frontend "$frontend_domain"
+reload_caddy
+wait_for_public_frontend "$frontend_domain"
 
 printf 'Frontend revision %s đã healthy; smoke test công khai đã pass.\n' "$release_sha"
