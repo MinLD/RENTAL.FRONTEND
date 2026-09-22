@@ -43,3 +43,26 @@ Component dùng lại nhiều nơi được đặt trong `components`; API/servi
 Chỉ tạo thư mục/file khi có nhu cầu thực tế. `page.tsx` nên mỏng và không chứa
 khối business logic lớn. Dự án chỉ sử dụng App Router, không tạo `pages` hoặc
 `src/pages`.
+
+## Docker và dev VPS
+
+Image runtime dùng Next.js standalone, chạy bằng user `node` và lắng nghe cổng
+`3000`. `NEXT_PUBLIC_API_URL` là cấu hình browser nên bắt buộc truyền lúc build;
+`BACKEND_API_URL` chỉ là override server-side cho các route handler.
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_API_URL=https://dev-api.lazyops.cloud \
+  --tag dprental-frontend:local .
+docker run --rm -p 3000:3000 \
+  -e BACKEND_API_URL=http://gateway:8080 \
+  dprental-frontend:local
+```
+
+Workflow `.github/workflows/frontend-dev.yml` chạy trên nhánh `develop-ci-cd`:
+lint, build, build/push image SHA bất biến tới GHCR, rồi SSH deploy Frontend.
+GitHub Environment `dev` cần variable `GHCR_IMAGE_NAMESPACE` (lowercase) và các
+secret dùng chung với Backend/AuthService: `DEV_VPS_SSH_PRIVATE_KEY`,
+`DEV_VPS_KNOWN_HOSTS`, `DEV_VPS_HOST`, `DEV_VPS_USER`, và tùy chọn
+`DEV_VPS_PORT`. VPS phải được cập nhật bundle `deploy/dev` trước release đầu
+tiên, bao gồm `.env` và `release.env` theo hai file example tại đó.
