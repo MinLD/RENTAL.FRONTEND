@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getJwtMaxAge } from "@/services/auth-token";
+
 export const AUTH_COOKIE_NAMES = ["accessToken", "refreshToken"] as const;
 
 type CookieAttributes = {
@@ -137,8 +139,14 @@ export function setAuthCookies(
   tokens: Record<(typeof AUTH_COOKIE_NAMES)[number], string>,
 ) {
   for (const cookieName of AUTH_COOKIE_NAMES) {
+    const maxAge =
+      cookieName === "accessToken"
+        ? getJwtMaxAge(tokens[cookieName])
+        : undefined;
+
     response.cookies.set(cookieName, tokens[cookieName], {
       httpOnly: true,
+      ...(maxAge !== undefined ? { maxAge } : {}),
       path: "/",
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
