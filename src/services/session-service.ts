@@ -1,23 +1,13 @@
 import { cache } from "react";
-import { headers } from "next/headers";
 
-import { buildBackendApiUrl } from "@/services/backend-api";
+import { serverApi } from "@/services/server-api";
 import type { AuthUser, CurrentUserResponse } from "@/types/auth";
 
 const AUTH_ME_ENDPOINT = "/api/v1/auth/users/me";
 
 export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   try {
-    const requestHeaders = await headers();
-    const cookieHeader = requestHeaders.get("cookie");
-
-    const response = await fetch(buildBackendApiUrl(AUTH_ME_ENDPOINT), {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
-    });
+    const response = await serverApi(AUTH_ME_ENDPOINT);
 
     if (!response.ok) {
       return null;

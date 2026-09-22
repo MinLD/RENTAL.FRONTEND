@@ -1,21 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { buildBackendApiUrl } from "@/services/backend-api";
 import { clearAuthCookies, copyAuthCookies } from "@/services/auth-cookie";
+import { refreshBackendSession } from "@/services/auth-refresh";
 
 export async function POST(request: Request) {
-  const backendResponse = await fetch(
-    buildBackendApiUrl("/api/v1/auth/refresh"),
-    {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        ...(request.headers.get("cookie")
-          ? { Cookie: request.headers.get("cookie") as string }
-          : {}),
-      },
-      method: "POST",
-    },
+  const backendResponse = await refreshBackendSession(
+    request.headers.get("cookie"),
   );
   const responseBody = await backendResponse.text();
   const response = new NextResponse(responseBody || null, {

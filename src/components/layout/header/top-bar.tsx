@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
-import { Mail, Truck, Users } from "lucide-react";
+import { BuildingComplex, Mail, Truck } from "lucide-react";
 
 export function TopBar() {
   return (
@@ -51,8 +51,8 @@ export function TopBar() {
             className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
             href="/partner"
           >
-            <Users size="20" />
-            Trở thành đối tác
+            <BuildingComplex size="20" />
+            Đăng ký công ty
           </Link>
         </div>
       </Container>
