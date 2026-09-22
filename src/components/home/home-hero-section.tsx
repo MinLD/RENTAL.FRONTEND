@@ -48,41 +48,6 @@ export function HomeHeroSection({ promotions, slides }: HomeHeroSectionProps) {
                   <div className="absolute bottom-0 left-20 h-28 w-20 rounded-t bg-white/20" />
                   <div className="absolute bottom-0 left-48 h-16 w-14 rounded-t bg-white/25" />
                 </div>
-
-                <div className="relative z-10 flex max-w-3xl flex-col justify-center px-6 py-6 text-white sm:px-10 lg:px-12">
-                  <div className="mb-4 inline-flex w-fit items-center gap-2 rounded bg-primary px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-primary-foreground shadow">
-                    <BadgeCheck aria-hidden="true" size={15} />
-                    {slide.eyebrow}
-                  </div>
-
-                  <h1 className="max-w-2xl text-2xl font-extrabold uppercase leading-tight tracking-tight sm:text-3xl lg:text-4xl">
-                    {slide.title}
-                  </h1>
-
-                  <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-white/90 sm:text-base">
-                    {slide.description}
-                  </p>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded bg-primary px-4 text-sm font-bold uppercase text-primary-foreground transition hover:bg-primary-hover"
-                      href={slide.cta.href}
-                    >
-                      {slide.cta.label}
-                      <ArrowRight aria-hidden="true" size={17} />
-                    </Link>
-
-                    {slide.secondaryCta ? (
-                      <Link
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded bg-white/20 px-4 text-sm font-bold uppercase text-white backdrop-blur transition hover:bg-white/30"
-                        href={slide.secondaryCta.href}
-                      >
-                        <Headphones aria-hidden="true" size={17} />
-                        {slide.secondaryCta.label}
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
               </article>
             </CarouselItem>
           ))}
