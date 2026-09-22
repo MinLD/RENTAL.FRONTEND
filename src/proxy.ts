@@ -4,14 +4,30 @@ import {
   AUTH_COOKIE_NAMES,
   clearAuthCookies,
   copyAuthCookies,
+  getAuthCookieValues,
   mergeAuthCookiesIntoCookieHeader,
 } from "@/services/auth-cookie";
 import { refreshBackendSession } from "@/services/auth-refresh";
-import { shouldRefreshJwtToken } from "@/services/auth-token";
+import { hasJwtRole, shouldRefreshJwtToken } from "@/services/auth-token";
 import { buildBackendApiUrl } from "@/services/backend-api";
 
 const REFRESH_BUFFER_SECONDS = 60;
 const AUTH_ME_ENDPOINT = "/api/v1/auth/users/me";
+
+const PORTAL_ROUTES = [
+  {
+    path: "/admin",
+    role: "adm",
+  },
+  {
+    path: "/company",
+    role: "com",
+  },
+  {
+    path: "/supplier",
+    role: "sup",
+  },
+] as const;
 
 const AUTH_ROUTES = [
   "/login",
@@ -28,14 +44,53 @@ function hasRefreshToken(request: NextRequest) {
   return Boolean(request.cookies.get(AUTH_COOKIE_NAMES[1])?.value);
 }
 
+function getAccessToken(request: NextRequest) {
+  return request.cookies.get(AUTH_COOKIE_NAMES[0])?.value ?? null;
+}
+
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 
+function isHomeRoute(pathname: string) {
+  return pathname === "/";
+}
+
 function hasAnyAuthCookie(request: NextRequest) {
   return hasAuthToken(request) || hasRefreshToken(request);
+}
+
+function isRouteMatch(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function getPortalRoute(pathname: string) {
+  return PORTAL_ROUTES.find((portalRoute) =>
+    isRouteMatch(pathname, portalRoute.path),
+  );
+}
+
+function isPortalRoute(pathname: string) {
+  return Boolean(getPortalRoute(pathname));
+}
+
+function getAuthenticatedHomePath(accessToken: string | null | undefined) {
+  const portalRoute = PORTAL_ROUTES.find(({ role }) =>
+    hasJwtRole(accessToken, role),
+  );
+
+  return portalRoute?.path ?? "/";
+}
+
+function buildAuthenticatedRedirect(
+  request: NextRequest,
+  accessToken: string | null | undefined,
+) {
+  return NextResponse.redirect(
+    new URL(getAuthenticatedHomePath(accessToken), request.url),
+  );
 }
 
 function shouldRefreshRequestSession(request: NextRequest) {
@@ -43,7 +98,7 @@ function shouldRefreshRequestSession(request: NextRequest) {
     return false;
   }
 
-  const accessToken = request.cookies.get(AUTH_COOKIE_NAMES[0])?.value;
+  const accessToken = getAccessToken(request);
 
   if (!accessToken) {
     return true;
@@ -59,7 +114,7 @@ function shouldRefreshRequestSession(request: NextRequest) {
 
 async function validateRequestSession(
   request: NextRequest,
-  redirectAuthenticatedUser = false,
+  shouldRedirectAuthenticatedUser = false,
 ) {
   if (!hasAnyAuthCookie(request)) {
     return null;
@@ -79,8 +134,25 @@ async function validateRequestSession(
       );
 
       if (currentUserResponse.ok) {
-        return redirectAuthenticatedUser
-          ? NextResponse.redirect(new URL("/", request.url))
+        const accessToken = getAccessToken(request);
+        const portalRoute = getPortalRoute(request.nextUrl.pathname);
+        const authenticatedHomePath = getAuthenticatedHomePath(accessToken);
+
+        if (
+          isHomeRoute(request.nextUrl.pathname) &&
+          authenticatedHomePath !== "/"
+        ) {
+          return buildAuthenticatedRedirect(request, accessToken);
+        }
+
+        if (portalRoute && !hasJwtRole(accessToken, portalRoute.role)) {
+          return NextResponse.redirect(
+            new URL(authenticatedHomePath, request.url),
+          );
+        }
+
+        return shouldRedirectAuthenticatedUser
+          ? buildAuthenticatedRedirect(request, accessToken)
           : null;
       }
 
@@ -119,8 +191,38 @@ async function validateRequestSession(
       ),
     );
 
-    const response = redirectAuthenticatedUser
-      ? NextResponse.redirect(new URL("/", request.url))
+    const refreshedAccessToken =
+      getAuthCookieValues(refreshResponse.headers).accessToken ??
+      getAccessToken(request);
+    const portalRoute = getPortalRoute(request.nextUrl.pathname);
+    const authenticatedHomePath =
+      getAuthenticatedHomePath(refreshedAccessToken);
+
+    if (
+      isHomeRoute(request.nextUrl.pathname) &&
+      authenticatedHomePath !== "/"
+    ) {
+      const response = NextResponse.redirect(
+        new URL(authenticatedHomePath, request.url),
+      );
+
+      copyAuthCookies(refreshResponse.headers, response);
+
+      return response;
+    }
+
+    if (portalRoute && !hasJwtRole(refreshedAccessToken, portalRoute.role)) {
+      const response = NextResponse.redirect(
+        new URL(authenticatedHomePath, request.url),
+      );
+
+      copyAuthCookies(refreshResponse.headers, response);
+
+      return response;
+    }
+
+    const response = shouldRedirectAuthenticatedUser
+      ? buildAuthenticatedRedirect(request, refreshedAccessToken)
       : NextResponse.next({
           request: {
             headers: requestHeaders,
@@ -164,8 +266,36 @@ async function refreshRequestSession(request: NextRequest) {
       ),
     );
 
-    const response = isAuthRoute(request.nextUrl.pathname)
-      ? NextResponse.redirect(new URL("/", request.url))
+    const refreshedAccessToken =
+      getAuthCookieValues(refreshResponse.headers).accessToken ??
+      getAccessToken(request);
+    const pathname = request.nextUrl.pathname;
+    const portalRoute = getPortalRoute(pathname);
+    const authenticatedHomePath =
+      getAuthenticatedHomePath(refreshedAccessToken);
+
+    if (isHomeRoute(pathname) && authenticatedHomePath !== "/") {
+      const response = NextResponse.redirect(
+        new URL(authenticatedHomePath, request.url),
+      );
+
+      copyAuthCookies(refreshResponse.headers, response);
+
+      return response;
+    }
+
+    if (portalRoute && !hasJwtRole(refreshedAccessToken, portalRoute.role)) {
+      const response = NextResponse.redirect(
+        new URL(authenticatedHomePath, request.url),
+      );
+
+      copyAuthCookies(refreshResponse.headers, response);
+
+      return response;
+    }
+
+    const response = isAuthRoute(pathname)
+      ? buildAuthenticatedRedirect(request, refreshedAccessToken)
       : NextResponse.next({
           request: {
             headers: requestHeaders,
@@ -181,6 +311,10 @@ async function refreshRequestSession(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  if (isPortalRoute(request.nextUrl.pathname) && !hasAnyAuthCookie(request)) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const refreshResponse = await refreshRequestSession(request);
 
   if (refreshResponse) {

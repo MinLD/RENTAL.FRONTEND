@@ -2,6 +2,7 @@ const JWT_PARTS_LENGTH = 3;
 
 type JwtPayload = {
   exp?: unknown;
+  r?: unknown;
 };
 
 function decodeBase64Url(value: string) {
@@ -14,7 +15,7 @@ function decodeBase64Url(value: string) {
   return atob(paddedBase64);
 }
 
-export function getJwtExpiration(token: string) {
+function getJwtPayload(token: string) {
   try {
     const tokenParts = token.split(".");
 
@@ -22,12 +23,31 @@ export function getJwtExpiration(token: string) {
       return null;
     }
 
-    const payload = JSON.parse(decodeBase64Url(tokenParts[1])) as JwtPayload;
-
-    return typeof payload.exp === "number" ? payload.exp : null;
+    return JSON.parse(decodeBase64Url(tokenParts[1])) as JwtPayload;
   } catch {
     return null;
   }
+}
+
+export function getJwtExpiration(token: string) {
+  const payload = getJwtPayload(token);
+
+  return typeof payload?.exp === "number" ? payload.exp : null;
+}
+
+export function getJwtRoles(token: string) {
+  const payload = getJwtPayload(token);
+  const roles = payload?.r;
+
+  if (Array.isArray(roles)) {
+    return roles.filter((role): role is string => typeof role === "string");
+  }
+
+  return typeof roles === "string" ? [roles] : [];
+}
+
+export function hasJwtRole(token: string | null | undefined, role: string) {
+  return token ? getJwtRoles(token).some((jwtRole) => jwtRole === role) : false;
 }
 
 export function getJwtMaxAge(token: string) {
