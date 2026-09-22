@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { buildBackendApiUrl } from "@/services/backend-api";
 import { setAuthCookies } from "@/services/auth-cookie";
+import { getFrontendOrigin } from "@/services/frontend-origin";
 import type { GoogleExchangeResponse } from "@/types/auth";
 
 const GOOGLE_EXCHANGE_ENDPOINT = "/api/v1/auth/google/exchange";
@@ -15,9 +16,10 @@ function getSafeReturnUrl(request: NextRequest) {
   }
 
   try {
-    const parsedReturnUrl = new URL(returnUrl, request.nextUrl.origin);
+    const frontendOrigin = getFrontendOrigin(request.nextUrl.origin);
+    const parsedReturnUrl = new URL(returnUrl, frontendOrigin);
 
-    if (parsedReturnUrl.origin !== request.nextUrl.origin) {
+    if (parsedReturnUrl.origin !== frontendOrigin) {
       return "/";
     }
 
@@ -31,7 +33,10 @@ function redirectToCallbackPage(
   request: NextRequest,
   params?: Record<string, string>,
 ) {
-  const callbackPageUrl = new URL(GOOGLE_CALLBACK_PAGE, request.nextUrl.origin);
+  const callbackPageUrl = new URL(
+    GOOGLE_CALLBACK_PAGE,
+    getFrontendOrigin(request.nextUrl.origin),
+  );
   const returnUrl = getSafeReturnUrl(request);
 
   callbackPageUrl.searchParams.set("returnUrl", returnUrl);

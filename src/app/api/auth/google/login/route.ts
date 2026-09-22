@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { buildBackendApiUrl } from "@/services/backend-api";
+import { buildPublicBackendApiUrl } from "@/services/backend-api";
+import { getFrontendOrigin } from "@/services/frontend-origin";
 
 const GOOGLE_LOGIN_ENDPOINT = "/api/v1/auth/google/login";
 
@@ -12,9 +13,10 @@ function getSafeReturnUrl(request: NextRequest) {
   }
 
   try {
-    const parsedReturnUrl = new URL(returnUrl, request.nextUrl.origin);
+    const frontendOrigin = getFrontendOrigin(request.nextUrl.origin);
+    const parsedReturnUrl = new URL(returnUrl, frontendOrigin);
 
-    if (parsedReturnUrl.origin !== request.nextUrl.origin) {
+    if (parsedReturnUrl.origin !== frontendOrigin) {
       return "/";
     }
 
@@ -25,11 +27,14 @@ function getSafeReturnUrl(request: NextRequest) {
 }
 
 export function GET(request: NextRequest) {
+  const frontendOrigin = getFrontendOrigin(request.nextUrl.origin);
   const frontendReturnUrl = new URL(
     getSafeReturnUrl(request),
-    request.nextUrl.origin,
+    frontendOrigin,
   );
-  const backendGoogleLoginUrl = new URL(buildBackendApiUrl(GOOGLE_LOGIN_ENDPOINT));
+  const backendGoogleLoginUrl = new URL(
+    buildPublicBackendApiUrl(GOOGLE_LOGIN_ENDPOINT),
+  );
   backendGoogleLoginUrl.searchParams.set("returnUrl", frontendReturnUrl.toString());
 
   return NextResponse.redirect(backendGoogleLoginUrl);
