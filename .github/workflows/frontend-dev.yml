@@ -11,14 +11,18 @@ on:
 permissions:
   contents: read
 
+env:
+  NEXT_PUBLIC_API_URL: https://dev-api.lazyops.cloud
+  IMAGE_REPOSITORY: ghcr.io/huutawn/dprental-frontend
+
 jobs:
   validate:
-    name: Validate source and Docker artifact
+    name: Validate frontend
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
@@ -30,7 +34,7 @@ jobs:
           git merge-base --is-ancestor origin/develop HEAD
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -42,66 +46,42 @@ jobs:
         run: npm run lint
 
       - name: Build
-        env:
-          NEXT_PUBLIC_API_URL: https://dev-api.lazyops.cloud
         run: npm run build
 
-      - name: Build runtime image
-        run: >-
-          docker build
-          --build-arg NEXT_PUBLIC_API_URL=https://dev-api.lazyops.cloud
-          --target runtime
-          --tag dprental-frontend-ci:${{ github.sha }}
-          .
-
   publish:
-    name: Publish immutable image to GHCR
-    needs: validate
+    name: Publish Frontend image
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop-ci-cd'
     runs-on: ubuntu-24.04
-    environment: dev
     permissions:
       contents: read
       packages: write
-
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate GHCR namespace
-        id: image-name
-        env:
-          IMAGE_NAMESPACE: ${{ vars.GHCR_IMAGE_NAMESPACE }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "$IMAGE_NAMESPACE"
-          case "$IMAGE_NAMESPACE" in
-            *[!a-z0-9._-]* | *[A-Z]*)
-              echo 'GHCR_IMAGE_NAMESPACE must be lowercase and contain only a-z, 0-9, dot, underscore, or hyphen.' >&2
-              exit 1
-              ;;
-          esac
-          printf 'namespace=%s\n' "$IMAGE_NAMESPACE" >> "$GITHUB_OUTPUT"
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish Frontend runtime image
-        uses: docker/build-push-action@v6
+      - name: Build and publish Frontend image
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=https://dev-api.lazyops.cloud
-          tags: ghcr.io/${{ steps.image-name.outputs.namespace }}/dprental-frontend:${{ github.sha }}
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+          tags: ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend-dev
+          cache-to: type=gha,scope=frontend-dev,mode=max
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -115,10 +95,9 @@ jobs:
     concurrency:
       group: dprental-dev
       cancel-in-progress: false
-
     steps:
       - name: Checkout deployment script
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Configure SSH trust
         env:
@@ -135,55 +114,25 @@ jobs:
           chmod 0600 "$HOME/.ssh/id_ed25519"
           chmod 0644 "$HOME/.ssh/known_hosts"
 
-      - name: Synchronize deployment script
+      - name: Deploy published image by digest
         env:
           DEPLOY_VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
           DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
           DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
-          RELEASE_SHA: ${{ github.sha }}
+          IMAGE_DIGEST: ${{ needs.publish.outputs.digest }}
         shell: bash
         run: |
           set -euo pipefail
           test -n "$DEPLOY_VPS_HOST"
           test -n "$DEPLOY_VPS_USER"
-          remote_temporary_script="/tmp/deploy-frontend-${RELEASE_SHA}.sh"
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          image="${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
           ssh \
             -i "$HOME/.ssh/id_ed25519" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -p "$DEPLOY_VPS_PORT" \
             "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            'install -d -m 0750 /opt/dprental/dev/scripts'
-          scp \
-            -i "$HOME/.ssh/id_ed25519" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -P "$DEPLOY_VPS_PORT" \
-            scripts/deploy-frontend.sh \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST:$remote_temporary_script"
-          ssh \
-            -i "$HOME/.ssh/id_ed25519" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_VPS_PORT" \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            "install -m 0750 '$remote_temporary_script' /opt/dprental/dev/scripts/deploy-frontend.sh && rm -f '$remote_temporary_script'"
-
-      - name: Deploy the published revision
-        env:
-          DEPLOY_VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
-          DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
-          DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
-          RELEASE_SHA: ${{ github.sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "$DEPLOY_VPS_HOST"
-          test -n "$DEPLOY_VPS_USER"
-          ssh \
-            -i "$HOME/.ssh/id_ed25519" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_VPS_PORT" \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            /opt/dprental/dev/scripts/deploy-frontend.sh "$RELEASE_SHA"
+            "bash -s -- '$image'" < scripts/deploy-frontend.sh
