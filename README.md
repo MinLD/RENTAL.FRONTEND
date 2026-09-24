@@ -59,14 +59,16 @@ docker run --rm -p 3000:3000 \
   dprental-frontend:local
 ```
 
-Workflow `.github/workflows/frontend-dev.yml` kiểm tra lint/build cho PR vào
+Workflow `.github/workflows/frontend-dev.yml` kiểm tra lint cho PR vào
 `develop-ci-cd`. Khi push lên nhánh này, workflow lint và build đúng một lần
 trong Docker, đẩy image gắn tag commit SHA lên GHCR, rồi deploy bằng digest.
-BuildKit cache giúp tái sử dụng các layer không thay đổi. Job publish chỉ có
-quyền ghi package; job deploy mới truy cập SSH secret của GitHub Environment
+Job publish chỉ có quyền ghi package; job deploy có quyền đọc package và mới
+truy cập SSH secret của GitHub Environment
 `dev`: `DEV_VPS_SSH_PRIVATE_KEY`,
 `DEV_VPS_KNOWN_HOSTS`, `DEV_VPS_HOST`, `DEV_VPS_USER`, và tùy chọn
-`DEV_VPS_PORT`. Image nằm tại `ghcr.io/huutawn/dprental-frontend`.
+`DEV_VPS_PORT`. Job deploy dùng token GHCR chỉ có quyền đọc qua SSH stdin và
+xóa cấu hình đăng nhập tạm trên VPS sau khi chạy. Image nằm tại
+`ghcr.io/huutawn/dprental-frontend`.
 Environment `dev` chỉ cho phép deploy từ `develop-ci-cd`; nhánh này yêu cầu PR
 và check `Validate frontend` thành công. VPS cần bundle `deploy/dev` với
 `.env`, `release.env` và `compose.yaml` đã cấu hình. Script deploy pull image

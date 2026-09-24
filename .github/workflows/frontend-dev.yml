@@ -45,9 +45,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Build
-        run: npm run build
-
   publish:
     name: Publish Frontend image
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop-ci-cd'
@@ -80,8 +77,6 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
           tags: ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
-          cache-from: type=gha,scope=frontend-dev
-          cache-to: type=gha,scope=frontend-dev,mode=max
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -92,6 +87,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop-ci-cd'
     runs-on: ubuntu-24.04
     environment: dev
+    permissions:
+      contents: read
+      packages: read
     concurrency:
       group: dprental-dev
       cancel-in-progress: false
@@ -120,13 +118,38 @@ jobs:
           DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
           DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
           IMAGE_DIGEST: ${{ needs.publish.outputs.digest }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           test -n "$DEPLOY_VPS_HOST"
           test -n "$DEPLOY_VPS_USER"
+          test -n "$GHCR_TOKEN"
           [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           image="${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
+          auth_dir="$(printf '%s\n' "$GHCR_TOKEN" | ssh \
+            -i "$HOME/.ssh/id_ed25519" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "$DEPLOY_VPS_PORT" \
+            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
+            'auth_dir=$(mktemp -d /tmp/dprental-ghcr.XXXXXX) || exit 1; if docker --config "$auth_dir" login ghcr.io -u huutawn --password-stdin >/dev/null; then printf "%s\n" "$auth_dir"; else rm -rf "$auth_dir"; exit 1; fi')"
+          [[ "$auth_dir" =~ ^/tmp/dprental-ghcr\.[A-Za-z0-9]{6}$ ]]
+          if ssh \
+            -i "$HOME/.ssh/id_ed25519" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "$DEPLOY_VPS_PORT" \
+            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
+            "auth_dir='$auth_dir'; trap 'rm -rf \"\$auth_dir\"' EXIT; DOCKER_CONFIG=\"\$auth_dir\" bash -s -- '$image'" < scripts/deploy-frontend.sh; then
+            exit 0
+          else
+            deploy_status=$?
+          fi
           ssh \
             -i "$HOME/.ssh/id_ed25519" \
             -o BatchMode=yes \
@@ -135,4 +158,5 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -p "$DEPLOY_VPS_PORT" \
             "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            "bash -s -- '$image'" < scripts/deploy-frontend.sh
+            "rm -rf '$auth_dir'" || printf 'Could not remove temporary GHCR credentials on VPS.\n' >&2
+          exit "$deploy_status"
