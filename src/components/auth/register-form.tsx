@@ -76,7 +76,7 @@ export function RegisterForm() {
 
   return (
     <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-      <Controller
+      {/* <Controller
         control={control}
         name="accountType"
         render={({ field }) => (
@@ -105,7 +105,7 @@ export function RegisterForm() {
             })}
           </div>
         )}
-      />
+      /> */}
 
       {errors.accountType?.message ? (
         <p className="text-xs font-medium text-error">
