@@ -52,7 +52,7 @@ export function TopBar() {
             href="/partner"
           >
             <BuildingComplex size="20" />
-            Đăng ký công ty
+            Đăng ký tổ chức
           </Link>
         </div>
       </Container>

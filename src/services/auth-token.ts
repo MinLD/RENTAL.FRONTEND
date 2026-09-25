@@ -2,6 +2,7 @@ const JWT_PARTS_LENGTH = 3;
 
 type JwtPayload = {
   exp?: unknown;
+  p?: unknown;
   r?: unknown;
 };
 
@@ -46,8 +47,32 @@ export function getJwtRoles(token: string) {
   return typeof roles === "string" ? [roles] : [];
 }
 
+export function getJwtPermissions(token: string) {
+  const payload = getJwtPayload(token);
+  const permissions = payload?.p;
+
+  if (Array.isArray(permissions)) {
+    return permissions.filter(
+      (permission): permission is string => typeof permission === "string",
+    );
+  }
+
+  return typeof permissions === "string" ? [permissions] : [];
+}
+
 export function hasJwtRole(token: string | null | undefined, role: string) {
   return token ? getJwtRoles(token).some((jwtRole) => jwtRole === role) : false;
+}
+
+export function hasJwtPermission(
+  token: string | null | undefined,
+  permission: string,
+) {
+  return token
+    ? getJwtPermissions(token).some(
+        (jwtPermission) => jwtPermission === permission,
+      )
+    : false;
 }
 
 export function getJwtMaxAge(token: string) {
