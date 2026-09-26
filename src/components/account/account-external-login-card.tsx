@@ -1,10 +1,10 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
 import {
   displayProfileValue,
   formatDate,
@@ -80,10 +80,7 @@ export function AccountExternalLoginCard({
         <h2 className="text-xl font-bold text-foreground">
           Bảo mật
         </h2>
-        <Button type="button" variant="secondary">
-          <LockKeyhole size={16} />
-          Đổi mật khẩu
-        </Button>
+        <ChangePasswordDialog />
       </div>
 
       <div className="mt-8">
