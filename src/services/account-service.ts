@@ -2,20 +2,12 @@ import { authApiClientJson } from "@/services/api-client";
 import type {
   CompleteProfileRequest,
   ExternalLoginResponse,
-  UpdateProfileRequest,
   UserSessionResponse,
 } from "@/types/auth";
 
 const EXTERNAL_LOGINS_ENDPOINT = "/api/v1/auth/users/me/external-logins";
 const USER_PROFILE_ENDPOINT = "/api/v1/auth/users/me";
 const USER_SESSIONS_ENDPOINT = "/api/v1/auth/users/me/sessions";
-
-export function updateCurrentUserProfile(request: UpdateProfileRequest) {
-  return authApiClientJson<void>(USER_PROFILE_ENDPOINT, {
-    json: request,
-    method: "PATCH",
-  });
-}
 
 export function completeCurrentUserProfile(request: CompleteProfileRequest) {
   return authApiClientJson<void>(USER_PROFILE_ENDPOINT, {

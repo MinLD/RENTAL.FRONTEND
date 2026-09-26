@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CalendarDays,
   IdCard,
@@ -10,64 +9,52 @@ import {
   UserRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import {
-  profileSchema,
-  type ProfileFormValues,
-} from "@/lib/validations/profile";
-import { updateCurrentUserProfile } from "@/services/account-service";
+  updateProfileAction,
+  type UpdateProfileActionState,
+} from "@/services/actions/account-actions";
 
 type AccountEditFormProps = {
   initialProfile: AccountProfileInitialData;
 };
 
+const initialUpdateProfileActionState: UpdateProfileActionState = {
+  success: false,
+};
+
 export function AccountEditForm({ initialProfile }: AccountEditFormProps) {
   const router = useRouter();
-  const {
-    formState: { errors, isDirty, isSubmitting },
-    handleSubmit,
-    register,
-    reset,
-  } = useForm<ProfileFormValues>({
-    defaultValues: {
-      dateOfBirth: initialProfile.dateOfBirth,
-      email: initialProfile.email,
-      fullName: initialProfile.fullName,
-      identityNumber: initialProfile.identityNumber,
-      phoneNumber: initialProfile.phoneNumber,
-    },
-    resolver: zodResolver(profileSchema),
-  });
+  const formRef = useRef<HTMLFormElement>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [state, formAction, isPending] = useActionState(
+    updateProfileAction,
+    initialUpdateProfileActionState,
+  );
 
-  async function onSubmit(values: ProfileFormValues) {
-    try {
-      await updateCurrentUserProfile({
-        avatarUrl: initialProfile.avatarUrl || null,
-        dateOfBirth: normalizeNullableText(values.dateOfBirth),
-        fullName: values.fullName.trim(),
-        phoneNumber: normalizeNullableText(values.phoneNumber),
-      });
-
-      console.log("Updated account profile form values:", values);
-      toast.success("Cập nhật thông tin cá nhân thành công.");
-      reset(values);
-      router.refresh();
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Không thể cập nhật thông tin cá nhân.",
-      );
+  useEffect(() => {
+    if (!state.message) {
+      return;
     }
-  }
+
+    if (state.success) {
+      toast.success(state.message);
+      router.refresh();
+
+      return;
+    }
+
+    toast.error(state.message);
+  }, [router, state]);
 
   function handleCancel() {
-    reset();
+    formRef.current?.reset();
+    setFormKey((currentKey) => currentKey + 1);
   }
 
   return (
@@ -81,84 +68,93 @@ export function AccountEditForm({ initialProfile }: AccountEditFormProps) {
         </p>
       </div>
 
-      <form className="mt-6" onSubmit={handleSubmit(onSubmit)}>
+      <form action={formAction} className="mt-6" key={formKey} ref={formRef}>
+        <input
+          name="avatarUrl"
+          type="hidden"
+          value={initialProfile.avatarUrl ?? ""}
+        />
+
+        {state.message && !state.success ? (
+          <p className="mb-4 rounded border border-error/20 bg-error/10 px-3 py-2 text-sm font-medium text-error">
+            {state.message}
+          </p>
+        ) : null}
+
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
             autoComplete="name"
-            error={errors.fullName?.message}
+            defaultValue={initialProfile.fullName}
+            error={state.fieldErrors?.fullName}
             id="fullName"
             label="Họ và tên"
             leftIcon={<UserRound size={16} />}
+            name="fullName"
             placeholder="Chưa cập nhật"
-            {...register("fullName")}
           />
 
           <TextField
             autoComplete="email"
             className="bg-muted text-muted-foreground"
-            error={errors.email?.message}
+            defaultValue={initialProfile.email}
             id="email"
             label="Email"
             leftIcon={<Mail size={16} />}
+            name="email"
             placeholder="Chưa cập nhật"
             readOnly
             type="email"
-            {...register("email")}
           />
 
           <TextField
             autoComplete="tel"
-            error={errors.phoneNumber?.message}
+            defaultValue={initialProfile.phoneNumber}
+            error={state.fieldErrors?.phoneNumber}
             id="phoneNumber"
             label="Số điện thoại"
             leftIcon={<Phone size={16} />}
+            name="phoneNumber"
             placeholder="Chưa cập nhật"
-            {...register("phoneNumber")}
           />
 
           <TextField
-            error={errors.dateOfBirth?.message}
+            defaultValue={initialProfile.dateOfBirth}
+            error={state.fieldErrors?.dateOfBirth}
             id="dateOfBirth"
             label="Ngày sinh"
             leftIcon={<CalendarDays size={16} />}
+            name="dateOfBirth"
             placeholder="Chưa cập nhật"
             type="date"
-            {...register("dateOfBirth")}
           />
 
           <TextField
             className="bg-muted text-muted-foreground"
-            error={errors.identityNumber?.message}
+            defaultValue={initialProfile.identityNumber}
             id="identityNumber"
             label="CCCD/CMND"
             leftIcon={<IdCard size={16} />}
+            name="identityNumber"
             placeholder="Chưa cập nhật"
             readOnly
-            {...register("identityNumber")}
           />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <Button
-            disabled={!isDirty || isSubmitting}
+            disabled={isPending}
             onClick={handleCancel}
             type="button"
             variant="secondary"
           >
             Hủy
           </Button>
-          <Button disabled={isSubmitting} type="submit">
+          <Button disabled={isPending} type="submit">
             <Save size={16} />
-            {isSubmitting ? "Đang lưu..." : "Lưu"}
+            {isPending ? "Đang lưu..." : "Lưu"}
           </Button>
         </div>
       </form>
     </section>
   );
-}
-
-function normalizeNullableText(value?: string) {
-  const normalizedValue = value?.trim();
-
-  return normalizedValue ? normalizedValue : null;
 }

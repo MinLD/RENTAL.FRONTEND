@@ -51,13 +51,6 @@ export type ExternalLoginResponse = {
   provider?: string | null;
 };
 
-export type UpdateProfileRequest = {
-  avatarUrl?: string | null;
-  dateOfBirth?: string | null;
-  fullName?: string | null;
-  phoneNumber?: string | null;
-};
-
 export type CompleteProfileRequest = {
   avatarUrl?: string | null;
   citizenId?: string | null;

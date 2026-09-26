@@ -1,9 +1,20 @@
 "use server";
 
 import { changePasswordSchema } from "@/lib/validations/auth";
+import { profileSchema } from "@/lib/validations/profile";
+import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
 
 const CHANGE_PASSWORD_ENDPOINT = "/api/v1/auth/users/me/password";
+const USER_PROFILE_ENDPOINT = "/api/v1/auth/users/me";
+
+export type UpdateProfileActionState = {
+  fieldErrors?: Partial<
+    Record<"dateOfBirth" | "fullName" | "phoneNumber", string>
+  >;
+  message?: string;
+  success: boolean;
+};
 
 export type ChangePasswordActionState = {
   fieldErrors?: Partial<
@@ -12,6 +23,58 @@ export type ChangePasswordActionState = {
   message?: string;
   success: boolean;
 };
+
+export async function updateProfileAction(
+  _previousState: UpdateProfileActionState,
+  formData: FormData,
+): Promise<UpdateProfileActionState> {
+  const parsedForm = profileSchema.safeParse({
+    dateOfBirth: formData.get("dateOfBirth"),
+    email: formData.get("email"),
+    fullName: formData.get("fullName"),
+    identityNumber: formData.get("identityNumber"),
+    phoneNumber: formData.get("phoneNumber"),
+  });
+
+  if (!parsedForm.success) {
+    const flattenedError = parsedForm.error.flatten();
+
+    return {
+      fieldErrors: {
+        dateOfBirth: flattenedError.fieldErrors.dateOfBirth?.[0],
+        fullName: flattenedError.fieldErrors.fullName?.[0],
+        phoneNumber: flattenedError.fieldErrors.phoneNumber?.[0],
+      },
+      message: "Vui lòng kiểm tra lại thông tin cá nhân.",
+      success: false,
+    };
+  }
+
+  const response = await serverApi(USER_PROFILE_ENDPOINT, {
+    json: {
+      avatarUrl: normalizeNullableFormValue(formData.get("avatarUrl")),
+      dateOfBirth: normalizeNullableText(parsedForm.data.dateOfBirth),
+      fullName: parsedForm.data.fullName.trim(),
+      phoneNumber: normalizeNullableText(parsedForm.data.phoneNumber),
+    },
+    method: "PATCH",
+  });
+
+  if (!response.ok) {
+    return {
+      message: await getActionResponseErrorMessage(
+        response,
+        "Không thể cập nhật thông tin cá nhân.",
+      ),
+      success: false,
+    };
+  }
+
+  return {
+    message: "Cập nhật thông tin cá nhân thành công.",
+    success: true,
+  };
+}
 
 export async function changePasswordAction(
   _previousState: ChangePasswordActionState,
@@ -48,7 +111,7 @@ export async function changePasswordAction(
 
   if (!response.ok) {
     return {
-      message: await getResponseErrorMessage(
+      message: await getActionResponseErrorMessage(
         response,
         "Không thể đổi mật khẩu. Vui lòng thử lại.",
       ),
@@ -62,77 +125,12 @@ export async function changePasswordAction(
   };
 }
 
-async function getResponseErrorMessage(
-  response: Response,
-  fallbackMessage: string,
-) {
-  let responseBody: unknown;
-
-  try {
-    responseBody = await response.clone().json();
-  } catch {
-    return fallbackMessage;
-  }
-
-  return (
-    getValidationErrorMessage(responseBody) ??
-    getProblemDetailMessage(responseBody) ??
-    fallbackMessage
-  );
+function normalizeNullableFormValue(value: FormDataEntryValue | null) {
+  return typeof value === "string" ? normalizeNullableText(value) : null;
 }
 
-function getValidationErrorMessage(responseBody: unknown) {
-  if (
-    !responseBody ||
-    typeof responseBody !== "object" ||
-    !("errors" in responseBody) ||
-    !responseBody.errors ||
-    typeof responseBody.errors !== "object"
-  ) {
-    return null;
-  }
+function normalizeNullableText(value?: string) {
+  const normalizedValue = value?.trim();
 
-  const messages = Object.values(responseBody.errors).flatMap((value) => {
-    if (Array.isArray(value)) {
-      return value.filter(
-        (message): message is string => typeof message === "string",
-      );
-    }
-
-    return typeof value === "string" ? [value] : [];
-  });
-
-  return messages.length ? messages.join("\n") : null;
-}
-
-function getProblemDetailMessage(responseBody: unknown) {
-  if (!responseBody || typeof responseBody !== "object") {
-    return null;
-  }
-
-  if (
-    "detail" in responseBody &&
-    typeof responseBody.detail === "string" &&
-    responseBody.detail
-  ) {
-    return responseBody.detail;
-  }
-
-  if (
-    "title" in responseBody &&
-    typeof responseBody.title === "string" &&
-    responseBody.title
-  ) {
-    return responseBody.title;
-  }
-
-  if (
-    "message" in responseBody &&
-    typeof responseBody.message === "string" &&
-    responseBody.message
-  ) {
-    return responseBody.message;
-  }
-
-  return null;
+  return normalizedValue ? normalizedValue : null;
 }
