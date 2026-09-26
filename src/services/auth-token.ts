@@ -2,6 +2,7 @@ const JWT_PARTS_LENGTH = 3;
 
 type JwtPayload = {
   exp?: unknown;
+  isProfileCompleted?: unknown;
   p?: unknown;
   r?: unknown;
 };
@@ -58,6 +59,33 @@ export function getJwtPermissions(token: string) {
   }
 
   return typeof permissions === "string" ? [permissions] : [];
+}
+
+export function getJwtProfileCompleted(token: string | null | undefined) {
+  if (!token) {
+    return null;
+  }
+
+  const payload = getJwtPayload(token);
+  const profileCompleted = payload?.isProfileCompleted;
+
+  if (typeof profileCompleted === "boolean") {
+    return profileCompleted;
+  }
+
+  if (typeof profileCompleted === "string") {
+    const normalizedValue = profileCompleted.toLowerCase();
+
+    if (normalizedValue === "true") {
+      return true;
+    }
+
+    if (normalizedValue === "false") {
+      return false;
+    }
+  }
+
+  return null;
 }
 
 export function hasJwtRole(token: string | null | undefined, role: string) {

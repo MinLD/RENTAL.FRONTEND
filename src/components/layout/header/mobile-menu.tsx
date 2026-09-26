@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
+import { toast } from "sonner";
 
 import { MAIN_NAVIGATION } from "@/config/navigation";
+import { logout } from "@/services/auth-service";
+import type { AuthUser } from "@/types/auth";
 
 const MOBILE_SECONDARY_LINKS = [
   {
@@ -15,14 +19,16 @@ const MOBILE_SECONDARY_LINKS = [
     label: "Trở thành đối tác",
     href: "/partner",
   },
-  {
-    label: "Đăng ký",
-    href: "/register",
-  },
 ] as const;
 
-export function MobileMenu() {
+type MobileMenuProps = Readonly<{
+  user?: AuthUser | null;
+}>;
+
+export function MobileMenu({ user }: MobileMenuProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const panelId = useId();
 
   useEffect(() => {
@@ -54,6 +60,25 @@ export function MobileMenu() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      toast.success("Đăng xuất thành công.");
+      setIsOpen(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể đăng xuất. Vui lòng thử lại.",
+      );
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <div className="md:hidden">
@@ -117,16 +142,6 @@ export function MobileMenu() {
             </button>
           </div>
 
-          <div className="border-b border-border px-4 py-3">
-            <button
-              className="flex h-10 w-full items-center justify-between rounded bg-primary px-3 text-sm font-semibold text-primary-foreground"
-              type="button"
-            >
-              <span>DANH MỤC THIẾT BỊ</span>
-              <span aria-hidden="true">▾</span>
-            </button>
-          </div>
-
           <nav aria-label="Điều hướng di động" className="flex-1 px-4 py-3">
             <ul className="space-y-1">
               {MAIN_NAVIGATION.map((item) => (
@@ -163,13 +178,24 @@ export function MobileMenu() {
           </nav>
 
           <div className="border-t border-border p-4">
-            <Link
-              className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-              href="/login"
-              onClick={() => setIsOpen(false)}
-            >
-              Đăng nhập
-            </Link>
+            {user ? (
+              <button
+                className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={isLoggingOut}
+                onClick={handleLogout}
+                type="button"
+              >
+                {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+              </button>
+            ) : (
+              <Link
+                className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+                href="/login"
+                onClick={() => setIsOpen(false)}
+              >
+                Đăng ký / Đăng nhập
+              </Link>
+            )}
           </div>
         </aside>
       </div>

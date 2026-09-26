@@ -59,10 +59,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   </p>
                 </div>
 
-                <button className={styles.languageButton} type="button">
+                {/* <button className={styles.languageButton} type="button">
                   <span className={styles.languageBadge}>VN</span>
                   Tiếng Việt
-                </button>
+                </button> */}
               </div>
 
               <div>
