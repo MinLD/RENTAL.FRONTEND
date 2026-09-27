@@ -1,7 +1,13 @@
 export type AuthUser = {
+  avatarUrl?: string | null;
+  dateOfBirth?: string | null;
   email: string;
+  hasPassword?: boolean;
   id: string;
+  identityNumber?: string | null;
+  isProfileCompleted?: boolean;
   name: string;
+  phoneNumber?: string | null;
   roleLabel: string;
 };
 
@@ -14,13 +20,43 @@ export type UserOrganizationResponse = {
 };
 
 export type CurrentUserResponse = {
+  avatarUrl?: string | null;
   createdAt: string;
+  dateOfBirth?: string | null;
   email: string | null;
   fullName: string | null;
+  hasPassword?: boolean;
   id: string;
+  identityNumber?: string | null;
+  isProfileCompleted?: boolean;
+  maskedCitizenId?: string | null;
   organizations: UserOrganizationResponse[] | null;
   permissions: string[] | null;
+  phoneNumber?: string | null;
   roles: string[] | null;
+};
+
+export type UserSessionResponse = {
+  createdAtUtc: string;
+  expiresAtUtc: string;
+  id: string;
+  isActive: boolean;
+  isCurrent: boolean;
+  revokedAtUtc?: string | null;
+};
+
+export type ExternalLoginResponse = {
+  email?: string | null;
+  linkedAtUtc: string;
+  provider?: string | null;
+};
+
+export type CompleteProfileRequest = {
+  avatarUrl?: string | null;
+  citizenId?: string | null;
+  dateOfBirth?: string | null;
+  fullName?: string | null;
+  phoneNumber?: string | null;
 };
 
 export type LoginRequest = {

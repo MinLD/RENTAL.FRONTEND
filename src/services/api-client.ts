@@ -52,6 +52,12 @@ export class ApiClientError extends Error {
 }
 
 function getApiClientErrorMessage(response: Response, responseBody?: unknown) {
+  const validationErrorMessage = getValidationErrorMessage(responseBody);
+
+  if (validationErrorMessage) {
+    return validationErrorMessage;
+  }
+
   if (
     responseBody &&
     typeof responseBody === "object" &&
@@ -71,6 +77,28 @@ function getApiClientErrorMessage(response: Response, responseBody?: unknown) {
   }
 
   return `API request failed: ${response.status} ${response.statusText}`;
+}
+
+function getValidationErrorMessage(responseBody?: unknown) {
+  if (
+    !responseBody ||
+    typeof responseBody !== "object" ||
+    !("errors" in responseBody) ||
+    !responseBody.errors ||
+    typeof responseBody.errors !== "object"
+  ) {
+    return null;
+  }
+
+  const messages = Object.values(responseBody.errors).flatMap((value) => {
+    if (Array.isArray(value)) {
+      return value.filter((message): message is string => typeof message === "string");
+    }
+
+    return typeof value === "string" ? [value] : [];
+  });
+
+  return messages.length ? messages.join("\n") : null;
 }
 
 export async function apiClient(
