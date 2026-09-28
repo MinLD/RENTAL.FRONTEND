@@ -3,7 +3,10 @@
 import { headers as getRequestHeaders } from "next/headers";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { updateAdminUserSchema } from "@/lib/validations/admin-users";
+import {
+  createAdminUserSchema,
+  updateAdminUserSchema,
+} from "@/lib/validations/admin-users";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
 import type {
@@ -69,15 +72,23 @@ export async function getUserDetailAction(id: string) {
 }
 
 export async function createUserAction(request: CreateAdminUserRequest) {
-  return fetchMockJson<AdminUserRow>(
-    await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.create),
-    {
-      body: JSON.stringify(request),
-      headers: {
-        "Content-Type": "application/json",
+  const parsedRequest = createAdminUserSchema.safeParse(request);
+
+  if (!parsedRequest.success) {
+    throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
+  }
+
+  return mapMockAdminUser(
+    await fetchMockJson<AdminUserRow>(
+      await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.create),
+      {
+        body: JSON.stringify(parsedRequest.data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
       },
-      method: "POST",
-    },
+    ),
   );
 }
 

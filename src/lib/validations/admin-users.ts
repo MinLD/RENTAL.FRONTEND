@@ -2,12 +2,11 @@ import { z } from "zod";
 
 export const ADMIN_USER_ROLE_OPTIONS = [
   "Admin",
-
   "Customer",
   "Supplier",
 ] as const;
 
-export const updateAdminUserSchema = z.object({
+const adminUserFormSchema = z.object({
   avatarMediaId: z.string().trim().optional(),
   email: z
     .string()
@@ -26,4 +25,8 @@ export const updateAdminUserSchema = z.object({
   }),
 });
 
+export const createAdminUserSchema = adminUserFormSchema;
+export const updateAdminUserSchema = adminUserFormSchema;
+
+export type CreateAdminUserFormValues = z.infer<typeof createAdminUserSchema>;
 export type UpdateAdminUserFormValues = z.infer<typeof updateAdminUserSchema>;

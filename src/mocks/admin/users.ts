@@ -100,12 +100,18 @@ export async function mockCreateUser(request: CreateAdminUserRequest) {
   const users = getUsersStore();
   const id = `mock-${Date.now().toString(36)}-${users.length + 1}`;
   const user: AdminUserRow = {
+    avatarMediaId: request.avatarMediaId,
+    avatarUrl: request.avatarMediaId
+      ? `/api/mock/media/uploads/${encodeURIComponent(request.avatarMediaId)}/preview`
+      : undefined,
+    createdAtUtc: new Date().toISOString(),
     email: request.email.trim(),
+    globalRoles: request.role.trim() ? [request.role.trim()] : [],
     id,
     name: request.name.trim(),
     phone: request.phone.trim(),
     role: request.role.trim() || "Customer",
-    status: "active",
+    status: request.status,
   };
 
   users.unshift(user);

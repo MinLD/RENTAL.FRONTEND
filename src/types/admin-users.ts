@@ -14,10 +14,12 @@ export type AdminUserRow = {
 };
 
 export type CreateAdminUserRequest = {
+  avatarMediaId?: string;
   email: string;
   name: string;
   phone: string;
   role: string;
+  status: AdminUserStatus;
 };
 
 export type UpdateAdminUserRequest = {

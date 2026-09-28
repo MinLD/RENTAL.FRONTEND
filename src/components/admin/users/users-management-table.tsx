@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUsersController } from "@/hooks/use-admin-users-controller";
 
 import { UserActionDialog } from "./user-action-dialog";
+import { UserCreateDrawer } from "./user-create-drawer";
 import { UserDetailDrawer } from "./user-detail";
 import type { UsersManagementTableProps } from "./users-management-types";
 import { userColumns } from "./users-table-columns";
@@ -28,13 +29,16 @@ export function UsersManagementTable({
 }: UsersManagementTableProps) {
   const {
     detailUser,
-    handleCreateMockUser,
+    handleCreateUser,
+    handleOpenCreateUser,
     handleUpdateUser,
     handleViewUser,
+    isCreateDrawerOpen,
     isCreatingUser,
     isLoadingDetail,
     isUpdatingUser,
     pendingAction,
+    setIsCreateDrawerOpen,
     setDetailUser,
     setPendingAction,
   } = useAdminUsersController({
@@ -123,18 +127,24 @@ export function UsersManagementTable({
           <Button
             disabled={isCreatingUser}
             onClick={() => {
-              void handleCreateMockUser(refresh);
+              handleOpenCreateUser(refresh);
             }}
             type="button"
           >
             <Plus className="size-4" />
-            {isCreatingUser ? "Đang thêm..." : "Thêm người dùng"}
+            Thêm người dùng
           </Button>
         )}
         searchPlaceholder="Tìm theo tên, email hoặc ID..."
         title="Danh sách người dùng"
       />
 
+      <UserCreateDrawer
+        isSubmitting={isCreatingUser}
+        onOpenChange={setIsCreateDrawerOpen}
+        onSubmit={handleCreateUser}
+        open={isCreateDrawerOpen}
+      />
       <UserDetailDrawer
         isSubmitting={isUpdatingUser}
         onOpenChange={(open) => !open && setDetailUser(null)}

@@ -7,7 +7,11 @@ import type {
   UserPendingAction,
   UsersManagementTableProps,
 } from "@/components/admin/users/users-management-types";
-import type { AdminUserRow, UpdateAdminUserRequest } from "@/types/admin-users";
+import type {
+  AdminUserRow,
+  CreateAdminUserRequest,
+  UpdateAdminUserRequest,
+} from "@/types/admin-users";
 
 export function useAdminUsersController({
   createUser,
@@ -18,6 +22,10 @@ export function useAdminUsersController({
   "createUser" | "fetchUserDetail" | "updateUser"
 >) {
   const [detailUser, setDetailUser] = useState<AdminUserRow | null>(null);
+  const [createUserRefresh, setCreateUserRefresh] = useState<
+    (() => void) | null
+  >(null);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
@@ -39,22 +47,21 @@ export function useAdminUsersController({
     }
   }
 
-  async function handleCreateMockUser(refresh: () => void) {
+  function handleOpenCreateUser(refresh: () => void) {
+    setCreateUserRefresh(() => refresh);
+    setIsCreateDrawerOpen(true);
+  }
+
+  async function handleCreateUser(request: CreateAdminUserRequest) {
     setIsCreatingUser(true);
 
     try {
-      await createUser({
-        email: "mock.user@lazyops.cloud",
-        name: "Mock User",
-        phone: "0900000000",
-        role: "Customer",
-      });
-      toast.success("Đã tạo user mock.");
-      refresh();
+      await createUser(request);
+      toast.success("Đã tạo user.");
+      setIsCreateDrawerOpen(false);
+      createUserRefresh?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể tạo user mock.",
-      );
+      toast.error(error instanceof Error ? error.message : "Không thể tạo user.");
     } finally {
       setIsCreatingUser(false);
     }
@@ -84,13 +91,16 @@ export function useAdminUsersController({
 
   return {
     detailUser,
-    handleCreateMockUser,
+    handleCreateUser,
+    handleOpenCreateUser,
     handleUpdateUser,
     handleViewUser,
+    isCreateDrawerOpen,
     isCreatingUser,
     isLoadingDetail,
     isUpdatingUser,
     pendingAction,
+    setIsCreateDrawerOpen,
     setDetailUser,
     setPendingAction,
   };
