@@ -1,13 +1,20 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, Save } from "lucide-react";
-import type { FormEvent } from "react";
+import type { SelectHTMLAttributes } from "react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextField } from "@/components/forms/text-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
+import {
+  ADMIN_USER_ROLE_OPTIONS,
+  updateAdminUserSchema,
+  type UpdateAdminUserFormValues,
+} from "@/lib/validations/admin-users";
 import { uploadMockMediaFile } from "@/services/media-service";
 import type {
   AdminUserRow,
@@ -19,8 +26,6 @@ import { cn } from "@/utils/cn";
 import { getInitials } from "./users-table-utils";
 
 const USER_DETAIL_FORM_ID = "admin-user-detail-form";
-
-const ROLE_OPTIONS = ["Admin", "Customer", "Supplier"] as const;
 
 const STATUS_OPTIONS: Array<{
   label: string;
@@ -103,26 +108,31 @@ function UserUpdateForm({
   onSubmit: (id: string, request: UpdateAdminUserRequest) => Promise<void>;
   user: AdminUserRow;
 }) {
-  const [avatarMediaId, setAvatarMediaId] = useState(user.avatarMediaId ?? "");
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
     user.avatarUrl ?? "",
   );
-  const [email, setEmail] = useState(user.email);
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone ?? "");
-  const [role, setRole] = useState(getUserRole(user));
-  const [status, setStatus] = useState<AdminUserStatus>(user.status);
+  const roleOptions = getRoleOptions(getUserRole(user));
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    setValue,
+  } = useForm<UpdateAdminUserFormValues>({
+    defaultValues: {
+      avatarMediaId: user.avatarMediaId ?? "",
+      email: user.email,
+      name: user.name,
+      phone: user.phone ?? "",
+      role: getUserRole(user),
+      status: user.status,
+    },
+    resolver: zodResolver(updateAdminUserSchema),
+  });
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function submitForm(values: UpdateAdminUserFormValues) {
     await onSubmit(user.id, {
-      avatarMediaId: avatarMediaId || undefined,
-      email,
-      name,
-      phone,
-      role,
-      status,
+      ...values,
+      avatarMediaId: values.avatarMediaId || undefined,
     });
   }
 
@@ -132,15 +142,18 @@ function UserUpdateForm({
     <form
       className="grid gap-5"
       id={USER_DETAIL_FORM_ID}
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(submitForm)}
     >
       <div className="flex flex-col items-center rounded border border-border bg-muted/40 p-5 text-center">
         <MediaAvatarUpload
           disabled={isSubmitting}
-          fallbackText={getInitials(name)}
+          fallbackText={getInitials(user.name)}
           onChange={(mediaId, upload) => {
             if (typeof mediaId === "string" && !Array.isArray(upload)) {
-              setAvatarMediaId(mediaId);
+              setValue("avatarMediaId", mediaId, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
               setAvatarPreviewUrl(upload.previewUrl);
             }
           }}
@@ -160,41 +173,36 @@ function UserUpdateForm({
         <TextField disabled label="ID" readOnly value={user.id} />
         <TextField
           disabled={disabled}
+          error={errors.name?.message}
           label="Họ tên"
-          onChange={(event) => setName(event.target.value)}
-          required
-          value={name}
+          {...register("name")}
         />
         <TextField
           disabled={disabled}
+          error={errors.email?.message}
           label="Email"
-          onChange={(event) => setEmail(event.target.value)}
-          required
           type="email"
-          value={email}
+          {...register("email")}
         />
         <TextField
           disabled={disabled}
+          error={errors.phone?.message}
           label="Số điện thoại"
-          onChange={(event) => setPhone(event.target.value)}
-          value={phone}
+          {...register("phone")}
         />
         <SelectField
           disabled={disabled}
+          error={errors.role?.message}
           label="Vai trò"
-          onChange={setRole}
-          options={ROLE_OPTIONS.map((option) => ({
-            label: option,
-            value: option,
-          }))}
-          value={role}
+          options={roleOptions}
+          {...register("role")}
         />
         <SelectField
           disabled={disabled}
+          error={errors.status?.message}
           label="Trạng thái"
-          onChange={(value) => setStatus(value as AdminUserStatus)}
           options={STATUS_OPTIONS}
-          value={status}
+          {...register("status")}
         />
         <TextField
           disabled
@@ -207,34 +215,35 @@ function UserUpdateForm({
   );
 }
 
-function SelectField({
-  disabled,
-  label,
-  onChange,
-  options,
-  value,
-}: {
-  disabled?: boolean;
+type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  error?: string;
   label: string;
-  onChange: (value: string) => void;
   options: Array<{
     label: string;
     value: string;
   }>;
-  value: string;
-}) {
+};
+
+function SelectField({
+  disabled,
+  error,
+  label,
+  options,
+  ...props
+}: SelectFieldProps) {
   return (
     <label className="space-y-1.5">
       <span className="block text-xs font-semibold uppercase text-foreground">
         {label}
       </span>
       <select
+        aria-invalid={error ? true : undefined}
         className={cn(
           "flex h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60",
+          error && "border-error",
         )}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
+        {...props}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -242,12 +251,26 @@ function SelectField({
           </option>
         ))}
       </select>
+      {error ? <p className="text-xs font-medium text-error">{error}</p> : null}
     </label>
   );
 }
 
 function getUserRole(user: AdminUserRow) {
   return user.role?.trim() || user.globalRoles?.[0] || "User";
+}
+
+function getRoleOptions(currentRole: string) {
+  const options = new Set<string>(ADMIN_USER_ROLE_OPTIONS);
+
+  if (currentRole) {
+    options.add(currentRole);
+  }
+
+  return Array.from(options).map((option) => ({
+    label: option,
+    value: option,
+  }));
 }
 
 function formatDateTime(value?: string) {

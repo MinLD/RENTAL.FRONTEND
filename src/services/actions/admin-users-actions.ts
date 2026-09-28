@@ -3,6 +3,7 @@
 import { headers as getRequestHeaders } from "next/headers";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
+import { updateAdminUserSchema } from "@/lib/validations/admin-users";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
 import type {
@@ -93,11 +94,17 @@ export async function updateUserAction(
   id: string,
   request: UpdateAdminUserRequest,
 ) {
+  const parsedRequest = updateAdminUserSchema.safeParse(request);
+
+  if (!parsedRequest.success) {
+    throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
+  }
+
   return mapMockAdminUser(
     await fetchMockJson<AdminUserRow>(
       await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.update(id)),
       {
-        body: JSON.stringify(request),
+        body: JSON.stringify(parsedRequest.data),
         headers: {
           "Content-Type": "application/json",
         },
@@ -239,4 +246,14 @@ async function buildMockUsersUrl(path: string) {
       : "https");
 
   return new URL(path, `${protocol}://${host}`);
+}
+
+function getValidationErrorMessage(error: {
+  fieldErrors: Record<string, string[] | undefined>;
+}) {
+  const messages = Object.values(error.fieldErrors).flatMap(
+    (fieldErrors) => fieldErrors ?? [],
+  );
+
+  return messages[0] ?? "Vui lòng kiểm tra lại thông tin user.";
 }
