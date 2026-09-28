@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import { setAuthCookies } from "@/services/auth-cookie";
 import { getFrontendOrigin } from "@/services/frontend-origin";
 import type { GoogleExchangeResponse } from "@/types/auth";
 
-const GOOGLE_EXCHANGE_ENDPOINT = "/api/v1/auth/google/exchange";
 const GOOGLE_CALLBACK_PAGE = "/auth/callback/google";
 
 function getSafeReturnUrl(request: NextRequest) {
@@ -65,15 +65,18 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const backendResponse = await fetch(buildBackendApiUrl(GOOGLE_EXCHANGE_ENDPOINT), {
-    body: JSON.stringify({ ticket }),
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+  const backendResponse = await fetch(
+    buildBackendApiUrl(API_ENDPOINTS.backend.auth.googleExchange),
+    {
+      body: JSON.stringify({ ticket }),
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      method: "POST",
     },
-    method: "POST",
-  });
+  );
 
   if (!backendResponse.ok) {
     return redirectToCallbackPage(request, {

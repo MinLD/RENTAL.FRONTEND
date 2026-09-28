@@ -1,4 +1,4 @@
-import { CalendarDays, Camera, IdCard, Phone } from "lucide-react";
+import { CalendarDays, IdCard, Phone } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { AccountProfileInitialData } from "@/components/account/account-types";
@@ -8,38 +8,35 @@ import {
   getUserInitials,
   maskIdentityNumber,
 } from "@/components/account/account-utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import type { AuthUser } from "@/types/auth";
 
 type AccountProfileSummaryProps = {
+  avatarPreviewUrl?: string;
   initialProfile: AccountProfileInitialData;
+  onAvatarChange?: (mediaId: string, previewUrl: string) => void;
   user: AuthUser;
 };
 
 export function AccountProfileSummary({
+  avatarPreviewUrl,
   initialProfile,
+  onAvatarChange,
   user,
 }: AccountProfileSummaryProps) {
   return (
     <aside className="self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
       <div className="flex flex-col items-center text-center">
-        <div className="relative">
-          <Avatar className="h-24 w-24 bg-secondary text-secondary-foreground">
-            {initialProfile.avatarUrl ? (
-              <AvatarImage alt={user.name} src={initialProfile.avatarUrl} />
-            ) : null}
-            <AvatarFallback className="bg-secondary text-2xl font-bold text-secondary-foreground">
-              {getUserInitials(user.name)}
-            </AvatarFallback>
-          </Avatar>
-          <button
-            aria-label="Cập nhật ảnh đại diện"
-            className="absolute bottom-0 right-0 inline-flex size-8 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
-            type="button"
-          >
-            <Camera size={15} />
-          </button>
-        </div>
+        <MediaAvatarUpload
+          fallbackText={getUserInitials(user.name)}
+          onChange={(mediaId, upload) => {
+            if (typeof mediaId === "string" && !Array.isArray(upload)) {
+              onAvatarChange?.(mediaId, upload.previewUrl);
+            }
+          }}
+          previewUrl={avatarPreviewUrl ?? initialProfile.avatarUrl}
+          size="lg"
+        />
 
         <h2 className="mt-4 text-lg font-bold text-foreground">
           {displayProfileValue(user.name)}

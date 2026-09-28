@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
 import type {
   CompleteProfileRequest,
@@ -5,24 +6,22 @@ import type {
   UserSessionResponse,
 } from "@/types/auth";
 
-const EXTERNAL_LOGINS_ENDPOINT = "/api/v1/auth/users/me/external-logins";
-const USER_PROFILE_ENDPOINT = "/api/v1/auth/users/me";
-const USER_SESSIONS_ENDPOINT = "/api/v1/auth/users/me/sessions";
-
 export function completeCurrentUserProfile(request: CompleteProfileRequest) {
-  return authApiClientJson<void>(USER_PROFILE_ENDPOINT, {
+  return authApiClientJson<void>(API_ENDPOINTS.backend.currentUser.me, {
     json: request,
     method: "POST",
   });
 }
 
 export function getExternalLogins() {
-  return authApiClientJson<ExternalLoginResponse[]>(EXTERNAL_LOGINS_ENDPOINT);
+  return authApiClientJson<ExternalLoginResponse[]>(
+    API_ENDPOINTS.backend.currentUser.externalLogins,
+  );
 }
 
 export function unlinkExternalLogin(provider: string) {
   return authApiClientJson<void>(
-    `${EXTERNAL_LOGINS_ENDPOINT}/${encodeURIComponent(provider)}`,
+    API_ENDPOINTS.backend.currentUser.externalLogin(provider),
     {
       method: "DELETE",
     },
@@ -30,11 +29,16 @@ export function unlinkExternalLogin(provider: string) {
 }
 
 export function getUserSessions() {
-  return authApiClientJson<UserSessionResponse[]>(USER_SESSIONS_ENDPOINT);
+  return authApiClientJson<UserSessionResponse[]>(
+    API_ENDPOINTS.backend.currentUser.sessions,
+  );
 }
 
 export function revokeUserSession(sessionId: string) {
-  return authApiClientJson<void>(`${USER_SESSIONS_ENDPOINT}/${sessionId}`, {
-    method: "DELETE",
-  });
+  return authApiClientJson<void>(
+    API_ENDPOINTS.backend.currentUser.session(sessionId),
+    {
+      method: "DELETE",
+    },
+  );
 }

@@ -59,7 +59,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <div className="relative w-full" ref={wrapperRef}>
       <button
         aria-expanded={isOpen}
-        className="flex h-10 w-full min-w-0 items-center gap-2 rounded border border-border bg-background px-2 text-left transition-colors hover:border-primary"
+        className="flex h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded border border-border bg-background px-2 text-left transition-colors hover:border-primary"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
       >
@@ -99,7 +99,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </Link>
           <button
             disabled={isLoggingOut}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
             onClick={handleLogout}
             type="button"
           >

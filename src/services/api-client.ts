@@ -1,3 +1,5 @@
+import { API_ENDPOINT_PREFIXES } from "@/config/api-endpoints";
+
 type ApiClientInit = Omit<RequestInit, "body"> & {
   body?: BodyInit | null;
   json?: unknown;
@@ -18,7 +20,10 @@ const buildApiUrl = (endpoint: string) => {
     throw new Error("API endpoints must be relative paths.");
   }
 
-  if (endpoint.startsWith("/api/auth/") || endpoint.startsWith("/api/mock/")) {
+  if (
+    endpoint.startsWith(API_ENDPOINT_PREFIXES.internalAuth) ||
+    endpoint.startsWith(API_ENDPOINT_PREFIXES.internalMock)
+  ) {
     return endpoint;
   }
 
@@ -30,7 +35,7 @@ const buildAuthenticatedApiUrl = (endpoint: string) => {
     throw new Error("API endpoints must be relative paths.");
   }
 
-  if (endpoint.startsWith("/api/auth/")) {
+  if (endpoint.startsWith(API_ENDPOINT_PREFIXES.internalAuth)) {
     return endpoint;
   }
 

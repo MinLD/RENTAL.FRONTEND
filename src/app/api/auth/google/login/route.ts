@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildPublicBackendApiUrl } from "@/services/backend-api";
 import { getFrontendOrigin } from "@/services/frontend-origin";
-
-const GOOGLE_LOGIN_ENDPOINT = "/api/v1/auth/google/login";
 
 function getSafeReturnUrl(request: NextRequest) {
   const returnUrl = request.nextUrl.searchParams.get("returnUrl");
@@ -33,7 +32,7 @@ export function GET(request: NextRequest) {
     frontendOrigin,
   );
   const backendGoogleLoginUrl = new URL(
-    buildPublicBackendApiUrl(GOOGLE_LOGIN_ENDPOINT),
+    buildPublicBackendApiUrl(API_ENDPOINTS.backend.auth.googleLogin),
   );
   backendGoogleLoginUrl.searchParams.set("returnUrl", frontendReturnUrl.toString());
 
