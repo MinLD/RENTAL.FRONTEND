@@ -1,6 +1,7 @@
 import type {
   AdminUserRow,
   CreateAdminUserRequest,
+  UpdateAdminUserRequest,
 } from "@/types/admin-users";
 
 export class MockAdminUsersApiError extends Error {
@@ -123,6 +124,49 @@ export async function mockDeleteUser(id: string) {
   }
 
   users.splice(index, 1);
+}
+
+export async function mockUpdateUser(
+  id: string,
+  request: UpdateAdminUserRequest,
+) {
+  await simulateNetworkDelay();
+
+  if (!request.name.trim() || !request.email.trim()) {
+    throw new MockAdminUsersApiError("Tên và email là bắt buộc.");
+  }
+
+  const users = getUsersStore();
+  const index = users.findIndex((user) => user.id === id);
+  const currentUser = users[index] ?? {
+    email: request.email,
+    id,
+    name: request.name,
+    status: request.status,
+  };
+
+  const updatedUser: AdminUserRow = {
+    ...currentUser,
+    avatarMediaId: request.avatarMediaId || currentUser.avatarMediaId,
+    avatarUrl: request.avatarMediaId
+      ? `/api/mock/media/uploads/${encodeURIComponent(request.avatarMediaId)}/preview`
+      : currentUser.avatarUrl,
+    email: request.email.trim(),
+    globalRoles: request.role.trim() ? [request.role.trim()] : [],
+    id,
+    name: request.name.trim(),
+    phone: request.phone.trim(),
+    role: request.role.trim() || "User",
+    status: request.status,
+  };
+
+  if (index === -1) {
+    users.unshift(updatedUser);
+  } else {
+    users[index] = updatedUser;
+  }
+
+  return updatedUser;
 }
 
 function simulateNetworkDelay() {

@@ -6,6 +6,7 @@ import {
   getUsersAction,
   lockUserAction,
   unlockUserAction,
+  updateUserAction,
 } from "@/services/actions/admin-users-actions";
 
 export default function UsersPage() {
@@ -17,6 +18,7 @@ export default function UsersPage() {
       fetchUsers={getUsersAction}
       lockUser={lockUserAction}
       unlockUser={unlockUserAction}
+      updateUser={updateUserAction}
     />
   );
 }

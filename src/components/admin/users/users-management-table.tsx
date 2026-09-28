@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUsersController } from "@/hooks/use-admin-users-controller";
 
 import { UserActionDialog } from "./user-action-dialog";
-import { UserDetail, UserDetailDrawer } from "./user-detail";
+import { UserDetailDrawer } from "./user-detail";
 import type { UsersManagementTableProps } from "./users-management-types";
 import { userColumns } from "./users-table-columns";
 
@@ -24,19 +24,23 @@ export function UsersManagementTable({
   fetchUserDetail,
   lockUser,
   unlockUser,
+  updateUser,
 }: UsersManagementTableProps) {
   const {
     detailUser,
     handleCreateMockUser,
+    handleUpdateUser,
     handleViewUser,
     isCreatingUser,
     isLoadingDetail,
+    isUpdatingUser,
     pendingAction,
     setDetailUser,
     setPendingAction,
   } = useAdminUsersController({
     createUser,
     fetchUserDetail,
+    updateUser,
   });
 
   return (
@@ -67,7 +71,6 @@ export function UsersManagementTable({
         getRowId={(user) => user.id}
         initialPageSize={25}
         onRowDoubleClick={handleViewUser}
-        renderDetail={(user) => <UserDetail user={user} />}
         renderRowActions={(user, { refresh }) => (
           <div className="flex justify-end gap-1">
             <Button
@@ -133,7 +136,9 @@ export function UsersManagementTable({
       />
 
       <UserDetailDrawer
+        isSubmitting={isUpdatingUser}
         onOpenChange={(open) => !open && setDetailUser(null)}
+        onSubmit={handleUpdateUser}
         user={detailUser}
       />
       <UserActionDialog

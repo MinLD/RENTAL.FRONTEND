@@ -74,6 +74,11 @@ export const API_ENDPOINTS = {
         create: "/api/mock/admin/users",
         delete: (id: string) =>
           `/api/mock/admin/users/${encodeURIComponent(id)}`,
+        update: (id: string) =>
+          `/api/mock/admin/users/${encodeURIComponent(id)}`,
+      },
+      media: {
+        upload: "/api/mock/media/uploads",
       },
       passwordReset: {
         request: "/api/mock/auth/password-reset/request",

@@ -7,15 +7,20 @@ import type {
   UserPendingAction,
   UsersManagementTableProps,
 } from "@/components/admin/users/users-management-types";
-import type { AdminUserRow } from "@/types/admin-users";
+import type { AdminUserRow, UpdateAdminUserRequest } from "@/types/admin-users";
 
 export function useAdminUsersController({
   createUser,
   fetchUserDetail,
-}: Pick<UsersManagementTableProps, "createUser" | "fetchUserDetail">) {
+  updateUser,
+}: Pick<
+  UsersManagementTableProps,
+  "createUser" | "fetchUserDetail" | "updateUser"
+>) {
   const [detailUser, setDetailUser] = useState<AdminUserRow | null>(null);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [pendingAction, setPendingAction] = useState<UserPendingAction>(null);
 
   async function handleViewUser(user: AdminUserRow) {
@@ -55,12 +60,36 @@ export function useAdminUsersController({
     }
   }
 
+  async function handleUpdateUser(
+    id: string,
+    request: UpdateAdminUserRequest,
+    refresh?: () => void,
+  ) {
+    setIsUpdatingUser(true);
+
+    try {
+      const updatedUser = await updateUser(id, request);
+
+      setDetailUser(updatedUser);
+      toast.success("Đã cập nhật user.");
+      refresh?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể cập nhật user.",
+      );
+    } finally {
+      setIsUpdatingUser(false);
+    }
+  }
+
   return {
     detailUser,
     handleCreateMockUser,
+    handleUpdateUser,
     handleViewUser,
     isCreatingUser,
     isLoadingDetail,
+    isUpdatingUser,
     pendingAction,
     setDetailUser,
     setPendingAction,

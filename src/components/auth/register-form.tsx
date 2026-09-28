@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { LockKeyhole, Mail, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,20 +20,6 @@ import {
   getGoogleLoginUrl,
   register as registerAccount,
 } from "@/services/auth-service";
-import { cn } from "@/utils/cn";
-
-const accountTypes = [
-  {
-    icon: UserRound,
-    label: "Khách thuê",
-    value: "customer",
-  },
-  {
-    icon: Building2,
-    label: "Nhà cung cấp",
-    value: "supplier",
-  },
-] as const;
 
 export function RegisterForm() {
   const router = useRouter();
@@ -76,37 +62,6 @@ export function RegisterForm() {
 
   return (
     <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-      {/* <Controller
-        control={control}
-        name="accountType"
-        render={({ field }) => (
-          <div className="grid grid-cols-2 gap-3">
-            {accountTypes.map((accountType) => {
-              const Icon = accountType.icon;
-              const isActive = field.value === accountType.value;
-
-              return (
-                <button
-                  className={cn(
-                    "inline-flex h-10 items-center justify-center gap-2 rounded border px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-foreground hover:border-primary hover:text-primary",
-                  )}
-                  key={accountType.value}
-                  onBlur={field.onBlur}
-                  onClick={() => field.onChange(accountType.value)}
-                  type="button"
-                >
-                  <Icon size={16} />
-                  {accountType.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      /> */}
-
       {errors.accountType?.message ? (
         <p className="text-xs font-medium text-error">
           {errors.accountType.message}

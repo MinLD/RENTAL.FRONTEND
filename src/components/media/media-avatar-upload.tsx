@@ -22,8 +22,11 @@ type MediaAvatarUploadProps = {
     mediaId: string | string[],
     upload: MediaUploadResponse | MediaUploadResponse[],
   ) => void;
+  onUploadingChange?: (isUploading: boolean) => void;
   previewUrl?: string | string[] | null;
   size?: "md" | "lg" | "xl";
+  uploadFile?: (file: File) => Promise<MediaUploadResponse>;
+  uploadFiles?: (files: File[]) => Promise<MediaUploadResponse[]>;
 };
 
 const sizeClassName = {
@@ -46,8 +49,11 @@ export function MediaAvatarUpload({
   fieldName,
   mode = "single",
   onChange,
+  onUploadingChange,
   previewUrl,
   size = "lg",
+  uploadFile,
+  uploadFiles,
 }: MediaAvatarUploadProps) {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,11 +73,16 @@ export function MediaAvatarUpload({
     }
 
     setIsUploading(true);
+    onUploadingChange?.(true);
 
     try {
       const uploads = isMultiple
-        ? await uploadMediaFiles(selectedFiles, { fieldName })
-        : await uploadMediaFile(selectedFiles[0], { fieldName });
+        ? uploadFiles
+          ? await uploadFiles(selectedFiles)
+          : await uploadMediaFiles(selectedFiles, { fieldName })
+        : uploadFile
+          ? await uploadFile(selectedFiles[0])
+          : await uploadMediaFile(selectedFiles[0], { fieldName });
       const uploadList = Array.isArray(uploads) ? uploads : [uploads];
 
       setLocalPreviewUrls(uploadList.map((upload) => upload.previewUrl));
@@ -92,6 +103,7 @@ export function MediaAvatarUpload({
       );
     } finally {
       setIsUploading(false);
+      onUploadingChange?.(false);
 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";

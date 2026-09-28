@@ -1,6 +1,7 @@
 import type {
   AdminUserRow,
   CreateAdminUserRequest,
+  UpdateAdminUserRequest,
 } from "@/types/admin-users";
 import type {
   DataTableFetchParams,
@@ -23,4 +24,8 @@ export type UsersManagementTableProps = {
   fetchUserDetail: (id: string) => Promise<AdminUserRow>;
   lockUser: (id: string) => Promise<void>;
   unlockUser: (id: string) => Promise<void>;
+  updateUser: (
+    id: string,
+    request: UpdateAdminUserRequest,
+  ) => Promise<AdminUserRow>;
 };

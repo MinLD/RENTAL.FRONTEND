@@ -187,6 +187,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   const fetchRequestIdRef = useRef(0);
   const hasActions = Boolean(renderRowActions);
   const canOpenDetail = Boolean(renderDetail);
+  const canInteractWithRow = canOpenDetail || Boolean(onRowDoubleClick);
   const isRemoteDataTable = Boolean(fetchData);
   const activeKeyword = searchValue ?? internalKeyword;
   const activeFilterParams = filterParams ?? internalFilterParams;
@@ -526,7 +527,10 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
               ) : activeData.length ? (
                 activeData.map((row) => (
                   <TableRow
-                    className={cn("group", canOpenDetail && "cursor-pointer")}
+                    className={cn(
+                      "group",
+                      canInteractWithRow && "cursor-pointer",
+                    )}
                     key={getRowId(row)}
                     onDoubleClick={() => {
                       if (onRowDoubleClick) {

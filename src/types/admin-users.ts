@@ -1,6 +1,7 @@
 export type AdminUserStatus = "active" | "locked";
 
 export type AdminUserRow = {
+  avatarMediaId?: string;
   avatarUrl?: string;
   createdAtUtc?: string;
   email: string;
@@ -17,6 +18,15 @@ export type CreateAdminUserRequest = {
   name: string;
   phone: string;
   role: string;
+};
+
+export type UpdateAdminUserRequest = {
+  avatarMediaId?: string;
+  email: string;
+  name: string;
+  phone: string;
+  role: string;
+  status: AdminUserStatus;
 };
 
 export type AdminUsersFilterParams = {

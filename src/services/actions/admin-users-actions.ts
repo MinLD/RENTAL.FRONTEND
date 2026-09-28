@@ -9,6 +9,7 @@ import type {
   AdminUserRow,
   AdminUsersFilterParams,
   CreateAdminUserRequest,
+  UpdateAdminUserRequest,
 } from "@/types/admin-users";
 import type {
   DataTableFetchParams,
@@ -85,6 +86,24 @@ export async function deleteUserAction(id: string) {
     {
       method: "DELETE",
     },
+  );
+}
+
+export async function updateUserAction(
+  id: string,
+  request: UpdateAdminUserRequest,
+) {
+  return mapMockAdminUser(
+    await fetchMockJson<AdminUserRow>(
+      await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.update(id)),
+      {
+        body: JSON.stringify(request),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PUT",
+      },
+    ),
   );
 }
 
@@ -184,6 +203,7 @@ function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
   const globalRoles = user.globalRoles?.filter(Boolean) ?? [];
 
   return {
+    avatarMediaId: undefined,
     avatarUrl: user.avatarUrl ?? undefined,
     createdAtUtc: user.createdAtUtc,
     email: user.email ?? "-",
@@ -193,6 +213,16 @@ function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
     phone: user.phoneNumber?.trim(),
     role: globalRoles.length ? globalRoles.join(", ") : undefined,
     status: user.isActive ? "active" : "locked",
+  };
+}
+
+function mapMockAdminUser(user: AdminUserRow): AdminUserRow {
+  return {
+    ...user,
+    email: user.email || "-",
+    globalRoles: user.globalRoles?.filter(Boolean) ?? [],
+    name: user.name?.trim() || user.email || "Chưa có tên",
+    role: user.role?.trim() || user.globalRoles?.[0] || "User",
   };
 }
 
