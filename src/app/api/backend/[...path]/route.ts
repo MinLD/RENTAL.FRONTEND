@@ -17,7 +17,12 @@ type BackendProxyContext = {
   }>;
 };
 
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "cookie"];
+const FORWARDED_REQUEST_HEADERS = [
+  "accept",
+  "content-type",
+  "cookie",
+  "Idempotency-Key",
+];
 
 function buildForwardedHeaders(request: NextRequest, cookieHeader?: string) {
   const headers = new Headers();

@@ -86,7 +86,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
         aria-controls={panelId}
         aria-expanded={isOpen}
         aria-label="Mở menu"
-        className="inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
         onClick={() => setIsOpen(true)}
         type="button"
       >
@@ -101,7 +101,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
       >
         <button
           aria-label="Đóng menu"
-          className={`absolute inset-0 bg-foreground/50 transition-opacity ${
+          className={`absolute inset-0 cursor-pointer bg-foreground/50 transition-opacity ${
             isOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setIsOpen(false)}
@@ -134,7 +134,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
 
             <button
               aria-label="Đóng menu"
-              className="inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+              className="inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
               onClick={() => setIsOpen(false)}
               type="button"
             >
@@ -180,7 +180,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
           <div className="border-t border-border p-4">
             {user ? (
               <button
-                className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
                 disabled={isLoggingOut}
                 onClick={handleLogout}
                 type="button"

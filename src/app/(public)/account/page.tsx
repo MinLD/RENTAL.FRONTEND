@@ -5,12 +5,10 @@ import {
   type AccountProfileInitialData,
 } from "@/components/account/account-profile-form";
 import { Container } from "@/components/layout/container";
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { serverApi } from "@/services/server-api";
 import { getCurrentUser } from "@/services/session-service";
 import type { ExternalLoginResponse, UserSessionResponse } from "@/types/auth";
-
-const EXTERNAL_LOGINS_ENDPOINT = "/api/v1/auth/users/me/external-logins";
-const USER_SESSIONS_ENDPOINT = "/api/v1/auth/users/me/sessions";
 
 export default async function AccountPage() {
   const user = (await getCurrentUser()) ?? {
@@ -24,6 +22,7 @@ export default async function AccountPage() {
   const sessions = await getInitialSessions();
   const externalLogins = await getInitialExternalLogins();
   const initialProfile: AccountProfileInitialData = {
+    avatarMediaId: user.avatarMediaId ?? "",
     avatarUrl: user.avatarUrl ?? "",
     dateOfBirth: toDateInputValue(user.dateOfBirth),
     email: user.email,
@@ -60,7 +59,7 @@ export default async function AccountPage() {
 
 async function getInitialSessions() {
   try {
-    const response = await serverApi(USER_SESSIONS_ENDPOINT);
+    const response = await serverApi(API_ENDPOINTS.backend.currentUser.sessions);
 
     if (!response.ok) {
       return [];
@@ -74,7 +73,9 @@ async function getInitialSessions() {
 
 async function getInitialExternalLogins() {
   try {
-    const response = await serverApi(EXTERNAL_LOGINS_ENDPOINT);
+    const response = await serverApi(
+      API_ENDPOINTS.backend.currentUser.externalLogins,
+    );
 
     if (!response.ok) {
       return [];

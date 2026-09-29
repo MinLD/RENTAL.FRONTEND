@@ -313,7 +313,7 @@ function VerifyCodeStep({
           </p>
         </div>
         <button
-          className="shrink-0 text-sm font-bold text-primary hover:opacity-80"
+          className="shrink-0 cursor-pointer text-sm font-bold text-primary hover:opacity-80"
           onClick={onChangeIdentifier}
           type="button"
         >
@@ -370,7 +370,7 @@ function VerifyCodeStep({
       <p className="mt-7 text-center text-sm text-muted-foreground">
         Chưa nhận được mã?{" "}
         <button
-          className="font-semibold text-primary disabled:text-muted-foreground"
+          className="cursor-pointer font-semibold text-primary disabled:cursor-not-allowed disabled:text-muted-foreground"
           disabled={resendInSeconds > 0 || isResending}
           onClick={handleResendCode}
           type="button"
@@ -384,7 +384,7 @@ function VerifyCodeStep({
       </p>
 
       <button
-        className="mx-auto mt-8 flex items-center gap-2 text-sm font-semibold text-secondary hover:text-primary"
+        className="mx-auto mt-8 flex cursor-pointer items-center gap-2 text-sm font-semibold text-secondary hover:text-primary"
         onClick={onChangeIdentifier}
         type="button"
       >

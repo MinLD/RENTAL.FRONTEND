@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import { copyAuthCookies } from "@/services/auth-cookie";
 
 export async function POST(request: Request) {
   const backendResponse = await fetch(
-    buildBackendApiUrl("/api/v1/auth/login"),
+    buildBackendApiUrl(API_ENDPOINTS.backend.auth.login),
     {
       body: await request.text(),
       cache: "no-store",

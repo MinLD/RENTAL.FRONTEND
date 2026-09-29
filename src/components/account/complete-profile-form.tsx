@@ -1,14 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, Camera, IdCard, Phone, UserRound } from "lucide-react";
+import { CalendarDays, IdCard, Phone, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { getUserInitials } from "@/components/account/account-utils";
 import { TextField } from "@/components/forms/text-field";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
 import {
   completeProfileSchema,
@@ -24,6 +25,10 @@ type CompleteProfileFormProps = {
 
 export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
   const router = useRouter();
+  const [avatarMediaId, setAvatarMediaId] = useState(user.avatarMediaId ?? "");
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
+    user.avatarUrl ?? "",
+  );
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -41,7 +46,7 @@ export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
   async function onSubmit(values: CompleteProfileFormValues) {
     try {
       await completeCurrentUserProfile({
-        avatarUrl: user.avatarUrl ?? null,
+        avatarMediaId: avatarMediaId || null,
         citizenId: values.citizenId.trim(),
         dateOfBirth: values.dateOfBirth,
         fullName: values.fullName.trim(),
@@ -143,23 +148,17 @@ export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
           </div>
 
           <div className="mt-8 flex items-center gap-5">
-            <div className="relative">
-              <Avatar className="h-20 w-20 bg-secondary text-secondary-foreground">
-                {user.avatarUrl ? (
-                  <AvatarImage alt={user.name} src={user.avatarUrl} />
-                ) : null}
-                <AvatarFallback className="bg-secondary text-xl font-bold text-secondary-foreground">
-                  {getUserInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                aria-label="Cập nhật ảnh đại diện"
-                className="absolute bottom-0 right-0 inline-flex size-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
-                type="button"
-              >
-                <Camera size={14} />
-              </button>
-            </div>
+            <MediaAvatarUpload
+              fallbackText={getUserInitials(user.name)}
+              onChange={(mediaId, upload) => {
+                if (typeof mediaId === "string" && !Array.isArray(upload)) {
+                  setAvatarMediaId(mediaId);
+                  setAvatarPreviewUrl(upload.previewUrl);
+                }
+              }}
+              previewUrl={avatarPreviewUrl}
+              size="md"
+            />
             <div>
               <p className="text-sm font-bold text-foreground">Ảnh đại diện</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">

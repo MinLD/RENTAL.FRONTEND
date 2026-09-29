@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
 import type { CurrentUserResponse } from "@/types/auth";
 
@@ -38,9 +39,12 @@ export function GoogleCallbackView() {
 
     async function completeGoogleLogin() {
       try {
-        await authApiClientJson<CurrentUserResponse>("/api/v1/auth/users/me", {
-          method: "GET",
-        });
+        await authApiClientJson<CurrentUserResponse>(
+          API_ENDPOINTS.backend.currentUser.me,
+          {
+            method: "GET",
+          },
+        );
 
         if (!isMounted) {
           return;

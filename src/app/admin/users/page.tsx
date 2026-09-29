@@ -1,14 +1,24 @@
+import { UsersManagementTable } from "@/components/admin/users/users-management-table";
+import {
+  createUserAction,
+  deleteUserAction,
+  getUserDetailAction,
+  getUsersAction,
+  lockUserAction,
+  unlockUserAction,
+  updateUserAction,
+} from "@/services/actions/admin-users-actions";
+
 export default function UsersPage() {
   return (
-    <section className="rounded-xl border border-border bg-background p-6 shadow-sm">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-        Dashboard user
-      </p>
-      <h1 className="mt-2 text-3xl font-bold text-foreground">Quản trị user</h1>
-      <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-        Khung dashboard admin đã sẵn sàng. Bước tiếp theo có thể thay menu tĩnh
-        bằng API navigation theo RBAC.
-      </p>
-    </section>
+    <UsersManagementTable
+      createUser={createUserAction}
+      deleteUser={deleteUserAction}
+      fetchUserDetail={getUserDetailAction}
+      fetchUsers={getUsersAction}
+      lockUser={lockUserAction}
+      unlockUser={unlockUserAction}
+      updateUser={updateUserAction}
+    />
   );
 }

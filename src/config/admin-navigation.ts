@@ -8,7 +8,7 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
   },
   {
     href: "/admin/users",
-    icon: "file-text",
+    icon: "user-pen",
     label: "Quản lý người dùng",
   },
   // {
@@ -51,11 +51,11 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
   //   icon: "bar-chart",
   //   label: "Báo cáo",
   // },
-  {
-    href: "/admin/settings",
-    icon: "settings",
-    label: "Cài đặt",
-  },
+  // {
+  //   href: "/admin/settings",
+  //   icon: "settings",
+  //   label: "Cài đặt",
+  // },
 ];
 
 export function filterDashboardNavigationByPermissions(

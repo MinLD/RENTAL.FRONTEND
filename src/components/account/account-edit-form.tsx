@@ -21,6 +21,7 @@ import {
 } from "@/services/actions/account-actions";
 
 type AccountEditFormProps = {
+  avatarMediaId?: string;
   initialProfile: AccountProfileInitialData;
 };
 
@@ -28,7 +29,10 @@ const initialUpdateProfileActionState: UpdateProfileActionState = {
   success: false,
 };
 
-export function AccountEditForm({ initialProfile }: AccountEditFormProps) {
+export function AccountEditForm({
+  avatarMediaId,
+  initialProfile,
+}: AccountEditFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
@@ -70,9 +74,9 @@ export function AccountEditForm({ initialProfile }: AccountEditFormProps) {
 
       <form action={formAction} className="mt-6" key={formKey} ref={formRef}>
         <input
-          name="avatarUrl"
+          name="avatarMediaId"
           type="hidden"
-          value={initialProfile.avatarUrl ?? ""}
+          value={avatarMediaId ?? initialProfile.avatarMediaId ?? ""}
         />
 
         {state.message && !state.success ? (

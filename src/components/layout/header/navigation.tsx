@@ -8,7 +8,7 @@ export function Navigation() {
     <nav aria-label="Điều hướng chính" className="hidden bg-navy text-navy-foreground md:block">
       <Container className="flex h-10 items-stretch">
         <button
-          className="inline-flex shrink-0 items-center gap-2 bg-primary px-3 text-xs font-semibold text-primary-foreground lg:px-5"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-2 bg-primary px-3 text-xs font-semibold text-primary-foreground lg:px-5"
           type="button"
         >
           <svg

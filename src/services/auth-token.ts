@@ -2,7 +2,7 @@ const JWT_PARTS_LENGTH = 3;
 
 type JwtPayload = {
   exp?: unknown;
-  isProfileCompleted?: unknown;
+  pc?: unknown;
   p?: unknown;
   r?: unknown;
 };
@@ -67,7 +67,7 @@ export function getJwtProfileCompleted(token: string | null | undefined) {
   }
 
   const payload = getJwtPayload(token);
-  const profileCompleted = payload?.isProfileCompleted;
+  const profileCompleted = payload?.pc;
 
   if (typeof profileCompleted === "boolean") {
     return profileCompleted;

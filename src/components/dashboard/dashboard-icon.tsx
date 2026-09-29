@@ -9,6 +9,7 @@ import {
   Settings,
   ShieldCheck,
   Truck,
+  UserPen,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const DASHBOARD_ICON_MAP: Record<DashboardNavigationIcon, LucideIcon> = {
   settings: Settings,
   shield: ShieldCheck,
   truck: Truck,
+  "user-pen": UserPen,
   users: Users,
 };
 

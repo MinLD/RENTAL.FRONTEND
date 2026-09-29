@@ -9,6 +9,7 @@ export type DashboardNavigationIcon =
   | "settings"
   | "shield"
   | "truck"
+  | "user-pen"
   | "users";
 
 export type DashboardNavigationItem = {

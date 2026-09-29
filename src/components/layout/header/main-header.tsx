@@ -29,7 +29,7 @@ export async function MainHeader() {
         <div className="order-last flex w-full min-w-0 items-center gap-2 md:order-none md:flex-1">
           <button
             aria-label="Mở danh mục thiết bị"
-            className="inline-flex h-9 shrink-0 items-center gap-1 rounded border border-primary bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover md:hidden"
+            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded border border-primary bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover md:hidden"
             type="button"
           >
             Tất cả
@@ -73,7 +73,7 @@ export async function MainHeader() {
               />
             </div>
             <button
-              className="inline-flex shrink-0 items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
+              className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
               type="button"
             >
               <span className="hidden sm:inline">TÌM MÁY</span>
@@ -104,7 +104,7 @@ export async function MainHeader() {
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             aria-label="Thông báo"
-            className="relative inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+            className="relative inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
             type="button"
           >
             <Bell size="20" />

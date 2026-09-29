@@ -1,12 +1,10 @@
 "use server";
 
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
-
-const CHANGE_PASSWORD_ENDPOINT = "/api/v1/auth/users/me/password";
-const USER_PROFILE_ENDPOINT = "/api/v1/auth/users/me";
 
 export type UpdateProfileActionState = {
   fieldErrors?: Partial<
@@ -50,9 +48,9 @@ export async function updateProfileAction(
     };
   }
 
-  const response = await serverApi(USER_PROFILE_ENDPOINT, {
+  const response = await serverApi(API_ENDPOINTS.backend.currentUser.me, {
     json: {
-      avatarUrl: normalizeNullableFormValue(formData.get("avatarUrl")),
+      avatarMediaId: normalizeNullableFormValue(formData.get("avatarMediaId")),
       dateOfBirth: normalizeNullableText(parsedForm.data.dateOfBirth),
       fullName: parsedForm.data.fullName.trim(),
       phoneNumber: normalizeNullableText(parsedForm.data.phoneNumber),
@@ -100,14 +98,17 @@ export async function changePasswordAction(
     };
   }
 
-  const response = await serverApi(CHANGE_PASSWORD_ENDPOINT, {
-    json: {
-      confirmPassword: parsedForm.data.confirmPassword,
-      currentPassword: parsedForm.data.currentPassword,
-      newPassword: parsedForm.data.newPassword,
+  const response = await serverApi(
+    API_ENDPOINTS.backend.currentUser.changePassword,
+    {
+      json: {
+        confirmPassword: parsedForm.data.confirmPassword,
+        currentPassword: parsedForm.data.currentPassword,
+        newPassword: parsedForm.data.newPassword,
+      },
+      method: "PATCH",
     },
-    method: "PATCH",
-  });
+  );
 
   if (!response.ok) {
     return {

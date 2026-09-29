@@ -62,10 +62,6 @@ function isAuthenticatedRoute(pathname: string) {
   return AUTHENTICATED_ROUTES.some((route) => isRouteMatch(pathname, route));
 }
 
-function isHomeRoute(pathname: string) {
-  return pathname === "/";
-}
-
 function isCompleteProfileRoute(pathname: string) {
   return isRouteMatch(pathname, COMPLETE_PROFILE_ROUTE);
 }
@@ -117,8 +113,9 @@ function buildRouteAccessRedirect(
   const portalRoute = getPortalRoute(pathname);
   const authenticatedHomePath = getAuthenticatedHomePath(accessToken);
   const profileCompleted = getJwtProfileCompleted(accessToken);
+  const hasPortalHome = authenticatedHomePath !== "/";
 
-  if (isHomeRoute(pathname) && authenticatedHomePath !== "/") {
+  if (hasPortalHome && !isRouteMatch(pathname, authenticatedHomePath)) {
     return buildAuthenticatedRedirect(request, accessToken);
   }
 

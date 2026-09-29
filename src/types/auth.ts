@@ -1,4 +1,5 @@
 export type AuthUser = {
+  avatarMediaId?: string | null;
   avatarUrl?: string | null;
   dateOfBirth?: string | null;
   email: string;
@@ -20,6 +21,7 @@ export type UserOrganizationResponse = {
 };
 
 export type CurrentUserResponse = {
+  avatarMediaId?: string | null;
   avatarUrl?: string | null;
   createdAt: string;
   dateOfBirth?: string | null;
@@ -52,7 +54,7 @@ export type ExternalLoginResponse = {
 };
 
 export type CompleteProfileRequest = {
-  avatarUrl?: string | null;
+  avatarMediaId?: string | null;
   citizenId?: string | null;
   dateOfBirth?: string | null;
   fullName?: string | null;
