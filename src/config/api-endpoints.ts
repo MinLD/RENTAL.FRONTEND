@@ -47,17 +47,19 @@ export const API_ENDPOINTS = {
       register: "/api/v1/auth/register",
     },
     currentUser: {
-      changePassword: "/api/v1/auth/users/me/change-password",
-      externalLogins: "/api/v1/auth/users/me/external-logins",
+      changePassword: "/api/v1/auth/users/change-password",
+      deactivate: "/api/v1/auth/users/deactivate",
+      externalLogins: "/api/v1/auth/users/external-logins",
       externalLogin: (provider: string) =>
-        `/api/v1/auth/users/me/external-logins/${encodeURIComponent(provider)}`,
+        `/api/v1/auth/users/external-logins/${encodeURIComponent(provider)}`,
       externalLoginLink: (provider: string) =>
-        `/api/v1/auth/users/me/external-logins/${encodeURIComponent(provider)}/link`,
+        `/api/v1/auth/users/external-logins/${encodeURIComponent(provider)}/link`,
       me: "/api/v1/auth/users/me",
+      organizations: "/api/v1/auth/users/organizations",
       profile: "/api/v1/auth/users/profile",
       session: (sessionId: string) =>
-        `/api/v1/auth/users/me/sessions/${encodeURIComponent(sessionId)}`,
-      sessions: "/api/v1/auth/users/me/sessions",
+        `/api/v1/auth/users/sessions/${encodeURIComponent(sessionId)}`,
+      sessions: "/api/v1/auth/users/sessions",
     },
     media: {
       upload: "/api/v1/media/uploads",

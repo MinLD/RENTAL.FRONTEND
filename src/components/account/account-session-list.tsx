@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { formatDateTime } from "@/components/account/account-utils";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getUserSessions, revokeUserSession } from "@/services/account-service";
 import type { UserSessionResponse } from "@/types/auth";
 
@@ -20,6 +21,8 @@ export function AccountSessionList({
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null,
   );
+  const [pendingRevokeSession, setPendingRevokeSession] =
+    useState<UserSessionResponse | null>(null);
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
   const activeSessionsCount = sessions.filter(
     (session) => session.isActive,
@@ -48,14 +51,6 @@ export function AccountSessionList({
       return;
     }
 
-    const shouldRevoke = window.confirm(
-      "Bạn có chắc muốn thu hồi phiên đăng nhập này?",
-    );
-
-    if (!shouldRevoke) {
-      return;
-    }
-
     setRevokingSessionId(session.id);
 
     try {
@@ -66,6 +61,7 @@ export function AccountSessionList({
           (currentSession) => currentSession.id !== session.id,
         ),
       );
+      setPendingRevokeSession(null);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -115,7 +111,7 @@ export function AccountSessionList({
               <SessionRow
                 isRevoking={revokingSessionId === session.id}
                 key={session.id}
-                onRevoke={() => handleRevokeSession(session)}
+                onRevoke={() => setPendingRevokeSession(session)}
                 session={session}
               />
             ))}
@@ -126,6 +122,29 @@ export function AccountSessionList({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        confirmLabel="Thu hồi"
+        description="Phiên này sẽ bị đăng xuất khỏi hệ thống. Người dùng cần đăng nhập lại nếu muốn tiếp tục sử dụng trên thiết bị đó."
+        icon={<Trash2 className="size-5" />}
+        isSubmitting={Boolean(
+          pendingRevokeSession && revokingSessionId === pendingRevokeSession.id,
+        )}
+        onConfirm={() => {
+          if (pendingRevokeSession) {
+            void handleRevokeSession(pendingRevokeSession);
+          }
+        }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingRevokeSession(null);
+          }
+        }}
+        open={Boolean(pendingRevokeSession)}
+        submittingLabel="Đang thu hồi..."
+        title="Thu hồi phiên đăng nhập?"
+        variant="danger"
+      />
     </section>
   );
 }
