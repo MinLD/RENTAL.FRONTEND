@@ -41,8 +41,6 @@ export const API_ENDPOINTS = {
     },
     auth: {
       firebaseLogin: "/api/v1/auth/firebase/login",
-      googleExchange: "/api/v1/auth/google/exchange",
-      googleLogin: "/api/v1/auth/google/login",
       login: "/api/v1/auth/login",
       logout: "/api/v1/auth/logout",
       refresh: "/api/v1/auth/refresh",
@@ -66,7 +64,6 @@ export const API_ENDPOINTS = {
     fallbackHost: "localhost:3000",
     auth: {
       firebaseLogin: "/api/auth/firebase/login",
-      googleLogin: "/api/auth/google/login",
       login: "/api/auth/login",
       logout: "/api/auth/logout",
       refresh: "/api/auth/refresh",

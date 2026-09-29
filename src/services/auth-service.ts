@@ -13,14 +13,6 @@ import type {
   VerifyPasswordResetCodeResponse,
 } from "@/types/auth";
 
-export function getGoogleLoginUrl(returnUrl = "/") {
-  const searchParams = new URLSearchParams({
-    returnUrl,
-  });
-
-  return `${API_ENDPOINTS.internal.auth.googleLogin}?${searchParams.toString()}`;
-}
-
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.login, {
     json: {

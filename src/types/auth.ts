@@ -92,15 +92,6 @@ export type FirebaseLoginResponse = {
   refreshToken: string;
 };
 
-export type GoogleExchangeRequest = {
-  ticket: string;
-};
-
-export type GoogleExchangeResponse = {
-  accessToken: string;
-  refreshToken: string;
-};
-
 export type RegisterResponse = {
   accountId: string;
 };

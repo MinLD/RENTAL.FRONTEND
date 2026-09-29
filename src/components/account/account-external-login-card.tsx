@@ -14,7 +14,6 @@ import {
   getExternalLogins,
   unlinkExternalLogin,
 } from "@/services/account-service";
-import { getGoogleLoginUrl } from "@/services/auth-service";
 import type { ExternalLoginResponse } from "@/types/auth";
 
 type AccountExternalLoginCardProps = {
@@ -31,10 +30,6 @@ export function AccountExternalLoginCard({
   const googleLogin = externalLogins.find((login) =>
     login.provider?.toLowerCase().includes("google"),
   );
-
-  function handleLinkGoogle() {
-    window.location.assign(getGoogleLoginUrl("/account"));
-  }
 
   async function refreshExternalLogins() {
     try {
@@ -129,8 +124,8 @@ export function AccountExternalLoginCard({
                 Có thể bổ sung provider khác khi hệ thống hỗ trợ.
               </p>
             </div>
-            <Button onClick={handleLinkGoogle} type="button">
-              Liên kết Google
+            <Button disabled type="button">
+              Chưa hỗ trợ
             </Button>
           </div>
         )}
