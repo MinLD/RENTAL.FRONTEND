@@ -3,19 +3,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, Save } from "lucide-react";
 import type { SelectHTMLAttributes } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextField } from "@/components/forms/text-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
 import {
-  ADMIN_USER_ROLE_OPTIONS,
   updateAdminUserSchema,
   type UpdateAdminUserFormValues,
 } from "@/lib/validations/admin-users";
 import type {
+  AdminRoleOption,
   AdminUserRow,
   AdminUserStatus,
   UpdateAdminUserRequest,
@@ -35,6 +36,7 @@ const STATUS_OPTIONS: Array<{
 ];
 
 type UserDetailDrawerProps = {
+  fetchRoles: () => Promise<AdminRoleOption[]>;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: string, request: UpdateAdminUserRequest) => Promise<void>;
@@ -42,6 +44,7 @@ type UserDetailDrawerProps = {
 };
 
 export function UserDetailDrawer({
+  fetchRoles,
   isSubmitting = false,
   onOpenChange,
   onSubmit,
@@ -84,8 +87,9 @@ export function UserDetailDrawer({
         <UserUpdateForm
           isAvatarUploading={isUploadingAvatar}
           isSubmitting={isSubmitting}
-          key={`${user.id}-${user.email}-${user.avatarMediaId ?? ""}-${user.avatarUrl ?? ""}`}
+          key={user.id}
           onAvatarUploadingChange={setIsUploadingAvatar}
+          fetchRoles={fetchRoles}
           onSubmit={onSubmit}
           user={user}
         />
@@ -95,12 +99,14 @@ export function UserDetailDrawer({
 }
 
 function UserUpdateForm({
+  fetchRoles,
   isAvatarUploading,
   isSubmitting,
   onAvatarUploadingChange,
   onSubmit,
   user,
 }: {
+  fetchRoles: () => Promise<AdminRoleOption[]>;
   isAvatarUploading: boolean;
   isSubmitting: boolean;
   onAvatarUploadingChange: (isUploading: boolean) => void;
@@ -110,29 +116,98 @@ function UserUpdateForm({
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
     user.avatarUrl ?? "",
   );
-  const roleOptions = getRoleOptions(getUserRole(user));
+  const [avatarMediaId, setAvatarMediaId] = useState(
+    user.avatarMediaId ?? "",
+  );
+  const [roles, setRoles] = useState<AdminRoleOption[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const roleOptions = useMemo(
+    () => {
+      const options = roles
+        .filter((role) => isUuid(role.id) && role.name)
+        .map((role) => ({
+          label: role.name ?? role.id,
+          value: role.id,
+        }));
+
+      return options;
+    },
+    [roles],
+  );
   const {
     formState: { errors },
     handleSubmit,
     register,
-    setValue,
   } = useForm<UpdateAdminUserFormValues>({
     defaultValues: {
-      avatarMediaId: user.avatarMediaId ?? "",
+      citizenId: user.citizenId ?? "",
+      dateOfBirth: toDateInputValue(user.dateOfBirth),
       email: user.email,
-      name: user.name,
-      phone: user.phone ?? "",
-      role: getUserRole(user),
-      status: user.status,
+      fullName: user.name,
+      isActive: user.status,
+      phoneNumber: user.phone ?? "",
     },
     resolver: zodResolver(updateAdminUserSchema),
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRoles() {
+      setIsLoadingRoles(true);
+
+      try {
+        const nextRoles = await fetchRoles();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRoles(nextRoles);
+        setSelectedRoleId(
+          getMatchedRoleId(user, nextRoles) || nextRoles[0]?.id || "",
+        );
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Không thể tải danh sách vai trò.",
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoadingRoles(false);
+        }
+      }
+    }
+
+    void loadRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchRoles, user]);
+
   async function submitForm(values: UpdateAdminUserFormValues) {
-    await onSubmit(user.id, {
-      ...values,
-      avatarMediaId: values.avatarMediaId || undefined,
-    });
+    const normalizedAvatarMediaId = normalizeUuid(avatarMediaId);
+    const roleIds = normalizeRoleIds(selectedRoleId);
+
+    const request: UpdateAdminUserRequest = {
+      avatarMediaId: normalizedAvatarMediaId,
+      citizenId: normalizeNullableText(values.citizenId),
+      dateOfBirth: normalizeNullableText(values.dateOfBirth),
+      email: normalizeNullableText(values.email),
+      fullName: values.fullName.trim(),
+      isActive: values.isActive === "active",
+      phoneNumber: normalizeNullableText(values.phoneNumber),
+      removeAvatar: false,
+    };
+
+    if (roleIds) {
+      request.roleIds = roleIds;
+    }
+
+    await onSubmit(user.id, request);
   }
 
   const disabled = isSubmitting || isAvatarUploading;
@@ -149,10 +224,7 @@ function UserUpdateForm({
           fallbackText={getInitials(user.name)}
           onChange={(mediaId, upload) => {
             if (typeof mediaId === "string" && !Array.isArray(upload)) {
-              setValue("avatarMediaId", mediaId, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
+              setAvatarMediaId(mediaId);
               setAvatarPreviewUrl(upload.previewUrl);
             }
           }}
@@ -171,9 +243,9 @@ function UserUpdateForm({
         <TextField disabled label="ID" readOnly value={user.id} />
         <TextField
           disabled={disabled}
-          error={errors.name?.message}
+          error={errors.fullName?.message}
           label="Họ tên"
-          {...register("name")}
+          {...register("fullName")}
         />
         <TextField
           disabled={disabled}
@@ -184,23 +256,37 @@ function UserUpdateForm({
         />
         <TextField
           disabled={disabled}
-          error={errors.phone?.message}
+          error={errors.phoneNumber?.message}
           label="Số điện thoại"
-          {...register("phone")}
+          {...register("phoneNumber")}
+        />
+        <TextField
+          disabled={disabled}
+          error={errors.dateOfBirth?.message}
+          label="Ngày sinh"
+          type="date"
+          {...register("dateOfBirth")}
+        />
+        <TextField
+          disabled={disabled}
+          error={errors.citizenId?.message}
+          inputMode="numeric"
+          label="CCCD/CMND"
+          {...register("citizenId")}
         />
         <SelectField
-          disabled={disabled}
-          error={errors.role?.message}
+          disabled={disabled || isLoadingRoles}
           label="Vai trò"
           options={roleOptions}
-          {...register("role")}
+          onChange={(event) => setSelectedRoleId(event.target.value)}
+          value={selectedRoleId}
         />
         <SelectField
           disabled={disabled}
-          error={errors.status?.message}
+          error={errors.isActive?.message}
           label="Trạng thái"
           options={STATUS_OPTIONS}
-          {...register("status")}
+          {...register("isActive")}
         />
         <TextField
           disabled
@@ -237,7 +323,7 @@ function SelectField({
       <select
         aria-invalid={error ? true : undefined}
         className={cn(
-          "flex h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60",
+          "flex h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-base font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 md:text-sm",
           error && "border-error",
         )}
         disabled={disabled}
@@ -252,23 +338,6 @@ function SelectField({
       {error ? <p className="text-xs font-medium text-error">{error}</p> : null}
     </label>
   );
-}
-
-function getUserRole(user: AdminUserRow) {
-  return user.role?.trim() || user.globalRoles?.[0] || "User";
-}
-
-function getRoleOptions(currentRole: string) {
-  const options = new Set<string>(ADMIN_USER_ROLE_OPTIONS);
-
-  if (currentRole) {
-    options.add(currentRole);
-  }
-
-  return Array.from(options).map((option) => ({
-    label: option,
-    value: option,
-  }));
 }
 
 function formatDateTime(value?: string) {
@@ -286,4 +355,50 @@ function formatDateTime(value?: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function getMatchedRoleId(user: AdminUserRow, roles: AdminRoleOption[]) {
+  const userRoleNames = new Set(
+    (user.globalRoles ?? []).map((roleName) => roleName.toLowerCase()),
+  );
+
+  return (
+    roles.find(
+      (role) =>
+        isUuid(role.id) &&
+        role.name &&
+        userRoleNames.has(role.name.toLowerCase()),
+    )?.id ?? ""
+  );
+}
+
+function isUuid(value?: string | null): value is string {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        value,
+      ),
+  );
+}
+
+function normalizeUuid(value?: string | null) {
+  return isUuid(value) ? value : null;
+}
+
+function normalizeRoleIds(value?: string | null) {
+  return isUuid(value) ? [value] : undefined;
+}
+
+function normalizeNullableText(value?: string | null) {
+  const normalizedValue = value?.trim();
+
+  return normalizedValue ? normalizedValue : null;
+}
+
+function toDateInputValue(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  return value.split("T")[0] ?? "";
 }

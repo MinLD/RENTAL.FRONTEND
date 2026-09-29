@@ -8,28 +8,54 @@ import { Container } from "@/components/layout/container";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { serverApi } from "@/services/server-api";
 import { getCurrentUser } from "@/services/session-service";
-import type { ExternalLoginResponse, UserSessionResponse } from "@/types/auth";
+import type {
+  CurrentUserResponse,
+  ExternalLoginResponse,
+  UserSessionResponse,
+} from "@/types/auth";
+import {
+  type ApiValueResult,
+  unwrapApiValue,
+} from "@/utils/api-result";
+import {
+  getAuthUserDisplayName,
+  getAuthUserIdentityNumber,
+  getAuthUserRoleLabel,
+} from "@/utils/auth-user";
 
 export default async function AccountPage() {
-  const user = (await getCurrentUser()) ?? {
-    email: "",
-    id: "",
-    isProfileCompleted: true,
-    name: "",
-    roleLabel: "Tài khoản",
-  };
-
-  const sessions = await getInitialSessions();
-  const externalLogins = await getInitialExternalLogins();
+  const [currentUser, sessions, externalLogins] = await Promise.all([
+    getCurrentUser(),
+    getInitialSessions(),
+    getInitialExternalLogins(),
+  ]);
+  const user =
+    currentUser ??
+    ({
+      avatarMediaId: null,
+      avatarUrl: null,
+      createdAt: "",
+      dateOfBirth: null,
+      email: "",
+      fullName: "",
+      hasPassword: false,
+      id: "",
+      isProfileCompleted: false,
+      maskedCitizenId: null,
+      organizations: [],
+      permissions: [],
+      phoneNumber: null,
+      roles: [],
+    } satisfies CurrentUserResponse);
   const initialProfile: AccountProfileInitialData = {
     avatarMediaId: user.avatarMediaId ?? "",
     avatarUrl: user.avatarUrl ?? "",
     dateOfBirth: toDateInputValue(user.dateOfBirth),
-    email: user.email,
-    fullName: user.name,
-    identityNumber: user.identityNumber ?? "",
+    email: user.email ?? "",
+    fullName: getAuthUserDisplayName(user),
+    identityNumber: getAuthUserIdentityNumber(user),
     phoneNumber: user.phoneNumber ?? "",
-    roleLabel: user.roleLabel,
+    roleLabel: getAuthUserRoleLabel(user),
   };
 
   return (
@@ -59,13 +85,19 @@ export default async function AccountPage() {
 
 async function getInitialSessions() {
   try {
-    const response = await serverApi(API_ENDPOINTS.backend.currentUser.sessions);
+    const response = await serverApi(
+      API_ENDPOINTS.backend.currentUser.sessions,
+    );
 
     if (!response.ok) {
       return [];
     }
 
-    return (await response.json()) as UserSessionResponse[];
+    const responseBody = (await response.json()) as
+      | ApiValueResult<UserSessionResponse[]>
+      | UserSessionResponse[];
+
+    return unwrapApiValue<UserSessionResponse[]>(responseBody);
   } catch {
     return [];
   }
@@ -81,7 +113,11 @@ async function getInitialExternalLogins() {
       return [];
     }
 
-    return (await response.json()) as ExternalLoginResponse[];
+    const responseBody = (await response.json()) as
+      | ApiValueResult<ExternalLoginResponse[]>
+      | ExternalLoginResponse[];
+
+    return unwrapApiValue<ExternalLoginResponse[]>(responseBody);
   } catch {
     return [];
   }

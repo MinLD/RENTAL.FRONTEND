@@ -12,29 +12,8 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       return null;
     }
 
-    const currentUserResponse = (await response.json()) as CurrentUserResponse;
-
-    return mapCurrentUserResponse(currentUserResponse);
+    return (await response.json()) as CurrentUserResponse;
   } catch {
     return null;
   }
 });
-
-function mapCurrentUserResponse(response: CurrentUserResponse): AuthUser {
-  const primaryOrganization = response.organizations?.[0];
-  const primaryRole = response.roles?.[0] ?? primaryOrganization?.roleName;
-
-  return {
-    avatarMediaId: response.avatarMediaId,
-    avatarUrl: response.avatarUrl,
-    dateOfBirth: response.dateOfBirth,
-    email: response.email ?? "",
-    hasPassword: response.hasPassword,
-    id: response.id,
-    identityNumber: response.maskedCitizenId ?? response.identityNumber,
-    isProfileCompleted: response.isProfileCompleted,
-    name: response.fullName ?? response.email ?? "Người dùng",
-    phoneNumber: response.phoneNumber,
-    roleLabel: primaryRole ?? "Tài khoản",
-  };
-}

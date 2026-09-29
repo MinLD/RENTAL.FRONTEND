@@ -1,5 +1,6 @@
 "use client";
 
+import { Unlink } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import {
   formatDate,
 } from "@/components/account/account-utils";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getFirebaseGoogleLoginErrorMessage } from "@/hooks/use-firebase-google-login";
 import {
   getExternalLogins,
@@ -31,6 +33,8 @@ export function AccountExternalLoginCard({
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(
     null,
   );
+  const [isUnlinkGoogleDialogOpen, setIsUnlinkGoogleDialogOpen] =
+    useState(false);
   const googleLogin = externalLogins.find((login) =>
     login.provider?.toLowerCase().includes("google"),
   );
@@ -68,20 +72,13 @@ export function AccountExternalLoginCard({
       return;
     }
 
-    const shouldUnlink = window.confirm(
-      "Bạn có chắc muốn hủy liên kết tài khoản Google?",
-    );
-
-    if (!shouldUnlink) {
-      return;
-    }
-
     setUnlinkingProvider(googleLogin.provider);
 
     try {
       await unlinkExternalLogin(googleLogin.provider);
       toast.success("Đã hủy liên kết Google.");
       await refreshExternalLogins();
+      setIsUnlinkGoogleDialogOpen(false);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -96,9 +93,13 @@ export function AccountExternalLoginCard({
   return (
     <section className="rounded-lg border border-border bg-background p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-foreground">
-          Bảo mật
-        </h2>
+        <div>
+          {" "}
+          <h2 className="text-xl font-bold text-foreground">Bảo mật</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Liên kết tài khoản của bạn.
+          </p>
+        </div>
         <ChangePasswordDialog />
       </div>
 
@@ -123,13 +124,15 @@ export function AccountExternalLoginCard({
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">
                   {displayProfileValue(googleLogin.email)} · Liên kết lúc{" "}
-                  {formatDate(googleLogin.linkedAtUtc ?? googleLogin.createdAtUtc)}
+                  {formatDate(
+                    googleLogin.linkedAtUtc ?? googleLogin.createdAtUtc,
+                  )}
                 </p>
               </div>
             </div>
             <Button
               disabled={unlinkingProvider === googleLogin.provider}
-              onClick={handleUnlinkGoogle}
+              onClick={() => setIsUnlinkGoogleDialogOpen(true)}
               type="button"
               variant="secondary"
             >
@@ -160,6 +163,21 @@ export function AccountExternalLoginCard({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        confirmLabel="Hủy liên kết"
+        description="Sau khi hủy liên kết, bạn sẽ không thể dùng tài khoản Google này để đăng nhập cho đến khi liên kết lại."
+        icon={<Unlink className="size-5" />}
+        isSubmitting={unlinkingProvider === googleLogin?.provider}
+        onConfirm={() => {
+          void handleUnlinkGoogle();
+        }}
+        onOpenChange={setIsUnlinkGoogleDialogOpen}
+        open={isUnlinkGoogleDialogOpen}
+        submittingLabel="Đang hủy..."
+        title="Hủy liên kết Google?"
+        variant="danger"
+      />
     </section>
   );
 }

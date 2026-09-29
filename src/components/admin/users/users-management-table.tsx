@@ -4,7 +4,6 @@ import {
   Eye,
   LockKeyhole,
   Plus,
-  Trash2,
   UnlockKeyhole,
 } from "lucide-react";
 
@@ -20,7 +19,7 @@ import { userColumns } from "./users-table-columns";
 
 export function UsersManagementTable({
   createUser,
-  deleteUser,
+  fetchRoles,
   fetchUsers,
   fetchUserDetail,
   lockUser,
@@ -62,6 +61,10 @@ export function UsersManagementTable({
             value: (user) => formatDateTime(user.createdAtUtc),
           },
           {
+            header: "Vai trò",
+            value: (user) => user.globalRoles?.join(", ") ?? "",
+          },
+          {
             header: "Trạng thái",
             value: (user) =>
               user.status === "active" ? "Hoạt động" : "Tạm khóa",
@@ -81,7 +84,7 @@ export function UsersManagementTable({
               aria-label="Xem chi tiết"
               disabled={isLoadingDetail}
               onClick={() => {
-                void handleViewUser(user);
+                void handleViewUser(user, refresh);
               }}
               size="icon"
               type="button"
@@ -109,18 +112,6 @@ export function UsersManagementTable({
                 <UnlockKeyhole className="size-4" />
               )}
             </Button>
-            <Button
-              aria-label="Xóa người dùng"
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={() =>
-                setPendingAction({ action: "delete", refresh, user })
-              }
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <Trash2 className="size-4" />
-            </Button>
           </div>
         )}
         renderToolbarActions={({ refresh }) => (
@@ -140,12 +131,14 @@ export function UsersManagementTable({
       />
 
       <UserCreateDrawer
+        fetchRoles={fetchRoles}
         isSubmitting={isCreatingUser}
         onOpenChange={setIsCreateDrawerOpen}
         onSubmit={handleCreateUser}
         open={isCreateDrawerOpen}
       />
       <UserDetailDrawer
+        fetchRoles={fetchRoles}
         isSubmitting={isUpdatingUser}
         onOpenChange={(open) => !open && setDetailUser(null)}
         onSubmit={handleUpdateUser}
@@ -153,7 +146,6 @@ export function UsersManagementTable({
       />
       <UserActionDialog
         action={pendingAction}
-        deleteUser={deleteUser}
         lockUser={lockUser}
         onOpenChange={(open) => !open && setPendingAction(null)}
         unlockUser={unlockUser}

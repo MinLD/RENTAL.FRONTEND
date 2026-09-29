@@ -52,6 +52,17 @@ export const userColumns: DataTableColumn<AdminUserRow>[] = [
     width: 190,
   },
   {
+    cell: (user) => (
+      <span className="block truncate font-medium text-muted-foreground">
+        {user.globalRoles?.length ? user.globalRoles.join(", ") : "-"}
+      </span>
+    ),
+    header: "Vai trò",
+    id: "roles",
+    minWidth: 180,
+    width: 220,
+  },
+  {
     cell: (user) => <UserStatusBadge status={user.status} />,
     header: "Trạng thái",
     id: "status",

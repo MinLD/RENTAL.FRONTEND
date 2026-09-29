@@ -1,4 +1,5 @@
 import type {
+  AdminRoleOption,
   AdminUserRow,
   CreateAdminUserRequest,
   UpdateAdminUserRequest,
@@ -10,14 +11,14 @@ import type {
 import type { AdminUsersFilterParams } from "@/types/admin-users";
 
 export type UserPendingAction = {
-  action: "delete" | "lock" | "unlock";
+  action: "lock" | "unlock";
   refresh: () => void;
   user: AdminUserRow;
 } | null;
 
 export type UsersManagementTableProps = {
-  createUser: (request: CreateAdminUserRequest) => Promise<AdminUserRow>;
-  deleteUser: (id: string) => Promise<void>;
+  createUser: (request: CreateAdminUserRequest) => Promise<string>;
+  fetchRoles: () => Promise<AdminRoleOption[]>;
   fetchUsers: (
     params: DataTableFetchParams<AdminUsersFilterParams>,
   ) => Promise<DataTableFetchResult<AdminUserRow>>;

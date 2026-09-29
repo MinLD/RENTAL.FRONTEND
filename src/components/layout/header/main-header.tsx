@@ -65,7 +65,7 @@ export async function MainHeader() {
                 />
               </svg>
               <input
-                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm"
                 id="header-search"
                 name="q"
                 placeholder="Bạn cần thuê thiết bị gì?"

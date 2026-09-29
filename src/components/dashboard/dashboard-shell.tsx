@@ -11,6 +11,10 @@ import {
 } from "@/components/ui/sidebar";
 import type { AuthUser } from "@/types/auth";
 import type { DashboardNavigationItem } from "@/types/dashboard-navigation";
+import {
+  getAuthUserDisplayName,
+  getAuthUserRoleLabel,
+} from "@/utils/auth-user";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -30,8 +34,9 @@ export function DashboardShell({
         user={
           user
             ? {
-                name: user.name,
-                roleLabel: user.roleLabel,
+                avatarUrl: user.avatarUrl,
+                name: getAuthUserDisplayName(user),
+                roleLabel: getAuthUserRoleLabel(user),
               }
             : null
         }

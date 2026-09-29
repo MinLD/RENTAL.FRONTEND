@@ -6,8 +6,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  ACCOUNT_PROFILE_UPDATED_EVENT,
+  type AccountProfileUpdatedEventDetail,
+} from "@/components/account/account-profile-events";
+import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { logout } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
+import {
+  getAuthUserDisplayName,
+  getAuthUserRoleLabel,
+} from "@/utils/auth-user";
 
 type UserMenuProps = Readonly<{
   user: AuthUser;
@@ -15,9 +24,46 @@ type UserMenuProps = Readonly<{
 
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
+  const [optimisticAvatar, setOptimisticAvatar] = useState<{
+    url: string;
+    userId: string;
+  } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const optimisticAvatarUrl =
+    optimisticAvatar?.userId === user.id ? optimisticAvatar.url : "";
+  const avatarUrl = optimisticAvatarUrl || user.avatarUrl;
+  const displayName = getAuthUserDisplayName(user);
+  const roleLabel = getAuthUserRoleLabel(user);
+
+  useEffect(() => {
+    function handleProfileUpdated(event: Event) {
+      const detail = (event as CustomEvent<AccountProfileUpdatedEventDetail>)
+        .detail;
+
+      if (!detail.avatarUrl || detail.userId !== user.id) {
+        return;
+      }
+
+      setOptimisticAvatar({
+        url: detail.avatarUrl,
+        userId: detail.userId,
+      });
+    }
+
+    window.addEventListener(
+      ACCOUNT_PROFILE_UPDATED_EVENT,
+      handleProfileUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        ACCOUNT_PROFILE_UPDATED_EVENT,
+        handleProfileUpdated,
+      );
+    };
+  }, [user.id]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -63,21 +109,25 @@ export function UserMenu({ user }: UserMenuProps) {
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">
-          DP
-        </span>
+        <AvatarWithSkeleton
+          alt={displayName}
+          className="size-8 bg-foreground text-background"
+          fallback={getUserInitials(displayName)}
+          fallbackClassName="bg-foreground text-xs font-bold text-background"
+          src={avatarUrl}
+        />
         <span className="hidden min-w-0 flex-1 leading-tight lg:block">
           <span
             className="block truncate text-sm font-semibold text-foreground"
-            title={user.name}
+            title={displayName}
           >
-            {user.name}
+            {displayName}
           </span>
           <span
             className="block truncate text-xs text-muted-foreground"
-            title={user.roleLabel}
+            title={roleLabel}
           >
-            {user.roleLabel}
+            {roleLabel}
           </span>
         </span>
         <ChevronDown
@@ -110,4 +160,17 @@ export function UserMenu({ user }: UserMenuProps) {
       ) : null}
     </div>
   );
+}
+
+function getUserInitials(name?: string) {
+  if (!name) {
+    return "DP";
+  }
+
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }

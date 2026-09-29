@@ -18,6 +18,7 @@ import {
 import { completeCurrentUserProfile } from "@/services/account-service";
 import { refreshSession } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
+import { getAuthUserDisplayName } from "@/utils/auth-user";
 
 type CompleteProfileFormProps = {
   user: AuthUser;
@@ -25,6 +26,7 @@ type CompleteProfileFormProps = {
 
 export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
   const router = useRouter();
+  const displayName = getAuthUserDisplayName(user);
   const [avatarMediaId, setAvatarMediaId] = useState(user.avatarMediaId ?? "");
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
     user.avatarUrl ?? "",
@@ -37,7 +39,7 @@ export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
     defaultValues: {
       citizenId: "",
       dateOfBirth: toDateInputValue(user.dateOfBirth),
-      fullName: user.name === "Người dùng" ? "" : user.name,
+      fullName: displayName === "Người dùng" ? "" : displayName,
       phoneNumber: user.phoneNumber ?? "",
     },
     resolver: zodResolver(completeProfileSchema),
@@ -149,7 +151,7 @@ export function CompleteProfileForm({ user }: CompleteProfileFormProps) {
 
           <div className="mt-8 flex items-center gap-5">
             <MediaAvatarUpload
-              fallbackText={getUserInitials(user.name)}
+              fallbackText={getUserInitials(displayName)}
               onChange={(mediaId, upload) => {
                 if (typeof mediaId === "string" && !Array.isArray(upload)) {
                   setAvatarMediaId(mediaId);

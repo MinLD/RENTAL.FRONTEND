@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { formatDateTime } from "@/components/account/account-utils";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getUserSessions, revokeUserSession } from "@/services/account-service";
 import type { UserSessionResponse } from "@/types/auth";
 
@@ -20,10 +21,11 @@ export function AccountSessionList({
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null,
   );
+  const [pendingRevokeSession, setPendingRevokeSession] =
+    useState<UserSessionResponse | null>(null);
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
-  const activeSessionsCount = sessions.filter(
-    (session) => session.isActive,
-  ).length;
+  const activeSessions = sessions.filter(isActiveSession);
+  const historySessions = sessions.filter((session) => !isActiveSession(session));
 
   async function refreshSessions() {
     setIsRefreshingSessions(true);
@@ -48,24 +50,23 @@ export function AccountSessionList({
       return;
     }
 
-    const shouldRevoke = window.confirm(
-      "Bạn có chắc muốn thu hồi phiên đăng nhập này?",
-    );
-
-    if (!shouldRevoke) {
-      return;
-    }
-
     setRevokingSessionId(session.id);
 
     try {
       await revokeUserSession(session.id);
       toast.success("Đã thu hồi phiên đăng nhập.");
       setSessions((currentSessions) =>
-        currentSessions.filter(
-          (currentSession) => currentSession.id !== session.id,
+        currentSessions.map((currentSession) =>
+          currentSession.id === session.id
+            ? {
+                ...currentSession,
+                isActive: false,
+                revokedAtUtc: new Date().toISOString(),
+              }
+            : currentSession,
         ),
       );
+      setPendingRevokeSession(null);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -86,7 +87,7 @@ export function AccountSessionList({
               Thiết bị đang đăng nhập
             </h2>
             <span className="text-xs font-semibold text-primary">
-              {activeSessionsCount} phiên đang hoạt động
+              {activeSessions.length} phiên đang hoạt động
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -109,23 +110,78 @@ export function AccountSessionList({
       </div>
 
       <div className="mt-6 max-h-[360px] overflow-y-auto pr-1">
-        {sessions.length ? (
+        {activeSessions.length ? (
           <div className="space-y-1">
-            {sessions.map((session) => (
+            {activeSessions.map((session) => (
               <SessionRow
                 isRevoking={revokingSessionId === session.id}
                 key={session.id}
-                onRevoke={() => handleRevokeSession(session)}
+                onRevoke={() => setPendingRevokeSession(session)}
                 session={session}
+                variant="active"
               />
             ))}
           </div>
         ) : (
           <div className="rounded border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-            Chưa có dữ liệu phiên đăng nhập.
+            Không có phiên đăng nhập nào đang hoạt động.
           </div>
         )}
       </div>
+
+      {historySessions.length ? (
+        <div className="mt-8 border-t border-border pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                Lịch sử đăng nhập
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Các phiên đã thu hồi hoặc đã hết hạn, chỉ dùng để đối chiếu.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">
+              {historySessions.length} phiên
+            </span>
+          </div>
+
+          <div className="mt-4 max-h-[300px] overflow-y-auto pr-1">
+            <div className="space-y-1">
+              {historySessions.map((session) => (
+                <SessionRow
+                  isRevoking={false}
+                  key={session.id}
+                  session={session}
+                  variant="history"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        confirmLabel="Thu hồi"
+        description="Phiên này sẽ bị đăng xuất khỏi hệ thống. Người dùng cần đăng nhập lại nếu muốn tiếp tục sử dụng trên thiết bị đó."
+        icon={<Trash2 className="size-5" />}
+        isSubmitting={Boolean(
+          pendingRevokeSession && revokingSessionId === pendingRevokeSession.id,
+        )}
+        onConfirm={() => {
+          if (pendingRevokeSession) {
+            void handleRevokeSession(pendingRevokeSession);
+          }
+        }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingRevokeSession(null);
+          }
+        }}
+        open={Boolean(pendingRevokeSession)}
+        submittingLabel="Đang thu hồi..."
+        title="Thu hồi phiên đăng nhập?"
+        variant="danger"
+      />
     </section>
   );
 }
@@ -134,55 +190,80 @@ function SessionRow({
   isRevoking,
   onRevoke,
   session,
+  variant,
 }: {
   isRevoking: boolean;
-  onRevoke: () => void;
+  onRevoke?: () => void;
   session: UserSessionResponse;
+  variant: "active" | "history";
 }) {
   const isDisabled = session.isCurrent || isRevoking;
+  const isHistory = variant === "history";
 
   return (
     <div className="grid gap-4 rounded-lg px-4 py-4 md:grid-cols-[minmax(0,1.5fr)_minmax(120px,0.8fr)_minmax(120px,0.8fr)_auto] md:items-center">
       <div className="flex min-w-0 items-start gap-4">
-        <span className="mt-1.5 size-4 shrink-0 rounded-full bg-primary" />
+        <span
+          className={`mt-1.5 size-4 shrink-0 rounded-full ${
+            isHistory ? "bg-muted-foreground/40" : "bg-primary"
+          }`}
+        />
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-foreground">
-            {session.isCurrent ? "Trình duyệt hiện tại" : "Thiết bị đăng nhập"}
+            {session.deviceName?.trim() ||
+              (session.isCurrent ? "Trình duyệt hiện tại" : "Thiết bị đăng nhập")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {session.isCurrent
-              ? "Phiên hiện tại"
-              : "Đăng nhập từ thiết bị khác"}
+            {session.ipAddress?.trim() || "Không có IP"}
           </p>
           {session.isCurrent ? (
             <p className="mt-2 text-xs font-semibold text-success">
               Phiên hiện tại
             </p>
           ) : null}
-          {!session.isActive ? (
+          {isHistory ? (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              Đã thu hồi
+              {session.revokedAtUtc ? "Đã thu hồi" : "Đã hết hạn"}
             </p>
           ) : null}
         </div>
       </div>
 
       <SessionTimeColumn label="Tạo lúc" value={session.createdAtUtc} />
-      <SessionTimeColumn label="Hết hạn" value={session.expiresAtUtc} />
+      <SessionTimeColumn
+        label={session.revokedAtUtc ? "Thu hồi lúc" : "Hết hạn"}
+        value={session.revokedAtUtc ?? session.expiresAtUtc}
+      />
 
-      <Button
-        className="w-fit justify-self-start md:justify-self-end"
-        disabled={isDisabled}
-        onClick={onRevoke}
-        size="sm"
-        type="button"
-        variant="secondary"
-      >
-        <Trash2 size={14} />
-        {isRevoking ? "Đang thu hồi..." : "Thu hồi"}
-      </Button>
+      {isHistory ? (
+        <span className="text-xs font-semibold text-muted-foreground md:justify-self-end">
+          Không còn hiệu lực
+        </span>
+      ) : (
+        <Button
+          className="w-fit justify-self-start md:justify-self-end"
+          disabled={isDisabled}
+          onClick={onRevoke}
+          size="sm"
+          type="button"
+          variant="secondary"
+        >
+          <Trash2 size={14} />
+          {isRevoking ? "Đang thu hồi..." : "Thu hồi"}
+        </Button>
+      )}
     </div>
   );
+}
+
+function isActiveSession(session: UserSessionResponse) {
+  if (!session.isActive || session.revokedAtUtc) {
+    return false;
+  }
+
+  const expiresAt = new Date(session.expiresAtUtc).getTime();
+
+  return Number.isNaN(expiresAt) || expiresAt > Date.now();
 }
 
 function SessionTimeColumn({ label, value }: { label: string; value: string }) {

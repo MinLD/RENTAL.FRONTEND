@@ -1,10 +1,13 @@
 "use server";
 
+import { refresh } from "next/cache";
+
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
+import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
 export type UpdateProfileActionState = {
   fieldErrors?: Partial<
@@ -48,13 +51,16 @@ export async function updateProfileAction(
     };
   }
 
-  const response = await serverApi(API_ENDPOINTS.backend.currentUser.me, {
-    json: {
-      avatarMediaId: normalizeNullableFormValue(formData.get("avatarMediaId")),
-      dateOfBirth: normalizeNullableText(parsedForm.data.dateOfBirth),
-      fullName: parsedForm.data.fullName.trim(),
-      phoneNumber: normalizeNullableText(parsedForm.data.phoneNumber),
-    },
+  const request: UpdateProfileRequest = {
+    avatarMediaId: normalizeNullableFormValue(formData.get("avatarMediaId")),
+    dateOfBirth: normalizeNullableText(parsedForm.data.dateOfBirth),
+    fullName: parsedForm.data.fullName.trim(),
+    phoneNumber: normalizeNullableText(parsedForm.data.phoneNumber),
+    removeAvatar: false,
+  };
+
+  const response = await serverApi(API_ENDPOINTS.backend.currentUser.profile, {
+    json: request,
     method: "PATCH",
   });
 
@@ -68,6 +74,7 @@ export async function updateProfileAction(
     };
   }
 
+  refresh();
   return {
     message: "Cập nhật thông tin cá nhân thành công.",
     success: true,
@@ -98,15 +105,16 @@ export async function changePasswordAction(
     };
   }
 
+  const request: ChangePasswordRequest = {
+    newPassword: parsedForm.data.newPassword,
+    oldPassword: parsedForm.data.currentPassword,
+  };
+
   const response = await serverApi(
     API_ENDPOINTS.backend.currentUser.changePassword,
     {
-      json: {
-        confirmPassword: parsedForm.data.confirmPassword,
-        currentPassword: parsedForm.data.currentPassword,
-        newPassword: parsedForm.data.newPassword,
-      },
-      method: "PATCH",
+      json: request,
+      method: "POST",
     },
   );
 

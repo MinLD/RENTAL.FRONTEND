@@ -1,15 +1,12 @@
 "use server";
 
-import { headers as getRequestHeaders } from "next/headers";
+import { z } from "zod";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import {
-  createAdminUserSchema,
-  updateAdminUserSchema,
-} from "@/lib/validations/admin-users";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
 import type {
+  AdminRoleOption,
   AdminUserRow,
   AdminUsersFilterParams,
   CreateAdminUserRequest,
@@ -19,6 +16,10 @@ import type {
   DataTableFetchParams,
   DataTableFetchResult,
 } from "@/types/data-table";
+import {
+  type ApiValueResult,
+  unwrapApiValue,
+} from "@/utils/api-result";
 
 type AdminUserListItemDto = {
   createdAtUtc?: string;
@@ -26,10 +27,17 @@ type AdminUserListItemDto = {
   fullName?: string | null;
   id?: string;
   isActive?: boolean;
+  roles?: string[] | null;
 };
 
 type AdminUserDetailDto = AdminUserListItemDto & {
+  avatarMediaId?: string | null;
   avatarUrl?: string | null;
+  avatarURL?: string | null;
+  avatarPreviewUrl?: string | null;
+  previewUrl?: string | null;
+  citizenId?: string | null;
+  dateOfBirth?: string | null;
   globalRoles?: string[] | null;
   phoneNumber?: string | null;
 };
@@ -41,6 +49,59 @@ type AdminUserListApiResponse = {
   totalCount?: number;
   totalPages?: number;
 };
+
+type AdminUserDetailApiResponse =
+  | AdminUserDetailDto
+  | ApiValueResult<AdminUserDetailDto>;
+
+type AdminRolesApiResponse =
+  | AdminRoleOption[]
+  | ApiValueResult<AdminRoleOption[]>;
+
+type RawAdminRoleOption = Partial<AdminRoleOption> & {
+  Description?: string | null;
+  Id?: string | null;
+  Name?: string | null;
+  roleId?: string | null;
+  roleName?: string | null;
+};
+
+const createAdminUserRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập email.")
+    .email("Email không hợp lệ."),
+  fullName: z.string().trim().min(1, "Vui lòng nhập họ tên."),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu."),
+  roleIds: z.array(z.string()).nullable().optional(),
+});
+
+const updateAdminUserRequestSchema = z.object({
+  avatarMediaId: z.string().nullable().optional(),
+  citizenId: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .refine((value) => !value || /^\d{12}$/.test(value), {
+      message: "CCCD/CMND phải gồm 12 chữ số.",
+    }),
+  dateOfBirth: z.string().nullable().optional(),
+  email: z.string().email("Email không hợp lệ.").nullable().optional(),
+  fullName: z.string().trim().min(1, "Vui lòng nhập họ tên."),
+  isActive: z.boolean().nullable().optional(),
+  phoneNumber: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .refine((value) => !value || /^(0|\+84)\d{9}$/.test(value), {
+      message: "Số điện thoại không hợp lệ.",
+    }),
+  removeAvatar: z.boolean(),
+  roleIds: z.array(z.string()).nullable().optional(),
+});
 
 export async function getUsersAction(
   params: DataTableFetchParams<AdminUsersFilterParams>,
@@ -62,67 +123,58 @@ export async function getUsersAction(
 }
 
 export async function getUserDetailAction(id: string) {
-  return mapAdminUserDetail(
-    await fetchBackendJson<AdminUserDetailDto>(
-      API_ENDPOINTS.backend.adminUsers.detail(id),
-      undefined,
-      "Không thể tải chi tiết user.",
-    ),
+  const response = await fetchBackendJson<AdminUserDetailApiResponse>(
+    API_ENDPOINTS.backend.adminUsers.detail(id),
+    undefined,
+    "Không thể tải chi tiết user.",
   );
+
+  return mapAdminUserDetail(unwrapApiValue<AdminUserDetailDto>(response));
 }
 
 export async function createUserAction(request: CreateAdminUserRequest) {
-  const parsedRequest = createAdminUserSchema.safeParse(request);
+  const parsedRequest = createAdminUserRequestSchema.safeParse(
+    sanitizeCreateUserRequest(request),
+  );
 
   if (!parsedRequest.success) {
     throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
   }
 
-  return mapMockAdminUser(
-    await fetchMockJson<AdminUserRow>(
-      await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.create),
-      {
-        body: JSON.stringify(parsedRequest.data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      },
-    ),
-  );
-}
-
-export async function deleteUserAction(id: string) {
-  await fetchMock(
-    await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.delete(id)),
+  const response = await fetchBackend(
+    API_ENDPOINTS.backend.adminUsers.create,
     {
-      method: "DELETE",
+      json: parsedRequest.data,
+      method: "POST",
     },
+    "Không thể tạo user.",
   );
+
+  return response.json() as Promise<string>;
 }
 
 export async function updateUserAction(
   id: string,
   request: UpdateAdminUserRequest,
 ) {
-  const parsedRequest = updateAdminUserSchema.safeParse(request);
+  const parsedRequest = updateAdminUserRequestSchema.safeParse(
+    sanitizeUpdateUserRequest(request),
+  );
 
   if (!parsedRequest.success) {
     throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
   }
 
-  return mapMockAdminUser(
-    await fetchMockJson<AdminUserRow>(
-      await buildMockUsersUrl(API_ENDPOINTS.internal.mock.adminUsers.update(id)),
-      {
-        body: JSON.stringify(parsedRequest.data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "PUT",
-      },
-    ),
+  await fetchBackend(
+    API_ENDPOINTS.backend.adminUsers.update(id),
+    {
+      json: parsedRequest.data,
+      method: "PUT",
+    },
+    "Không thể cập nhật user.",
   );
+
+  return getUserDetailAction(id);
 }
 
 export async function lockUserAction(id: string) {
@@ -145,6 +197,18 @@ export async function unlockUserAction(id: string) {
   );
 }
 
+export async function getAdminRolesAction() {
+  const response = await fetchBackendJson<AdminRolesApiResponse>(
+    API_ENDPOINTS.backend.adminUsers.roles,
+    undefined,
+    "Không thể tải danh sách vai trò.",
+  );
+
+  return unwrapApiValue<RawAdminRoleOption[]>(response)
+    .map(normalizeRoleOption)
+    .filter((role): role is AdminRoleOption => Boolean(role));
+}
+
 async function fetchBackendJson<TResponse>(
   endpoint: string,
   init: RequestInit | undefined,
@@ -161,7 +225,11 @@ async function fetchBackendJson<TResponse>(
 
 async function fetchBackend(
   endpoint: string,
-  init: RequestInit | undefined,
+  init:
+    | (Omit<RequestInit, "body"> & {
+        json?: unknown;
+      })
+    | undefined,
   fallbackMessage: string,
 ) {
   const response = await serverApi(endpoint, init);
@@ -175,55 +243,31 @@ async function fetchBackend(
   return response;
 }
 
-async function fetchMockJson<TResponse>(
-  url: URL,
-  init?: RequestInit,
-): Promise<TResponse> {
-  const response = await fetchMock(url, init);
-
-  if (response.status === 204) {
-    return undefined as TResponse;
-  }
-
-  return response.json() as Promise<TResponse>;
-}
-
-async function fetchMock(url: URL, init?: RequestInit) {
-  const response = await fetch(url, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      ...init?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      await getActionResponseErrorMessage(response, "Mock API thất bại."),
-    );
-  }
-
-  return response;
-}
-
 function mapAdminUserListItem(user: AdminUserListItemDto): AdminUserRow {
+  const roles = user.roles?.filter(Boolean) ?? [];
+
   return {
     createdAtUtc: user.createdAtUtc,
     email: user.email ?? "-",
+    globalRoles: roles,
     id: user.id ?? "",
     name: user.fullName?.trim() || user.email || "Chưa có tên",
+    role: roles.join(", ") || undefined,
     status: user.isActive ? "active" : "locked",
   };
 }
 
 function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
   const globalRoles = user.globalRoles?.filter(Boolean) ?? [];
+  const avatarUrl =
+    user.avatarUrl ?? user.avatarURL ?? user.avatarPreviewUrl ?? user.previewUrl;
 
   return {
-    avatarMediaId: undefined,
-    avatarUrl: user.avatarUrl ?? undefined,
+    avatarMediaId: isUuid(user.avatarMediaId) ? user.avatarMediaId : undefined,
+    avatarUrl: avatarUrl || undefined,
+    citizenId: user.citizenId ?? undefined,
     createdAtUtc: user.createdAtUtc,
+    dateOfBirth: user.dateOfBirth ?? undefined,
     email: user.email ?? "-",
     globalRoles,
     id: user.id ?? "",
@@ -234,36 +278,65 @@ function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
   };
 }
 
-function mapMockAdminUser(user: AdminUserRow): AdminUserRow {
+function sanitizeCreateUserRequest(
+  request: CreateAdminUserRequest,
+): CreateAdminUserRequest {
   return {
-    ...user,
-    email: user.email || "-",
-    globalRoles: user.globalRoles?.filter(Boolean) ?? [],
-    name: user.name?.trim() || user.email || "Chưa có tên",
-    role: user.role?.trim() || user.globalRoles?.[0] || "User",
+    ...request,
+    roleIds: normalizeRoleIds(request.roleIds),
   };
 }
 
-async function buildMockUsersUrl(path: string) {
-  const requestHeaders = await getRequestHeaders();
-  const host =
-    requestHeaders.get("x-forwarded-host") ??
-    requestHeaders.get("host") ??
-    API_ENDPOINTS.internal.fallbackHost;
-  const protocol =
-    requestHeaders.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
-      ? "http"
-      : "https");
+function sanitizeUpdateUserRequest(
+  request: UpdateAdminUserRequest,
+): UpdateAdminUserRequest {
+  return {
+    ...request,
+    avatarMediaId: isUuid(request.avatarMediaId)
+      ? request.avatarMediaId
+      : null,
+    roleIds: normalizeRoleIds(request.roleIds),
+  };
+}
 
-  return new URL(path, `${protocol}://${host}`);
+function normalizeRoleIds(roleIds?: string[] | null) {
+  const validRoleIds = roleIds?.filter(isUuid) ?? [];
+
+  return validRoleIds.length ? validRoleIds : undefined;
+}
+
+function normalizeRoleOption(
+  role: RawAdminRoleOption,
+): AdminRoleOption | null {
+  const id = role.id ?? role.roleId ?? role.Id ?? null;
+  const name = role.name ?? role.roleName ?? role.Name ?? null;
+
+  if (!isUuid(id) || !name) {
+    return null;
+  }
+
+  return {
+    description: role.description ?? role.Description ?? null,
+    id,
+    name,
+  };
+}
+
+function isUuid(value?: string | null): value is string {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        value,
+      ),
+  );
 }
 
 function getValidationErrorMessage(error: {
   fieldErrors: Record<string, string[] | undefined>;
 }) {
-  const messages = Object.values(error.fieldErrors).flatMap(
-    (fieldErrors) => fieldErrors ?? [],
+  const messages = Object.entries(error.fieldErrors).flatMap(
+    ([fieldName, fieldErrors]) =>
+      (fieldErrors ?? []).map((message) => `${fieldName}: ${message}`),
   );
 
   return messages[0] ?? "Vui lòng kiểm tra lại thông tin user.";

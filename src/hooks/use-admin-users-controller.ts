@@ -25,13 +25,15 @@ export function useAdminUsersController({
   const [createUserRefresh, setCreateUserRefresh] = useState<
     (() => void) | null
   >(null);
+  const [detailRefresh, setDetailRefresh] = useState<(() => void) | null>(null);
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [pendingAction, setPendingAction] = useState<UserPendingAction>(null);
 
-  async function handleViewUser(user: AdminUserRow) {
+  async function handleViewUser(user: AdminUserRow, refresh?: () => void) {
+    setDetailRefresh(() => refresh ?? null);
     setIsLoadingDetail(true);
 
     try {
@@ -70,7 +72,6 @@ export function useAdminUsersController({
   async function handleUpdateUser(
     id: string,
     request: UpdateAdminUserRequest,
-    refresh?: () => void,
   ) {
     setIsUpdatingUser(true);
 
@@ -79,7 +80,7 @@ export function useAdminUsersController({
 
       setDetailUser(updatedUser);
       toast.success("Đã cập nhật user.");
-      refresh?.();
+      detailRefresh?.();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể cập nhật user.",

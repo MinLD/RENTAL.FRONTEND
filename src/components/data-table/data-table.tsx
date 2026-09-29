@@ -699,7 +699,7 @@ function DataTablePaginationBar({
           <PaginationItem className="gap-2">
             <select
               aria-label="Rows per page"
-              className="h-10 rounded border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 rounded border border-border bg-background px-3 text-base font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
               disabled={!onPageSizeChange}
               onChange={(event) =>
                 onPageSizeChange?.(Number(event.target.value))

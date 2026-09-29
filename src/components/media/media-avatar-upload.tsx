@@ -4,7 +4,7 @@ import { Camera, LoaderCircle } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { uploadMediaFile, uploadMediaFiles } from "@/services/media-service";
 import type { MediaUploadResponse } from "@/types/media";
 import { cn } from "@/utils/cn";
@@ -85,7 +85,6 @@ export function MediaAvatarUpload({
           : await uploadMediaFile(selectedFiles[0], { fieldName });
       const uploadList = Array.isArray(uploads) ? uploads : [uploads];
 
-      console.log("[MediaUpload] upload response", uploads);
       setLocalPreviewUrls(uploadList.map((upload) => upload.previewUrl));
 
       if (Array.isArray(uploads)) {
@@ -149,7 +148,7 @@ export function MediaAvatarUpload({
       <button
         aria-label="Cập nhật ảnh"
         className={cn(
-          "relative -ml-10 mt-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover",
+          "relative z-20 -ml-10 mt-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover",
           "disabled:cursor-not-allowed disabled:opacity-70",
         )}
         disabled={disabled || isUploading}
@@ -179,22 +178,19 @@ function AvatarPreview({
 }) {
   return (
     <div className="relative">
-      <Avatar
+      <AvatarWithSkeleton
+        alt={fallbackText}
         className={cn(
           sizeClassName[size],
           "bg-secondary text-secondary-foreground",
         )}
-      >
-        {previewUrl ? <AvatarImage alt={fallbackText} src={previewUrl} /> : null}
-        <AvatarFallback
-          className={cn(
-            "bg-secondary font-bold text-secondary-foreground",
-            fallbackTextClassName[size],
-          )}
-        >
-          {fallbackText}
-        </AvatarFallback>
-      </Avatar>
+        fallback={fallbackText}
+        fallbackClassName={cn(
+          "bg-secondary font-bold text-secondary-foreground",
+          fallbackTextClassName[size],
+        )}
+        src={previewUrl}
+      />
       {isUploading ? (
         <div className="absolute inset-0 grid place-items-center rounded-full bg-background/70">
           <LoaderCircle className="size-5 animate-spin text-primary" />
