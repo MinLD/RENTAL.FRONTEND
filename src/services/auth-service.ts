@@ -3,6 +3,7 @@ import { apiClientJson } from "@/services/api-client";
 import type {
   LoginResponse,
   LoginRequest,
+  FirebaseLoginRequest,
   RequestPasswordResetRequest,
   RequestPasswordResetResponse,
   ResetPasswordRequest,
@@ -26,6 +27,15 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
       email: request.email,
       password: request.password,
     },
+    method: "POST",
+  });
+}
+
+export async function loginWithFirebaseIdToken(
+  request: FirebaseLoginRequest,
+): Promise<LoginResponse> {
+  return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.firebaseLogin, {
+    json: request,
     method: "POST",
   });
 }

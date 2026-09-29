@@ -83,6 +83,15 @@ export type LoginResponse = {
   userId?: string | null;
 };
 
+export type FirebaseLoginRequest = {
+  idToken: string;
+};
+
+export type FirebaseLoginResponse = {
+  accessToken: string;
+  refreshToken: string;
+};
+
 export type GoogleExchangeRequest = {
   ticket: string;
 };

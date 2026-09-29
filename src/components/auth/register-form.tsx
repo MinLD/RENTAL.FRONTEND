@@ -12,17 +12,17 @@ import { PasswordField } from "@/components/forms/password-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useFirebaseGoogleLogin } from "@/hooks/use-firebase-google-login";
 import {
   registerSchema,
   type RegisterFormValues,
 } from "@/lib/validations/auth";
-import {
-  getGoogleLoginUrl,
-  register as registerAccount,
-} from "@/services/auth-service";
+import { register as registerAccount } from "@/services/auth-service";
 
 export function RegisterForm() {
   const router = useRouter();
+  const { handleFirebaseGoogleLogin, isSigningInWithGoogle } =
+    useFirebaseGoogleLogin();
 
   const {
     control,
@@ -54,10 +54,6 @@ export function RegisterForm() {
           : "Không thể đăng ký. Vui lòng thử lại.",
       );
     }
-  }
-
-  function handleGoogleLogin() {
-    window.location.assign(getGoogleLoginUrl("/"));
   }
 
   return (
@@ -176,7 +172,10 @@ export function RegisterForm() {
 
       <Button
         className="w-full cursor-pointer uppercase hover:bg-primary/5"
-        onClick={handleGoogleLogin}
+        disabled={isSubmitting || isSigningInWithGoogle}
+        onClick={() => {
+          void handleFirebaseGoogleLogin();
+        }}
         type="button"
         variant="secondary"
       >
@@ -187,7 +186,7 @@ export function RegisterForm() {
           src="/icons/google-logo.5462b711.svg"
           width={16}
         />
-        Google
+        {isSigningInWithGoogle ? "Đang đăng nhập Google..." : "Google"}
       </Button>
     </form>
   );

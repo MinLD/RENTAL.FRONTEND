@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}/suspend`,
     },
     auth: {
+      firebaseLogin: "/api/v1/auth/firebase/login",
       googleExchange: "/api/v1/auth/google/exchange",
       googleLogin: "/api/v1/auth/google/login",
       login: "/api/v1/auth/login",
@@ -64,6 +65,7 @@ export const API_ENDPOINTS = {
   internal: {
     fallbackHost: "localhost:3000",
     auth: {
+      firebaseLogin: "/api/auth/firebase/login",
       googleLogin: "/api/auth/google/login",
       login: "/api/auth/login",
       logout: "/api/auth/logout",
