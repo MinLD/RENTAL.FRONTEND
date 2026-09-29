@@ -59,10 +59,23 @@ docker run --rm -p 3000:3000 \
   dprental-frontend:local
 ```
 
-Workflow `.github/workflows/frontend-dev.yml` chạy trên nhánh `develop-ci-cd`:
-lint, build, build/push image SHA bất biến tới GHCR, rồi SSH deploy Frontend.
-GitHub Environment `dev` cần variable `GHCR_IMAGE_NAMESPACE` (lowercase) và các
-secret dùng chung với Backend/AuthService: `DEV_VPS_SSH_PRIVATE_KEY`,
+Workflow `.github/workflows/frontend-dev.yml` kiểm tra lint cho PR vào
+`develop-ci-cd`. Khi push lên nhánh này, workflow lint và build đúng một lần
+trong Docker, đẩy image gắn tag commit SHA lên GHCR, rồi deploy bằng digest.
+Job publish chỉ có quyền ghi package; job deploy có quyền đọc package và mới
+truy cập SSH secret của GitHub Environment
+`dev`: `DEV_VPS_SSH_PRIVATE_KEY`,
 `DEV_VPS_KNOWN_HOSTS`, `DEV_VPS_HOST`, `DEV_VPS_USER`, và tùy chọn
-`DEV_VPS_PORT`. VPS phải được cập nhật bundle `deploy/dev` trước release đầu
-tiên, bao gồm `.env` và `release.env` theo hai file example tại đó.
+`DEV_VPS_PORT`. Job deploy dùng token GHCR chỉ có quyền đọc qua SSH stdin và
+xóa cấu hình đăng nhập tạm trên VPS sau khi chạy. Image nằm tại
+`ghcr.io/huutawn/dprental-frontend`.
+Environment `dev` chỉ cho phép deploy từ `develop-ci-cd`; nhánh này yêu cầu PR
+và check `Validate frontend` thành công. VPS cần bundle `deploy/dev` với
+`.env`, `release.env` và `compose.yaml` đã cấu hình. Script deploy pull image
+trước khi đổi `release.env` và khôi phục image trước đó nếu health check hoặc
+kiểm tra URL công khai thất bại.
+
+Kiểm tra script deploy tại chỗ bằng `bash tests/deploy-frontend.sh`. Sau khi
+workflow được cập nhật, đo ít nhất năm lần push thành công bằng thời gian từ
+`createdAt` đến `updatedAt` của GitHub Actions; mục tiêu trung vị không quá
+155 giây (nền trước thay đổi: 259,5 giây từ hai lần push không chờ runner).
