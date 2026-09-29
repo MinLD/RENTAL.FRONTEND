@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     adminUsers: {
       activate: (id: string) =>
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}/activate`,
+      create: "/api/v1/auth/admin/users",
       detail: (id: string) =>
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}`,
       list: ({ keyword, page, pageSize }: ListAdminUsersParams) =>
@@ -36,8 +37,11 @@ export const API_ENDPOINTS = {
           PageSize: pageSize,
           Search: keyword?.trim(),
         }),
+      roles: "/api/v1/auth/admin/users/roles",
       suspend: (id: string) =>
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}/suspend`,
+      update: (id: string) =>
+        `/api/v1/auth/admin/users/${encodeURIComponent(id)}`,
     },
     auth: {
       firebaseLogin: "/api/v1/auth/firebase/login",
@@ -74,13 +78,6 @@ export const API_ENDPOINTS = {
       refresh: "/api/auth/refresh",
     },
     mock: {
-      adminUsers: {
-        create: "/api/mock/admin/users",
-        delete: (id: string) =>
-          `/api/mock/admin/users/${encodeURIComponent(id)}`,
-        update: (id: string) =>
-          `/api/mock/admin/users/${encodeURIComponent(id)}`,
-      },
       passwordReset: {
         request: "/api/mock/auth/password-reset/request",
         reset: "/api/mock/auth/password-reset/reset",

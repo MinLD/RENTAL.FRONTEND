@@ -1,4 +1,4 @@
-import { LockKeyhole, Trash2, UnlockKeyhole } from "lucide-react";
+import { LockKeyhole, UnlockKeyhole } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -17,7 +17,6 @@ import type { UserPendingAction } from "./users-management-types";
 
 type UserActionDialogProps = {
   action: UserPendingAction;
-  deleteUser: (id: string) => Promise<void>;
   lockUser: (id: string) => Promise<void>;
   onOpenChange: (open: boolean) => void;
   unlockUser: (id: string) => Promise<void>;
@@ -25,7 +24,6 @@ type UserActionDialogProps = {
 
 export function UserActionDialog({
   action,
-  deleteUser,
   lockUser,
   onOpenChange,
   unlockUser,
@@ -35,14 +33,10 @@ export function UserActionDialog({
   const isUnlock = action?.action === "unlock";
   const title = isLock
     ? "Tạm khóa người dùng?"
-    : isUnlock
-      ? "Mở khóa người dùng?"
-      : "Xóa người dùng?";
+    : "Mở khóa người dùng?";
   const description = isLock
     ? "User sẽ không thể đăng nhập cho đến khi quản trị viên kích hoạt lại bằng API activate."
-    : isUnlock
-      ? "User sẽ có thể đăng nhập lại sau khi tài khoản được kích hoạt."
-      : "Thao tác này sẽ xóa user khỏi danh sách quản trị giả định.";
+    : "User sẽ có thể đăng nhập lại sau khi tài khoản được kích hoạt.";
   const confirmLabel = isLock ? "Tạm khóa" : isUnlock ? "Mở khóa" : "Xóa";
 
   async function handleConfirm() {
@@ -53,10 +47,6 @@ export function UserActionDialog({
     setIsSubmitting(true);
 
     try {
-      if (action.action === "delete") {
-        await deleteUser(action.user.id);
-      }
-
       if (action.action === "lock") {
         await lockUser(action.user.id);
       }
@@ -87,17 +77,13 @@ export function UserActionDialog({
                 "mt-1 flex size-8 items-center justify-center rounded-full",
                 isUnlock
                   ? "bg-green-50 text-green-600"
-                  : isLock
-                    ? "bg-orange-50 text-primary"
-                    : "bg-red-50 text-red-600",
+                  : "bg-orange-50 text-primary",
               )}
             >
               {isUnlock ? (
                 <UnlockKeyhole className="size-5" />
-              ) : isLock ? (
-                <LockKeyhole className="size-5" />
               ) : (
-                <Trash2 className="size-5" />
+                <LockKeyhole className="size-5" />
               )}
             </div>
             <div>

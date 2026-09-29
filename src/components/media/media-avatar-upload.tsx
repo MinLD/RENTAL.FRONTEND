@@ -85,7 +85,6 @@ export function MediaAvatarUpload({
           : await uploadMediaFile(selectedFiles[0], { fieldName });
       const uploadList = Array.isArray(uploads) ? uploads : [uploads];
 
-      console.log("[MediaUpload] upload response", uploads);
       setLocalPreviewUrls(uploadList.map((upload) => upload.previewUrl));
 
       if (Array.isArray(uploads)) {

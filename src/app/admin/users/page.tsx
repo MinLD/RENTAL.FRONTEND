@@ -1,7 +1,7 @@
 import { UsersManagementTable } from "@/components/admin/users/users-management-table";
 import {
   createUserAction,
-  deleteUserAction,
+  getAdminRolesAction,
   getUserDetailAction,
   getUsersAction,
   lockUserAction,
@@ -13,7 +13,7 @@ export default function UsersPage() {
   return (
     <UsersManagementTable
       createUser={createUserAction}
-      deleteUser={deleteUserAction}
+      fetchRoles={getAdminRolesAction}
       fetchUserDetail={getUserDetailAction}
       fetchUsers={getUsersAction}
       lockUser={lockUserAction}
