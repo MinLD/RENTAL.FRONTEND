@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { apiClientJson, authApiClientJson } from "@/services/api-client";
+import { authApiClientJson } from "@/services/api-client";
 import type { MediaUploadResponse } from "@/types/media";
 
 type UploadMediaOptions = {
@@ -7,20 +7,25 @@ type UploadMediaOptions = {
   idempotencyKey?: string;
 };
 
+const DEFAULT_MEDIA_FILE_FIELD_NAME = "File";
+const MEDIA_CHECKSUM_FIELD_NAME = "Sha256Checksum";
+const IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+
 export async function uploadMediaFile(
   file: File,
   options: UploadMediaOptions = {},
 ) {
   const formData = new FormData();
 
-  formData.set(options.fieldName ?? "file", file);
+  formData.set(options.fieldName ?? DEFAULT_MEDIA_FILE_FIELD_NAME, file);
+  formData.set(MEDIA_CHECKSUM_FIELD_NAME, await getFileSha256Checksum(file));
 
   return authApiClientJson<MediaUploadResponse>(
     API_ENDPOINTS.backend.media.upload,
     {
       body: formData,
       headers: {
-        "idempotency-key": options.idempotencyKey ?? crypto.randomUUID(),
+        [IDEMPOTENCY_KEY_HEADER]: options.idempotencyKey ?? crypto.randomUUID(),
       },
       method: "POST",
     },
@@ -34,29 +39,13 @@ export async function uploadMediaFiles(
   return Promise.all(files.map((file) => uploadMediaFile(file, options)));
 }
 
-export async function uploadMockMediaFile(
-  file: File,
-  options: UploadMediaOptions = {},
-) {
-  const formData = new FormData();
-
-  formData.set(options.fieldName ?? "file", file);
-
-  return apiClientJson<MediaUploadResponse>(
-    API_ENDPOINTS.internal.mock.media.upload,
-    {
-      body: formData,
-      headers: {
-        "idempotency-key": options.idempotencyKey ?? crypto.randomUUID(),
-      },
-      method: "POST",
-    },
+async function getFileSha256Checksum(file: File) {
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    await file.arrayBuffer(),
   );
-}
 
-export async function uploadMockMediaFiles(
-  files: File[],
-  options: UploadMediaOptions = {},
-) {
-  return Promise.all(files.map((file) => uploadMockMediaFile(file, options)));
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }

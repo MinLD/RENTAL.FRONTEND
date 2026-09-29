@@ -15,7 +15,6 @@ import {
   updateAdminUserSchema,
   type UpdateAdminUserFormValues,
 } from "@/lib/validations/admin-users";
-import { uploadMockMediaFile } from "@/services/media-service";
 import type {
   AdminUserRow,
   AdminUserStatus,
@@ -160,7 +159,6 @@ function UserUpdateForm({
           onUploadingChange={onAvatarUploadingChange}
           previewUrl={avatarPreviewUrl}
           size="xl"
-          uploadFile={(file) => uploadMockMediaFile(file)}
         />
         <div className="mt-4 max-w-full">
           <p className="truncate text-sm font-bold text-foreground">

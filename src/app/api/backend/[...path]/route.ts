@@ -21,7 +21,7 @@ const FORWARDED_REQUEST_HEADERS = [
   "accept",
   "content-type",
   "cookie",
-  "idempotency-key",
+  "Idempotency-Key",
 ];
 
 function buildForwardedHeaders(request: NextRequest, cookieHeader?: string) {
