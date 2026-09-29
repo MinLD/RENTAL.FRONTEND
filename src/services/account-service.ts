@@ -28,6 +28,18 @@ export function unlinkExternalLogin(provider: string) {
   );
 }
 
+export function linkGoogleExternalLogin(idToken: string) {
+  return authApiClientJson<void>(
+    API_ENDPOINTS.backend.currentUser.externalLoginLink("Google"),
+    {
+      json: {
+        idToken,
+      },
+      method: "POST",
+    },
+  );
+}
+
 export function getUserSessions() {
   return authApiClientJson<UserSessionResponse[]>(
     API_ENDPOINTS.backend.currentUser.sessions,

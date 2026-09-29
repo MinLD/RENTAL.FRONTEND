@@ -3,6 +3,7 @@ import { apiClientJson } from "@/services/api-client";
 import type {
   LoginResponse,
   LoginRequest,
+  FirebaseLoginRequest,
   RequestPasswordResetRequest,
   RequestPasswordResetResponse,
   ResetPasswordRequest,
@@ -12,20 +13,21 @@ import type {
   VerifyPasswordResetCodeResponse,
 } from "@/types/auth";
 
-export function getGoogleLoginUrl(returnUrl = "/") {
-  const searchParams = new URLSearchParams({
-    returnUrl,
-  });
-
-  return `${API_ENDPOINTS.internal.auth.googleLogin}?${searchParams.toString()}`;
-}
-
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.login, {
     json: {
       email: request.email,
       password: request.password,
     },
+    method: "POST",
+  });
+}
+
+export async function loginWithFirebaseIdToken(
+  request: FirebaseLoginRequest,
+): Promise<LoginResponse> {
+  return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.firebaseLogin, {
+    json: request,
     method: "POST",
   });
 }

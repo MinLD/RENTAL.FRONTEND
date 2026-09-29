@@ -48,8 +48,9 @@ export type UserSessionResponse = {
 };
 
 export type ExternalLoginResponse = {
+  createdAtUtc?: string | null;
   email?: string | null;
-  linkedAtUtc: string;
+  linkedAtUtc?: string | null;
   provider?: string | null;
 };
 
@@ -83,11 +84,11 @@ export type LoginResponse = {
   userId?: string | null;
 };
 
-export type GoogleExchangeRequest = {
-  ticket: string;
+export type FirebaseLoginRequest = {
+  idToken: string;
 };
 
-export type GoogleExchangeResponse = {
+export type FirebaseLoginResponse = {
   accessToken: string;
   refreshToken: string;
 };

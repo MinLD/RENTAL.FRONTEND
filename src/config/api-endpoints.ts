@@ -40,8 +40,7 @@ export const API_ENDPOINTS = {
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}/suspend`,
     },
     auth: {
-      googleExchange: "/api/v1/auth/google/exchange",
-      googleLogin: "/api/v1/auth/google/login",
+      firebaseLogin: "/api/v1/auth/firebase/login",
       login: "/api/v1/auth/login",
       logout: "/api/v1/auth/logout",
       refresh: "/api/v1/auth/refresh",
@@ -52,6 +51,8 @@ export const API_ENDPOINTS = {
       externalLogins: "/api/v1/auth/users/me/external-logins",
       externalLogin: (provider: string) =>
         `/api/v1/auth/users/me/external-logins/${encodeURIComponent(provider)}`,
+      externalLoginLink: (provider: string) =>
+        `/api/v1/auth/users/me/external-logins/${encodeURIComponent(provider)}/link`,
       me: "/api/v1/auth/users/me",
       session: (sessionId: string) =>
         `/api/v1/auth/users/me/sessions/${encodeURIComponent(sessionId)}`,
@@ -64,7 +65,7 @@ export const API_ENDPOINTS = {
   internal: {
     fallbackHost: "localhost:3000",
     auth: {
-      googleLogin: "/api/auth/google/login",
+      firebaseLogin: "/api/auth/firebase/login",
       login: "/api/auth/login",
       logout: "/api/auth/logout",
       refresh: "/api/auth/refresh",

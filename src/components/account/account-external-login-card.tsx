@@ -10,11 +10,13 @@ import {
   formatDate,
 } from "@/components/account/account-utils";
 import { Button } from "@/components/ui/button";
+import { getFirebaseGoogleLoginErrorMessage } from "@/hooks/use-firebase-google-login";
 import {
   getExternalLogins,
+  linkGoogleExternalLogin,
   unlinkExternalLogin,
 } from "@/services/account-service";
-import { getGoogleLoginUrl } from "@/services/auth-service";
+import { signInWithFirebaseGoogle } from "@/services/firebase-google-auth-service";
 import type { ExternalLoginResponse } from "@/types/auth";
 
 type AccountExternalLoginCardProps = {
@@ -25,6 +27,7 @@ export function AccountExternalLoginCard({
   initialExternalLogins,
 }: AccountExternalLoginCardProps) {
   const [externalLogins, setExternalLogins] = useState(initialExternalLogins);
+  const [isLinkingGoogle, setIsLinkingGoogle] = useState(false);
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(
     null,
   );
@@ -32,15 +35,31 @@ export function AccountExternalLoginCard({
     login.provider?.toLowerCase().includes("google"),
   );
 
-  function handleLinkGoogle() {
-    window.location.assign(getGoogleLoginUrl("/account"));
-  }
-
   async function refreshExternalLogins() {
     try {
       setExternalLogins(await getExternalLogins());
     } catch {
       // External login is a secondary panel, keep the profile usable if it fails.
+    }
+  }
+
+  async function handleLinkGoogle() {
+    setIsLinkingGoogle(true);
+
+    try {
+      const firebaseLogin = await signInWithFirebaseGoogle();
+
+      await linkGoogleExternalLogin(firebaseLogin.idToken);
+      toast.success("Đã liên kết Google.");
+      await refreshExternalLogins();
+    } catch (error) {
+      const message = getFirebaseGoogleLoginErrorMessage(error);
+
+      if (message) {
+        toast.error(message);
+      }
+    } finally {
+      setIsLinkingGoogle(false);
     }
   }
 
@@ -104,7 +123,7 @@ export function AccountExternalLoginCard({
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">
                   {displayProfileValue(googleLogin.email)} · Liên kết lúc{" "}
-                  {formatDate(googleLogin.linkedAtUtc)}
+                  {formatDate(googleLogin.linkedAtUtc ?? googleLogin.createdAtUtc)}
                 </p>
               </div>
             </div>
@@ -129,8 +148,14 @@ export function AccountExternalLoginCard({
                 Có thể bổ sung provider khác khi hệ thống hỗ trợ.
               </p>
             </div>
-            <Button onClick={handleLinkGoogle} type="button">
-              Liên kết Google
+            <Button
+              disabled={isLinkingGoogle}
+              onClick={() => {
+                void handleLinkGoogle();
+              }}
+              type="button"
+            >
+              {isLinkingGoogle ? "Đang liên kết..." : "Liên kết Google"}
             </Button>
           </div>
         )}
