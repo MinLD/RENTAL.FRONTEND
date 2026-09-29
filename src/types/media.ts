@@ -7,3 +7,25 @@ export type MediaUploadResponse = {
   sizeBytes: number;
   status: string;
 };
+
+export type MediaCompletedDto = {
+  contentType: string | null;
+  mediaId: string;
+  originalFileName: string | null;
+  previewUrl: string | null;
+  previewUrlExpiresAtUtc: string | null;
+  sizeBytes: number;
+  status: string | null;
+};
+
+export type MediaUploadError = {
+  code: string | null;
+  message: string | null;
+};
+
+export type MediaUploadResult = {
+  error: MediaUploadError | null;
+  fileName: string | null;
+  index: number;
+  media: MediaCompletedDto | null;
+};
