@@ -44,7 +44,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
           />
           <button
             aria-label={isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-            className="absolute right-3 top-1/2 flex -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
+            className="absolute right-3 top-1/2 flex cursor-pointer -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
             onClick={() => setIsVisible((currentValue) => !currentValue)}
             type="button"
           >

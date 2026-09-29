@@ -35,9 +35,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               <p className={styles.logoCaption}>Sàn thiết bị công trường</p>
             </div>
 
-            <p className={styles.heroText}>
+            {/* <p className={styles.heroText}>
               Kiến tạo tiên phong đồng hành phát triển
-            </p>
+            </p> */}
 
             <p className={styles.copyright}>
               © 2026 DPRENTAL. All rights reserved.
@@ -59,10 +59,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   </p>
                 </div>
 
-                <button className={styles.languageButton} type="button">
+                {/* <button className={styles.languageButton} type="button">
                   <span className={styles.languageBadge}>VN</span>
                   Tiếng Việt
-                </button>
+                </button> */}
               </div>
 
               <div>

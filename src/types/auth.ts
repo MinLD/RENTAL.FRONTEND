@@ -1,7 +1,14 @@
 export type AuthUser = {
+  avatarMediaId?: string | null;
+  avatarUrl?: string | null;
+  dateOfBirth?: string | null;
   email: string;
+  hasPassword?: boolean;
   id: string;
+  identityNumber?: string | null;
+  isProfileCompleted?: boolean;
   name: string;
+  phoneNumber?: string | null;
   roleLabel: string;
 };
 
@@ -14,13 +21,45 @@ export type UserOrganizationResponse = {
 };
 
 export type CurrentUserResponse = {
+  avatarMediaId?: string | null;
+  avatarUrl?: string | null;
   createdAt: string;
+  dateOfBirth?: string | null;
   email: string | null;
   fullName: string | null;
+  hasPassword?: boolean;
   id: string;
+  identityNumber?: string | null;
+  isProfileCompleted?: boolean;
+  maskedCitizenId?: string | null;
   organizations: UserOrganizationResponse[] | null;
   permissions: string[] | null;
+  phoneNumber?: string | null;
   roles: string[] | null;
+};
+
+export type UserSessionResponse = {
+  createdAtUtc: string;
+  expiresAtUtc: string;
+  id: string;
+  isActive: boolean;
+  isCurrent: boolean;
+  revokedAtUtc?: string | null;
+};
+
+export type ExternalLoginResponse = {
+  createdAtUtc?: string | null;
+  email?: string | null;
+  linkedAtUtc?: string | null;
+  provider?: string | null;
+};
+
+export type CompleteProfileRequest = {
+  avatarMediaId?: string | null;
+  citizenId?: string | null;
+  dateOfBirth?: string | null;
+  fullName?: string | null;
+  phoneNumber?: string | null;
 };
 
 export type LoginRequest = {
@@ -45,11 +84,11 @@ export type LoginResponse = {
   userId?: string | null;
 };
 
-export type GoogleExchangeRequest = {
-  ticket: string;
+export type FirebaseLoginRequest = {
+  idToken: string;
 };
 
-export type GoogleExchangeResponse = {
+export type FirebaseLoginResponse = {
   accessToken: string;
   refreshToken: string;
 };

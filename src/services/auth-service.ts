@@ -1,7 +1,9 @@
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { apiClientJson } from "@/services/api-client";
 import type {
   LoginResponse,
   LoginRequest,
+  FirebaseLoginRequest,
   RequestPasswordResetRequest,
   RequestPasswordResetResponse,
   ResetPasswordRequest,
@@ -11,22 +13,8 @@ import type {
   VerifyPasswordResetCodeResponse,
 } from "@/types/auth";
 
-const PASSWORD_RESET_ENDPOINTS = {
-  request: "/api/mock/auth/password-reset/request",
-  reset: "/api/mock/auth/password-reset/reset",
-  verify: "/api/mock/auth/password-reset/verify",
-} as const;
-
-export function getGoogleLoginUrl(returnUrl = "/") {
-  const searchParams = new URLSearchParams({
-    returnUrl,
-  });
-
-  return `/api/auth/google/login?${searchParams.toString()}`;
-}
-
 export async function login(request: LoginRequest): Promise<LoginResponse> {
-  return apiClientJson<LoginResponse>("/api/auth/login", {
+  return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.login, {
     json: {
       email: request.email,
       password: request.password,
@@ -35,10 +23,19 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
   });
 }
 
+export async function loginWithFirebaseIdToken(
+  request: FirebaseLoginRequest,
+): Promise<LoginResponse> {
+  return apiClientJson<LoginResponse>(API_ENDPOINTS.internal.auth.firebaseLogin, {
+    json: request,
+    method: "POST",
+  });
+}
+
 export async function register(
   request: RegisterRequest,
 ): Promise<RegisterResponse> {
-  return apiClientJson<RegisterResponse>("/api/v1/auth/register", {
+  return apiClientJson<RegisterResponse>(API_ENDPOINTS.backend.auth.register, {
     json: {
       email: request.email,
       fullName: request.name,
@@ -49,13 +46,13 @@ export async function register(
 }
 
 export async function logout(): Promise<void> {
-  await apiClientJson<void>("/api/auth/logout", {
+  await apiClientJson<void>(API_ENDPOINTS.internal.auth.logout, {
     method: "POST",
   });
 }
 
 export async function refreshSession(): Promise<void> {
-  await apiClientJson<void>("/api/auth/refresh", {
+  await apiClientJson<void>(API_ENDPOINTS.internal.auth.refresh, {
     method: "POST",
   });
 }
@@ -64,7 +61,7 @@ export async function requestPasswordReset(
   request: RequestPasswordResetRequest,
 ): Promise<RequestPasswordResetResponse> {
   return apiClientJson<RequestPasswordResetResponse>(
-    PASSWORD_RESET_ENDPOINTS.request,
+    API_ENDPOINTS.internal.mock.passwordReset.request,
     {
       json: request,
       method: "POST",
@@ -76,7 +73,7 @@ export async function verifyPasswordResetCode(
   request: VerifyPasswordResetCodeRequest,
 ): Promise<VerifyPasswordResetCodeResponse> {
   return apiClientJson<VerifyPasswordResetCodeResponse>(
-    PASSWORD_RESET_ENDPOINTS.verify,
+    API_ENDPOINTS.internal.mock.passwordReset.verify,
     {
       json: request,
       method: "POST",
@@ -87,7 +84,7 @@ export async function verifyPasswordResetCode(
 export async function resetPassword(
   request: ResetPasswordRequest,
 ): Promise<void> {
-  await apiClientJson<void>(PASSWORD_RESET_ENDPOINTS.reset, {
+  await apiClientJson<void>(API_ENDPOINTS.internal.mock.passwordReset.reset, {
     json: request,
     method: "POST",
   });

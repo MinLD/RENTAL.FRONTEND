@@ -1,7 +1,8 @@
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { getSetCookieHeaders } from "@/services/auth-cookie";
 import { buildBackendApiUrl } from "@/services/backend-api";
 
-export const AUTH_REFRESH_ENDPOINT = "/api/v1/auth/refresh";
+export const AUTH_REFRESH_ENDPOINT = API_ENDPOINTS.backend.auth.refresh;
 
 type RefreshSnapshot = {
   body: ArrayBuffer;

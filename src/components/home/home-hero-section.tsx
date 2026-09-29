@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BadgeCheck, Headphones } from "lucide-react";
 
 import type { HomeHeroSlide, HomePromoBanner } from "@/config/homepage";
 import {

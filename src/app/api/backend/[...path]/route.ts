@@ -17,7 +17,13 @@ type BackendProxyContext = {
   }>;
 };
 
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "cookie"];
+const FORWARDED_REQUEST_HEADERS = [
+  "accept",
+  "content-type",
+  "cookie",
+  "Idempotency-Key",
+];
+const BODYLESS_RESPONSE_STATUSES = new Set([204, 205, 304]);
 
 function buildForwardedHeaders(request: NextRequest, cookieHeader?: string) {
   const headers = new Headers();
@@ -43,6 +49,16 @@ function createProxyResponse(backendResponse: Response) {
 
   if (contentType) {
     responseHeaders.set("content-type", contentType);
+  }
+
+  if (BODYLESS_RESPONSE_STATUSES.has(backendResponse.status)) {
+    return Promise.resolve(
+      new NextResponse(null, {
+        headers: responseHeaders,
+        status: backendResponse.status,
+        statusText: backendResponse.statusText,
+      }),
+    );
   }
 
   return backendResponse.arrayBuffer().then(

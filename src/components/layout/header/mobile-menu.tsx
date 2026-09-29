@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
+import { toast } from "sonner";
 
 import { MAIN_NAVIGATION } from "@/config/navigation";
+import { logout } from "@/services/auth-service";
+import type { AuthUser } from "@/types/auth";
 
 const MOBILE_SECONDARY_LINKS = [
   {
@@ -15,14 +19,16 @@ const MOBILE_SECONDARY_LINKS = [
     label: "Trở thành đối tác",
     href: "/partner",
   },
-  {
-    label: "Đăng ký",
-    href: "/register",
-  },
 ] as const;
 
-export function MobileMenu() {
+type MobileMenuProps = Readonly<{
+  user?: AuthUser | null;
+}>;
+
+export function MobileMenu({ user }: MobileMenuProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const panelId = useId();
 
   useEffect(() => {
@@ -55,13 +61,32 @@ export function MobileMenu() {
     };
   }, [isOpen]);
 
+  async function handleLogout() {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      toast.success("Đăng xuất thành công.");
+      setIsOpen(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể đăng xuất. Vui lòng thử lại.",
+      );
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <div className="md:hidden">
       <button
         aria-controls={panelId}
         aria-expanded={isOpen}
         aria-label="Mở menu"
-        className="inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
         onClick={() => setIsOpen(true)}
         type="button"
       >
@@ -76,7 +101,7 @@ export function MobileMenu() {
       >
         <button
           aria-label="Đóng menu"
-          className={`absolute inset-0 bg-foreground/50 transition-opacity ${
+          className={`absolute inset-0 cursor-pointer bg-foreground/50 transition-opacity ${
             isOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setIsOpen(false)}
@@ -109,21 +134,11 @@ export function MobileMenu() {
 
             <button
               aria-label="Đóng menu"
-              className="inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+              className="inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
               onClick={() => setIsOpen(false)}
               type="button"
             >
               <X size={20} />
-            </button>
-          </div>
-
-          <div className="border-b border-border px-4 py-3">
-            <button
-              className="flex h-10 w-full items-center justify-between rounded bg-primary px-3 text-sm font-semibold text-primary-foreground"
-              type="button"
-            >
-              <span>DANH MỤC THIẾT BỊ</span>
-              <span aria-hidden="true">▾</span>
             </button>
           </div>
 
@@ -163,13 +178,24 @@ export function MobileMenu() {
           </nav>
 
           <div className="border-t border-border p-4">
-            <Link
-              className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
-              href="/login"
-              onClick={() => setIsOpen(false)}
-            >
-              Đăng nhập
-            </Link>
+            {user ? (
+              <button
+                className="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={isLoggingOut}
+                onClick={handleLogout}
+                type="button"
+              >
+                {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+              </button>
+            ) : (
+              <Link
+                className="inline-flex h-10 w-full items-center justify-center rounded bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+                href="/login"
+                onClick={() => setIsOpen(false)}
+              >
+                Đăng ký / Đăng nhập
+              </Link>
+            )}
           </div>
         </aside>
       </div>

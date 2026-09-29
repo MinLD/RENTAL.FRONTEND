@@ -1,11 +1,15 @@
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
-import { Bell, ShoppingCart } from "lucide-react";
+import { getCurrentUser } from "@/services/session-service";
+import { Bell, ChevronDown, ShoppingCart } from "lucide-react";
+import { AuthLinks } from "./auth-links";
 import { MobileMenu } from "./mobile-menu";
-import { HeaderAuthSlot } from "./header-auth-slot";
+import { UserMenu } from "./user-menu";
 
-export function MainHeader() {
+export async function MainHeader() {
+  const user = await getCurrentUser();
+
   return (
     <div className="border-b border-border bg-background">
       <Container className="flex min-h-14 flex-wrap items-center gap-3 py-2 md:gap-4 lg:h-14 lg:flex-nowrap lg:py-0">
@@ -22,74 +26,85 @@ export function MainHeader() {
           </span>
         </Link>
 
-        <form
-          aria-label="Tìm kiếm thiết bị"
-          className="order-last flex h-9 w-full min-w-0 overflow-hidden rounded border border-primary md:order-none md:flex-1"
-        >
-          <label className="sr-only" htmlFor="header-search">
-            Tìm kiếm thiết bị
-          </label>
-          <div className="flex min-w-0 flex-1 items-center gap-2 px-3 text-muted-foreground focus-within:text-primary">
-            <svg
-              aria-hidden="true"
-              className="size-4 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="m16 16 4 4"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.5"
-              />
-            </svg>
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-              id="header-search"
-              name="q"
-              placeholder="Bạn cần thuê thiết bị gì? (ví dụ: máy xúc...)"
-              type="search"
-            />
-          </div>
+        <div className="order-last flex w-full min-w-0 items-center gap-2 md:order-none md:flex-1">
           <button
-            className="inline-flex shrink-0 items-center gap-1.5 bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label="Mở danh mục thiết bị"
+            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded border border-primary bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover md:hidden"
             type="button"
           >
-            TÌM MÁY
-            <svg
-              aria-hidden="true"
-              className="size-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="6"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                d="m16 16 4 4"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2"
-              />
-            </svg>
+            Tất cả
+            <ChevronDown size={14} />
           </button>
-        </form>
+
+          <form
+            aria-label="Tìm kiếm thiết bị"
+            className="flex h-9 min-w-0 flex-1 overflow-hidden rounded border border-primary"
+          >
+            <label className="sr-only" htmlFor="header-search">
+              Tìm kiếm thiết bị
+            </label>
+            <div className="flex min-w-0 flex-1 items-center gap-2 px-3 text-muted-foreground focus-within:text-primary">
+              <svg
+                aria-hidden="true"
+                className="size-4 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="m16 16 4 4"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+              <input
+                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                id="header-search"
+                name="q"
+                placeholder="Bạn cần thuê thiết bị gì?"
+                type="search"
+              />
+            </div>
+            <button
+              className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
+              type="button"
+            >
+              <span className="hidden sm:inline">TÌM MÁY</span>
+              <svg
+                aria-hidden="true"
+                className="size-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="m16 16 4 4"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="2"
+                />
+              </svg>
+            </button>
+          </form>
+        </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             aria-label="Thông báo"
-            className="relative inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
+            className="relative inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
             type="button"
           >
             <Bell size="20" />
@@ -113,11 +128,17 @@ export function MainHeader() {
             </span>
           </Link>
 
-          <div className="hidden  shrink-0 justify-end sm:flex">
-            <HeaderAuthSlot />
+          <div className="hidden shrink-0 justify-end sm:flex">
+            {user ? <UserMenu user={user} /> : <AuthLinks />}
           </div>
 
-          <MobileMenu />
+          {user ? (
+            <div className="shrink-0 sm:hidden">
+              <UserMenu user={user} />
+            </div>
+          ) : null}
+
+          <MobileMenu user={user} />
         </div>
       </Container>
     </div>
