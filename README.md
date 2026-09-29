@@ -67,11 +67,12 @@ docker run --rm -p 3000:3000 \
 Workflow `.github/workflows/frontend-dev.yml` kiểm tra lint cho PR vào
 `develop-ci-cd`. Khi push lên nhánh này, workflow lint và build đúng một lần
 trong Docker, đẩy image gắn tag commit SHA lên GHCR, rồi deploy bằng digest.
-Trước khi push, tạo bốn **repository variables** trong GitHub Actions với tên
-`NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`,
+Trước khi push, tạo bốn **environment secrets** trong GitHub Environment `dev`
+với tên `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`,
 `NEXT_PUBLIC_FIREBASE_PROJECT_ID` và `NEXT_PUBLIC_FIREBASE_APP_ID`. Job publish
-sẽ dừng trước khi build nếu thiếu giá trị. Các biến trong Compose trên VPS được
-truyền lúc container chạy nên không thay thế được giá trị cần thiết lúc build.
+sử dụng Environment `dev` và sẽ dừng trước khi build nếu thiếu giá trị. Các biến
+trong Compose trên VPS được truyền lúc container chạy nên không thay thế được
+giá trị cần thiết lúc build.
 Job publish chỉ có quyền ghi package; job deploy có quyền đọc package và mới
 truy cập SSH secret của GitHub Environment
 `dev`: `DEV_VPS_SSH_PRIVATE_KEY`,
