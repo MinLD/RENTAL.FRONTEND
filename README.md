@@ -81,7 +81,9 @@ truy cập SSH secret của GitHub Environment
 xóa cấu hình đăng nhập tạm trên VPS sau khi chạy. Image nằm tại
 `ghcr.io/huutawn/dprental-frontend`.
 Environment `dev` chỉ cho phép deploy từ `develop-ci-cd`; nhánh này yêu cầu PR
-và check `Validate frontend` thành công. VPS cần bundle `deploy/dev` với
+và check `Validate frontend` thành công. Sau khi merge PR, kiểm tra run sự kiện
+`push` trên nhánh `develop-ci-cd` trong tab Actions để xác nhận job publish và
+deploy đã chạy. VPS cần bundle `deploy/dev` với
 `.env`, `release.env` và `compose.yaml` đã cấu hình. Script deploy pull image
 trước khi đổi `release.env` và khôi phục image trước đó nếu health check hoặc
 kiểm tra URL công khai thất bại.
