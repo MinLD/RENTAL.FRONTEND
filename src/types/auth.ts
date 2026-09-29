@@ -1,17 +1,3 @@
-export type AuthUser = {
-  avatarMediaId?: string | null;
-  avatarUrl?: string | null;
-  dateOfBirth?: string | null;
-  email: string;
-  hasPassword?: boolean;
-  id: string;
-  identityNumber?: string | null;
-  isProfileCompleted?: boolean;
-  name: string;
-  phoneNumber?: string | null;
-  roleLabel: string;
-};
-
 export type UserOrganizationResponse = {
   organizationId: string;
   name: string | null;
@@ -21,22 +7,23 @@ export type UserOrganizationResponse = {
 };
 
 export type CurrentUserResponse = {
-  avatarMediaId?: string | null;
-  avatarUrl?: string | null;
+  avatarMediaId: string | null;
+  avatarUrl: string | null;
   createdAt: string;
-  dateOfBirth?: string | null;
+  dateOfBirth: string | null;
   email: string | null;
   fullName: string | null;
-  hasPassword?: boolean;
+  hasPassword: boolean;
   id: string;
-  identityNumber?: string | null;
-  isProfileCompleted?: boolean;
-  maskedCitizenId?: string | null;
+  isProfileCompleted: boolean;
+  maskedCitizenId: string | null;
   organizations: UserOrganizationResponse[] | null;
   permissions: string[] | null;
-  phoneNumber?: string | null;
+  phoneNumber: string | null;
   roles: string[] | null;
 };
+
+export type AuthUser = CurrentUserResponse;
 
 export type UserSessionResponse = {
   createdAtUtc: string;
@@ -60,6 +47,15 @@ export type CompleteProfileRequest = {
   dateOfBirth?: string | null;
   fullName?: string | null;
   phoneNumber?: string | null;
+};
+
+export type UpdateProfileRequest = {
+  avatarMediaId: string | null;
+  citizenId?: string | null;
+  dateOfBirth: string | null;
+  fullName: string;
+  phoneNumber: string | null;
+  removeAvatar: boolean;
 };
 
 export type LoginRequest = {

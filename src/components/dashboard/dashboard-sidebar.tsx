@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icon";
+import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +30,7 @@ import { cn } from "@/utils/cn";
 type DashboardSidebarProps = {
   items: DashboardNavigationItem[];
   user?: {
+    avatarUrl?: string | null;
     name: string;
     roleLabel: string;
   } | null;
@@ -154,6 +156,7 @@ function SidebarUserMenu({
   user,
 }: {
   user?: {
+    avatarUrl?: string | null;
     name: string;
     roleLabel: string;
   } | null;
@@ -164,6 +167,7 @@ function SidebarUserMenu({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const displayName = user?.name ?? "Quản trị viên";
   const displayRole = user?.roleLabel ?? "Quản trị hệ thống";
+  const avatarUrl = user?.avatarUrl;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -215,9 +219,13 @@ function SidebarUserMenu({
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
-          {getUserInitials(displayName)}
-        </span>
+        <AvatarWithSkeleton
+          alt={displayName}
+          className="size-9 bg-secondary text-secondary-foreground"
+          fallback={getUserInitials(displayName)}
+          fallbackClassName="bg-secondary text-xs font-bold text-secondary-foreground"
+          src={avatarUrl}
+        />
         <span className="min-w-0 flex-1 whitespace-nowrap opacity-100 transition-opacity delay-150 duration-150 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:delay-0">
           <span className="block truncate text-sm font-bold text-foreground">
             {displayName}
@@ -237,9 +245,13 @@ function SidebarUserMenu({
       {isOpen ? (
         <div className="absolute bottom-full left-0 z-50 mb-2 w-64 overflow-hidden rounded-lg border border-border bg-background shadow-lg group-data-[collapsible=icon]:left-12 group-data-[collapsible=icon]:w-60">
           <div className="flex items-center gap-3 border-b border-border px-3 py-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
-              {getUserInitials(displayName)}
-            </span>
+            <AvatarWithSkeleton
+              alt={displayName}
+              className="size-9 bg-secondary text-secondary-foreground"
+              fallback={getUserInitials(displayName)}
+              fallbackClassName="bg-secondary text-xs font-bold text-secondary-foreground"
+              src={avatarUrl}
+            />
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-foreground">
                 {displayName}

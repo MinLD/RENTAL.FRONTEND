@@ -35,6 +35,11 @@ export function AccountProfileForm({
     initialProfile.avatarUrl ?? "",
   );
 
+  function resetAvatar() {
+    setAvatarMediaId(initialProfile.avatarMediaId ?? "");
+    setAvatarPreviewUrl(initialProfile.avatarUrl ?? "");
+  }
+
   return (
     <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
       <AccountProfileSummary
@@ -50,7 +55,10 @@ export function AccountProfileForm({
       <div className="space-y-5">
         <AccountEditForm
           avatarMediaId={avatarMediaId}
+          avatarPreviewUrl={avatarPreviewUrl}
           initialProfile={initialProfile}
+          onCancel={resetAvatar}
+          userId={user.id}
         />
         <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />
         <AccountSessionList initialSessions={initialSessions} />

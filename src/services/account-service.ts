@@ -7,7 +7,7 @@ import type {
 } from "@/types/auth";
 
 export function completeCurrentUserProfile(request: CompleteProfileRequest) {
-  return authApiClientJson<void>(API_ENDPOINTS.backend.currentUser.me, {
+  return authApiClientJson<void>(API_ENDPOINTS.backend.currentUser.profile, {
     json: request,
     method: "POST",
   });

@@ -12,6 +12,10 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  ACCOUNT_PROFILE_UPDATED_EVENT,
+  type AccountProfileUpdatedEventDetail,
+} from "@/components/account/account-profile-events";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
@@ -22,7 +26,10 @@ import {
 
 type AccountEditFormProps = {
   avatarMediaId?: string;
+  avatarPreviewUrl?: string;
   initialProfile: AccountProfileInitialData;
+  onCancel?: () => void;
+  userId: string;
 };
 
 const initialUpdateProfileActionState: UpdateProfileActionState = {
@@ -31,7 +38,10 @@ const initialUpdateProfileActionState: UpdateProfileActionState = {
 
 export function AccountEditForm({
   avatarMediaId,
+  avatarPreviewUrl,
   initialProfile,
+  onCancel,
+  userId,
 }: AccountEditFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -48,16 +58,33 @@ export function AccountEditForm({
 
     if (state.success) {
       toast.success(state.message);
+      const nextAvatarUrl = avatarPreviewUrl ?? initialProfile.avatarUrl ?? "";
+
+      if (nextAvatarUrl) {
+        window.dispatchEvent(
+          new CustomEvent<AccountProfileUpdatedEventDetail>(
+            ACCOUNT_PROFILE_UPDATED_EVENT,
+            {
+              detail: {
+                avatarUrl: nextAvatarUrl,
+                userId,
+              },
+            },
+          ),
+        );
+      }
+
       router.refresh();
 
       return;
     }
 
     toast.error(state.message);
-  }, [router, state]);
+  }, [avatarPreviewUrl, initialProfile.avatarUrl, router, state, userId]);
 
   function handleCancel() {
     formRef.current?.reset();
+    onCancel?.();
     setFormKey((currentKey) => currentKey + 1);
   }
 
@@ -78,6 +105,7 @@ export function AccountEditForm({
           type="hidden"
           value={avatarMediaId ?? initialProfile.avatarMediaId ?? ""}
         />
+        <input name="removeAvatar" type="hidden" value="false" />
 
         {state.message && !state.success ? (
           <p className="mb-4 rounded border border-error/20 bg-error/10 px-3 py-2 text-sm font-medium text-error">

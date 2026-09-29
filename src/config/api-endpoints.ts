@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
       externalLoginLink: (provider: string) =>
         `/api/v1/auth/users/me/external-logins/${encodeURIComponent(provider)}/link`,
       me: "/api/v1/auth/users/me",
+      profile: "/api/v1/auth/users/profile",
       session: (sessionId: string) =>
         `/api/v1/auth/users/me/sessions/${encodeURIComponent(sessionId)}`,
       sessions: "/api/v1/auth/users/me/sessions",

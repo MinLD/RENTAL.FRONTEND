@@ -96,9 +96,13 @@ export function AccountExternalLoginCard({
   return (
     <section className="rounded-lg border border-border bg-background p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-foreground">
-          Bảo mật
-        </h2>
+        <div>
+          {" "}
+          <h2 className="text-xl font-bold text-foreground">Bảo mật</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Liên kết tài khoản của bạn.
+          </p>
+        </div>
         <ChangePasswordDialog />
       </div>
 
@@ -123,7 +127,9 @@ export function AccountExternalLoginCard({
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">
                   {displayProfileValue(googleLogin.email)} · Liên kết lúc{" "}
-                  {formatDate(googleLogin.linkedAtUtc ?? googleLogin.createdAtUtc)}
+                  {formatDate(
+                    googleLogin.linkedAtUtc ?? googleLogin.createdAtUtc,
+                  )}
                 </p>
               </div>
             </div>
