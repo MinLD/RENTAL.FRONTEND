@@ -48,8 +48,9 @@ export type UserSessionResponse = {
 };
 
 export type ExternalLoginResponse = {
+  createdAtUtc?: string | null;
   email?: string | null;
-  linkedAtUtc: string;
+  linkedAtUtc?: string | null;
   provider?: string | null;
 };
 

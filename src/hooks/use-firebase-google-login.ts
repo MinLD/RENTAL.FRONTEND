@@ -48,7 +48,7 @@ export function useFirebaseGoogleLogin({
   };
 }
 
-function getFirebaseGoogleLoginErrorMessage(error: unknown) {
+export function getFirebaseGoogleLoginErrorMessage(error: unknown) {
   if (error instanceof FirebaseError) {
     if (
       error.code === "auth/popup-closed-by-user" ||
