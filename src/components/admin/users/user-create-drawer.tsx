@@ -223,7 +223,7 @@ function SelectField({
       <select
         aria-invalid={error ? true : undefined}
         className={cn(
-          "flex h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60",
+          "flex h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-base font-semibold text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 md:text-sm",
           error && "border-error",
         )}
         disabled={disabled}

@@ -14,6 +14,10 @@ import type {
   UserSessionResponse,
 } from "@/types/auth";
 import {
+  type ApiValueResult,
+  unwrapApiValue,
+} from "@/utils/api-result";
+import {
   getAuthUserDisplayName,
   getAuthUserIdentityNumber,
   getAuthUserRoleLabel,
@@ -89,7 +93,11 @@ async function getInitialSessions() {
       return [];
     }
 
-    return (await response.json()) as UserSessionResponse[];
+    const responseBody = (await response.json()) as
+      | ApiValueResult<UserSessionResponse[]>
+      | UserSessionResponse[];
+
+    return unwrapApiValue<UserSessionResponse[]>(responseBody);
   } catch {
     return [];
   }
@@ -105,7 +113,11 @@ async function getInitialExternalLogins() {
       return [];
     }
 
-    return (await response.json()) as ExternalLoginResponse[];
+    const responseBody = (await response.json()) as
+      | ApiValueResult<ExternalLoginResponse[]>
+      | ExternalLoginResponse[];
+
+    return unwrapApiValue<ExternalLoginResponse[]>(responseBody);
   } catch {
     return [];
   }

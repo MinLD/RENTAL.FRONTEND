@@ -5,6 +5,10 @@ import type {
   ExternalLoginResponse,
   UserSessionResponse,
 } from "@/types/auth";
+import {
+  type ApiValueResult,
+  unwrapApiValue,
+} from "@/utils/api-result";
 
 export function completeCurrentUserProfile(request: CompleteProfileRequest) {
   return authApiClientJson<void>(API_ENDPOINTS.backend.currentUser.profile, {
@@ -14,8 +18,10 @@ export function completeCurrentUserProfile(request: CompleteProfileRequest) {
 }
 
 export function getExternalLogins() {
-  return authApiClientJson<ExternalLoginResponse[]>(
-    API_ENDPOINTS.backend.currentUser.externalLogins,
+  return authApiClientJson<
+    ApiValueResult<ExternalLoginResponse[]> | ExternalLoginResponse[]
+  >(API_ENDPOINTS.backend.currentUser.externalLogins).then((response) =>
+    unwrapApiValue<ExternalLoginResponse[]>(response),
   );
 }
 
@@ -41,8 +47,10 @@ export function linkGoogleExternalLogin(idToken: string) {
 }
 
 export function getUserSessions() {
-  return authApiClientJson<UserSessionResponse[]>(
-    API_ENDPOINTS.backend.currentUser.sessions,
+  return authApiClientJson<
+    ApiValueResult<UserSessionResponse[]> | UserSessionResponse[]
+  >(API_ENDPOINTS.backend.currentUser.sessions).then((response) =>
+    unwrapApiValue<UserSessionResponse[]>(response),
   );
 }
 

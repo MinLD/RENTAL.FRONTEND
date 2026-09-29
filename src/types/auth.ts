@@ -27,8 +27,10 @@ export type AuthUser = CurrentUserResponse;
 
 export type UserSessionResponse = {
   createdAtUtc: string;
+  deviceName: string | null;
   expiresAtUtc: string;
   id: string;
+  ipAddress: string | null;
   isActive: boolean;
   isCurrent: boolean;
   revokedAtUtc?: string | null;
@@ -56,6 +58,11 @@ export type UpdateProfileRequest = {
   fullName: string;
   phoneNumber: string | null;
   removeAvatar: boolean;
+};
+
+export type ChangePasswordRequest = {
+  newPassword: string;
+  oldPassword: string;
 };
 
 export type LoginRequest = {

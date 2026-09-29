@@ -7,7 +7,7 @@ import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
-import type { UpdateProfileRequest } from "@/types/auth";
+import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
 export type UpdateProfileActionState = {
   fieldErrors?: Partial<
@@ -105,14 +105,15 @@ export async function changePasswordAction(
     };
   }
 
+  const request: ChangePasswordRequest = {
+    newPassword: parsedForm.data.newPassword,
+    oldPassword: parsedForm.data.currentPassword,
+  };
+
   const response = await serverApi(
     API_ENDPOINTS.backend.currentUser.changePassword,
     {
-      json: {
-        confirmPassword: parsedForm.data.confirmPassword,
-        currentPassword: parsedForm.data.currentPassword,
-        newPassword: parsedForm.data.newPassword,
-      },
+      json: request,
       method: "POST",
     },
   );
