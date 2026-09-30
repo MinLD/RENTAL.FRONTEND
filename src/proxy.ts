@@ -9,7 +9,6 @@ import {
 } from "@/services/auth-cookie";
 import { refreshBackendSession } from "@/services/auth-refresh";
 import {
-  getJwtProfileCompleted,
   getJwtRoles,
   shouldRefreshJwtToken,
 } from "@/services/auth-token";
@@ -19,7 +18,6 @@ import type { AuthUser } from "@/types/auth";
 
 const REFRESH_BUFFER_SECONDS = 60;
 const ACCOUNT_ROUTE = "/account";
-const COMPLETE_PROFILE_ROUTE = "/account/complete-profile";
 
 const PORTAL_ROUTES = [
   {
@@ -52,7 +50,6 @@ const AUTH_ROUTES = [
 const AUTHENTICATED_ROUTES = [ACCOUNT_ROUTE] as const;
 
 type RouteAuthState = {
-  profileCompleted: boolean | null;
   roles: string[];
 };
 
@@ -74,14 +71,6 @@ function isAuthRoute(pathname: string) {
 
 function isAuthenticatedRoute(pathname: string) {
   return AUTHENTICATED_ROUTES.some((route) => isRouteMatch(pathname, route));
-}
-
-function isCompleteProfileRoute(pathname: string) {
-  return isRouteMatch(pathname, COMPLETE_PROFILE_ROUTE);
-}
-
-function isAccountProfileRoute(pathname: string) {
-  return isRouteMatch(pathname, ACCOUNT_ROUTE);
 }
 
 function hasAnyAuthCookie(request: NextRequest) {
@@ -142,7 +131,6 @@ function buildRouteAccessRedirect(
   const pathname = request.nextUrl.pathname;
   const portalRoute = getPortalRoute(pathname);
   const authenticatedHomePath = getAuthenticatedHomePath(authState);
-  const profileCompleted = authState.profileCompleted;
   const hasPortalHome = authenticatedHomePath !== "/";
 
   if (hasPortalHome && !isRouteMatch(pathname, authenticatedHomePath)) {
@@ -151,20 +139,6 @@ function buildRouteAccessRedirect(
 
   if (portalRoute && !hasRouteRole(authState, portalRoute.role)) {
     return NextResponse.redirect(new URL(authenticatedHomePath, request.url));
-  }
-
-  if (
-    profileCompleted === false &&
-    isAccountProfileRoute(pathname) &&
-    !isCompleteProfileRoute(pathname)
-  ) {
-    return NextResponse.redirect(
-      new URL(COMPLETE_PROFILE_ROUTE, request.url),
-    );
-  }
-
-  if (profileCompleted === true && isCompleteProfileRoute(pathname)) {
-    return NextResponse.redirect(new URL(ACCOUNT_ROUTE, request.url));
   }
 
   if (isAuthRoute(pathname)) {
@@ -298,9 +272,11 @@ function copyRefreshedSessionCookies(
 
 function buildInvalidSessionResponse(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const response = isAuthRoute(pathname)
-    ? NextResponse.next()
-    : NextResponse.redirect(new URL("/login", request.url));
+  const response =
+    isAuthRoute(pathname) ||
+    (!isPortalRoute(pathname) && !isAuthenticatedRoute(pathname))
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/login", request.url));
 
   clearAuthCookies(response);
 
@@ -319,9 +295,6 @@ function getValidatedRouteAuthState(
   const jwtRoles = accessToken ? getJwtRoles(accessToken) : [];
 
   return {
-    profileCompleted: accessToken
-      ? (getJwtProfileCompleted(accessToken) ?? user.isProfileCompleted)
-      : user.isProfileCompleted,
     roles: jwtRoles.length ? jwtRoles : (user.roles ?? []),
   };
 }
@@ -336,11 +309,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (
-    isAuthRoute(pathname) ||
-    isPortalRoute(pathname) ||
-    isAuthenticatedRoute(pathname)
-  ) {
+  if (hasAnyAuthCookie(request)) {
     const session = await validateRequestSession(request);
 
     if (!session.user) {

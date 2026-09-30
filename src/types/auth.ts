@@ -43,14 +43,6 @@ export type ExternalLoginResponse = {
   provider?: string | null;
 };
 
-export type CompleteProfileRequest = {
-  avatarMediaId?: string | null;
-  citizenId?: string | null;
-  dateOfBirth?: string | null;
-  fullName?: string | null;
-  phoneNumber?: string | null;
-};
-
 export type UpdateProfileRequest = {
   avatarMediaId: string | null;
   citizenId?: string | null;

@@ -81,12 +81,6 @@ export function ChangePasswordDialog() {
             </div>
 
             <form action={formAction} className="space-y-4 p-5" ref={formRef}>
-              {state.message && !state.success ? (
-                <p className="rounded border border-error/20 bg-error/10 px-3 py-2 text-sm font-medium text-error">
-                  {state.message}
-                </p>
-              ) : null}
-
               <PasswordField
                 autoComplete="current-password"
                 error={state.fieldErrors?.currentPassword}

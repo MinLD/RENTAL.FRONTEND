@@ -1,7 +1,6 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
 import type {
-  CompleteProfileRequest,
   ExternalLoginResponse,
   UserSessionResponse,
 } from "@/types/auth";
@@ -9,13 +8,6 @@ import {
   type ApiValueResult,
   unwrapApiValue,
 } from "@/utils/api-result";
-
-export function completeCurrentUserProfile(request: CompleteProfileRequest) {
-  return authApiClientJson<void>(API_ENDPOINTS.backend.currentUser.profile, {
-    json: request,
-    method: "POST",
-  });
-}
 
 export function getExternalLogins() {
   return authApiClientJson<

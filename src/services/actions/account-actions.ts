@@ -11,7 +11,7 @@ import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
 export type UpdateProfileActionState = {
   fieldErrors?: Partial<
-    Record<"dateOfBirth" | "fullName" | "phoneNumber", string>
+    Record<"dateOfBirth" | "fullName" | "identityNumber" | "phoneNumber", string>
   >;
   message?: string;
   success: boolean;
@@ -33,7 +33,7 @@ export async function updateProfileAction(
     dateOfBirth: formData.get("dateOfBirth"),
     email: formData.get("email"),
     fullName: formData.get("fullName"),
-    identityNumber: formData.get("identityNumber"),
+    identityNumber: normalizeMaskedIdentityNumber(formData.get("identityNumber")),
     phoneNumber: formData.get("phoneNumber"),
   });
 
@@ -44,6 +44,7 @@ export async function updateProfileAction(
       fieldErrors: {
         dateOfBirth: flattenedError.fieldErrors.dateOfBirth?.[0],
         fullName: flattenedError.fieldErrors.fullName?.[0],
+        identityNumber: flattenedError.fieldErrors.identityNumber?.[0],
         phoneNumber: flattenedError.fieldErrors.phoneNumber?.[0],
       },
       message: "Vui lòng kiểm tra lại thông tin cá nhân.",
@@ -53,6 +54,7 @@ export async function updateProfileAction(
 
   const request: UpdateProfileRequest = {
     avatarMediaId: normalizeNullableFormValue(formData.get("avatarMediaId")),
+    citizenId: normalizeNullableText(parsedForm.data.identityNumber),
     dateOfBirth: normalizeNullableText(parsedForm.data.dateOfBirth),
     fullName: parsedForm.data.fullName.trim(),
     phoneNumber: normalizeNullableText(parsedForm.data.phoneNumber),
@@ -61,7 +63,7 @@ export async function updateProfileAction(
 
   const response = await serverApi(API_ENDPOINTS.backend.currentUser.profile, {
     json: request,
-    method: "PATCH",
+    method: "PUT",
   });
 
   if (!response.ok) {
@@ -142,4 +144,12 @@ function normalizeNullableText(value?: string) {
   const normalizedValue = value?.trim();
 
   return normalizedValue ? normalizedValue : null;
+}
+
+function normalizeMaskedIdentityNumber(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value.includes("*") ? "" : value;
 }

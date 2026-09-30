@@ -2,7 +2,6 @@ const JWT_PARTS_LENGTH = 3;
 
 type JwtPayload = {
   exp?: unknown;
-  pc?: unknown;
   p?: unknown;
   r?: unknown;
 };
@@ -39,7 +38,7 @@ export function getJwtExpiration(token: string) {
 
 export function getJwtRoles(token: string) {
   const payload = getJwtPayload(token);
-  const roles = payload?.r;
+  const roles = payload?.r
 
   if (Array.isArray(roles)) {
     return roles.filter((role): role is string => typeof role === "string");
@@ -59,33 +58,6 @@ export function getJwtPermissions(token: string) {
   }
 
   return typeof permissions === "string" ? [permissions] : [];
-}
-
-export function getJwtProfileCompleted(token: string | null | undefined) {
-  if (!token) {
-    return null;
-  }
-
-  const payload = getJwtPayload(token);
-  const profileCompleted = payload?.pc;
-
-  if (typeof profileCompleted === "boolean") {
-    return profileCompleted;
-  }
-
-  if (typeof profileCompleted === "string") {
-    const normalizedValue = profileCompleted.toLowerCase();
-
-    if (normalizedValue === "true") {
-      return true;
-    }
-
-    if (normalizedValue === "false") {
-      return false;
-    }
-  }
-
-  return null;
 }
 
 export function hasJwtRole(token: string | null | undefined, role: string) {
