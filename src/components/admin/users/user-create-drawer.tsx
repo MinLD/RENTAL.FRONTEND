@@ -50,7 +50,11 @@ export function UserCreateDrawer({
           >
             Hủy
           </Button>
-          <Button disabled={isSubmitting} form={CREATE_USER_FORM_ID} type="submit">
+          <Button
+            disabled={isSubmitting}
+            form={CREATE_USER_FORM_ID}
+            type="submit"
+          >
             {isSubmitting ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
@@ -90,10 +94,6 @@ function CreateUserForm({
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const roleOptions = useMemo(
     () => [
-      {
-        label: "Không gán vai trò",
-        value: "",
-      },
       ...roles.map((role) => ({
         label: role.name ?? role.id,
         value: role.id,
@@ -207,9 +207,9 @@ function CreateUserForm({
 function isUuid(value?: string | null): value is string {
   return Boolean(
     value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        value,
-      ),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    ),
   );
 }
 

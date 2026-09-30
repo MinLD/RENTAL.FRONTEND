@@ -18,18 +18,21 @@ import {
 
 type DashboardShellProps = {
   children: ReactNode;
+  homeHref?: string;
   navigation: DashboardNavigationItem[];
   user: AuthUser | null;
 };
 
 export function DashboardShell({
   children,
+  homeHref,
   navigation,
   user,
 }: DashboardShellProps) {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <DashboardSidebar
+        homeHref={homeHref}
         items={navigation}
         user={
           user
