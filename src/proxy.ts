@@ -31,6 +31,12 @@ const PORTAL_ROUTES = [
   },
 ] as const;
 
+const ROLE_ALIASES: Record<(typeof PORTAL_ROUTES)[number]["role"], string[]> = {
+  adm: ["adm", "admin", "administrator"],
+  com: ["com", "company"],
+  sup: ["sup", "supplier"],
+};
+
 const AUTH_ROUTES = [
   "/login",
   "/register",
@@ -86,8 +92,21 @@ function isPortalRoute(pathname: string) {
   return Boolean(getPortalRoute(pathname));
 }
 
+function normalizeRole(role: string) {
+  return role.trim().toLowerCase();
+}
+
 function hasUserRole(user: AuthUser, role: string) {
-  return user.roles?.some((userRole) => userRole === role) ?? false;
+  const acceptedRoles = new Set(
+    (ROLE_ALIASES[role as (typeof PORTAL_ROUTES)[number]["role"]] ?? [role]).map(
+      normalizeRole,
+    ),
+  );
+
+  return (
+    user.roles?.some((userRole) => acceptedRoles.has(normalizeRole(userRole))) ??
+    false
+  );
 }
 
 function getAuthenticatedHomePath(user: AuthUser) {
