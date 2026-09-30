@@ -34,6 +34,9 @@ export function AccountProfileForm({
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
     initialProfile.avatarUrl ?? "",
   );
+  const isAvatarDirty =
+    avatarMediaId !== (initialProfile.avatarMediaId ?? "") ||
+    avatarPreviewUrl !== (initialProfile.avatarUrl ?? "");
 
   function resetAvatar() {
     setAvatarMediaId(initialProfile.avatarMediaId ?? "");
@@ -57,6 +60,7 @@ export function AccountProfileForm({
           avatarMediaId={avatarMediaId}
           avatarPreviewUrl={avatarPreviewUrl}
           initialProfile={initialProfile}
+          isAvatarDirty={isAvatarDirty}
           onCancel={resetAvatar}
           userId={user.id}
         />

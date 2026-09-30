@@ -28,6 +28,7 @@ type AccountEditFormProps = {
   avatarMediaId?: string;
   avatarPreviewUrl?: string;
   initialProfile: AccountProfileInitialData;
+  isAvatarDirty?: boolean;
   onCancel?: () => void;
   userId: string;
 };
@@ -40,16 +41,19 @@ export function AccountEditForm({
   avatarMediaId,
   avatarPreviewUrl,
   initialProfile,
+  isAvatarDirty = false,
   onCancel,
   userId,
 }: AccountEditFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
+  const [isFieldsDirty, setIsFieldsDirty] = useState(false);
   const [state, formAction, isPending] = useActionState(
     updateProfileAction,
     initialUpdateProfileActionState,
   );
+  const isDirty = isFieldsDirty || isAvatarDirty;
 
   useEffect(() => {
     if (!state.message) {
@@ -84,8 +88,32 @@ export function AccountEditForm({
 
   function handleCancel() {
     formRef.current?.reset();
+    setIsFieldsDirty(false);
     onCancel?.();
     setFormKey((currentKey) => currentKey + 1);
+  }
+
+  function handleFormAction(formData: FormData) {
+    setIsFieldsDirty(false);
+    formAction(formData);
+  }
+
+  function handleFormChange() {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    const formData = new FormData(form);
+
+    setIsFieldsDirty(
+      getTextValue(formData, "fullName") !== initialProfile.fullName ||
+        getTextValue(formData, "phoneNumber") !== initialProfile.phoneNumber ||
+        getTextValue(formData, "dateOfBirth") !== initialProfile.dateOfBirth ||
+        normalizeIdentityNumberValue(getTextValue(formData, "identityNumber")) !==
+          normalizeIdentityNumberValue(initialProfile.identityNumber),
+    );
   }
 
   return (
@@ -99,19 +127,20 @@ export function AccountEditForm({
         </p>
       </div>
 
-      <form action={formAction} className="mt-6" key={formKey} ref={formRef}>
+      <form
+        action={handleFormAction}
+        className="mt-6"
+        key={formKey}
+        onChange={handleFormChange}
+        onInput={handleFormChange}
+        ref={formRef}
+      >
         <input
           name="avatarMediaId"
           type="hidden"
           value={avatarMediaId ?? initialProfile.avatarMediaId ?? ""}
         />
         <input name="removeAvatar" type="hidden" value="false" />
-
-        {state.message && !state.success ? (
-          <p className="mb-4 rounded border border-error/20 bg-error/10 px-3 py-2 text-sm font-medium text-error">
-            {state.message}
-          </p>
-        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
@@ -161,27 +190,27 @@ export function AccountEditForm({
           />
 
           <TextField
-            className="bg-muted text-muted-foreground"
             defaultValue={initialProfile.identityNumber}
+            error={state.fieldErrors?.identityNumber}
             id="identityNumber"
+            inputMode="numeric"
             label="CCCD/CMND"
             leftIcon={<IdCard size={16} />}
             name="identityNumber"
             placeholder="Chưa cập nhật"
-            readOnly
           />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <Button
-            disabled={isPending}
+            disabled={!isDirty || isPending}
             onClick={handleCancel}
             type="button"
             variant="secondary"
           >
             Hủy
           </Button>
-          <Button disabled={isPending} type="submit">
+          <Button disabled={!isDirty || isPending} type="submit">
             <Save size={16} />
             {isPending ? "Đang lưu..." : "Lưu"}
           </Button>
@@ -189,4 +218,16 @@ export function AccountEditForm({
       </form>
     </section>
   );
+}
+
+function getTextValue(formData: FormData, fieldName: string) {
+  const value = formData.get(fieldName);
+
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeIdentityNumberValue(value?: string) {
+  const normalizedValue = value?.trim() ?? "";
+
+  return normalizedValue.includes("*") ? "" : normalizedValue;
 }
