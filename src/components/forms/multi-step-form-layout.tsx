@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
+import { Check } from "lucide-react";
 
 import { cn } from "@/utils/cn";
 
@@ -13,6 +14,7 @@ export type MultiStepFormStep = {
 type MultiStepFormLayoutProps = {
   children?: ReactNode;
   className?: string;
+  completedStepIds?: readonly string[];
   currentStep: string;
   footer?: ReactNode;
   isStepNavigationDisabled?: boolean;
@@ -25,6 +27,7 @@ type MultiStepFormLayoutProps = {
 export function MultiStepFormLayout({
   children,
   className,
+  completedStepIds = [],
   currentStep,
   footer,
   isStepNavigationDisabled = false,
@@ -35,6 +38,7 @@ export function MultiStepFormLayout({
   const contentId = `${layoutId}-content`;
   const titleId = `${layoutId}-title`;
   const activeStep = steps.find((step) => step.id === currentStep);
+  const activeStepIndex = steps.findIndex((step) => step.id === currentStep);
 
   return (
     <div
@@ -50,6 +54,8 @@ export function MultiStepFormLayout({
         <ol className="space-y-1">
           {steps.map((step, index) => {
             const isActive = step.id === currentStep;
+            const isCompleted =
+              index < activeStepIndex && completedStepIds.includes(step.id);
 
             return (
               <li key={step.id}>
@@ -73,12 +79,17 @@ export function MultiStepFormLayout({
                       "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs",
                       isActive
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/60 bg-slate-100 text-muted-foreground",
+                        : isCompleted
+                          ? "border-success bg-success text-white"
+                          : "border-border/60 bg-slate-100 text-muted-foreground",
                     )}
                   >
-                    {index + 1}
+                    {isCompleted ? <Check className="size-4" /> : index + 1}
                   </span>
                   <span>{step.title}</span>
+                  {isCompleted ? (
+                    <span className="sr-only">Đã hoàn thành</span>
+                  ) : null}
                 </button>
               </li>
             );
@@ -99,12 +110,12 @@ export function MultiStepFormLayout({
           {activeStep?.title}
         </h1>
         {activeStep?.description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{activeStep.description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {activeStep.description}
+          </p>
         ) : null}
         <div className="flex-1">{children}</div>
-        {footer ? (
-          <div className="mt-6 border-t border-border/60 pt-4">{footer}</div>
-        ) : null}
+        {footer ? <div className="mt-6  pt-4">{footer}</div> : null}
       </section>
     </div>
   );

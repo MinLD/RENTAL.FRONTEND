@@ -54,8 +54,48 @@ export const businessInformationSchema = z.object({
     .max(2000, "Giới thiệu doanh nghiệp không được quá 2.000 ký tự."),
 });
 
+export const businessLicenseMediaIdSchema = z
+  .string()
+  .min(1, "Vui lòng tải giấy phép kinh doanh.")
+  .regex(guidRegex, "Mã tài liệu giấy phép kinh doanh không hợp lệ.")
+  .refine(
+    (value) => value !== emptyGuid,
+    "Mã tài liệu giấy phép kinh doanh không hợp lệ.",
+  );
+
+export const legalInformationSchema = z.object({
+  businessLicenseNumber: z
+    .string()
+    .trim()
+    .max(50, "Số giấy phép kinh doanh không được quá 50 ký tự."),
+  businessLicenseIssuedDate: z.union([
+    z.literal(""),
+    z.iso.date("Ngày cấp phải là ngày hợp lệ theo định dạng YYYY-MM-DD."),
+  ]),
+  businessLicenseIssuedPlace: z
+    .string()
+    .trim()
+    .max(200, "Nơi cấp giấy phép không được quá 200 ký tự."),
+  legalRepresentativeName: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập họ và tên người đại diện.")
+    .max(100, "Họ và tên người đại diện không được quá 100 ký tự."),
+  legalRepresentativeCitizenId: z
+    .string()
+    .trim()
+    .refine((value) => !value || /^\d{12}$/.test(value), {
+      message: "CCCD/CMND người đại diện phải gồm đúng 12 chữ số.",
+    }),
+  businessLicenseDocumentMediaId: businessLicenseMediaIdSchema,
+});
+
+export const partnerRegistrationSchema = businessInformationSchema.extend(
+  legalInformationSchema.shape,
+);
+
 export type PartnerRegistrationFormValues = z.infer<
-  typeof businessInformationSchema
+  typeof partnerRegistrationSchema
 >;
 
 export const BUSINESS_INFORMATION_FIELDS = [
@@ -66,4 +106,13 @@ export const BUSINESS_INFORMATION_FIELDS = [
   "website",
   "logoMediaId",
   "description",
+] as const satisfies readonly (keyof PartnerRegistrationFormValues)[];
+
+export const LEGAL_INFORMATION_FIELDS = [
+  "businessLicenseNumber",
+  "businessLicenseIssuedDate",
+  "businessLicenseIssuedPlace",
+  "legalRepresentativeName",
+  "legalRepresentativeCitizenId",
+  "businessLicenseDocumentMediaId",
 ] as const satisfies readonly (keyof PartnerRegistrationFormValues)[];
