@@ -15,6 +15,7 @@ import type { AuthUser } from "@/types/auth";
 
 const REFRESH_BUFFER_SECONDS = 60;
 const ACCOUNT_ROUTE = "/account";
+const PARTNER_ROUTE = "/partner";
 
 const PORTAL_ROUTES = [
   {
@@ -39,7 +40,7 @@ const AUTH_ROUTES = [
   "/supplier-register",
 ] as const;
 
-const AUTHENTICATED_ROUTES = [ACCOUNT_ROUTE] as const;
+const AUTHENTICATED_ROUTES = [ACCOUNT_ROUTE, PARTNER_ROUTE] as const;
 
 type RouteAuthState = {
   roles: string[];

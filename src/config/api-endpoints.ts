@@ -25,6 +25,9 @@ function buildQueryEndpoint(
 
 export const API_ENDPOINTS = {
   backend: {
+    organizations: {
+      register: "/api/v1/auth/organizations/register",
+    },
     adminUsers: {
       activate: (id: string) =>
         `/api/v1/auth/admin/users/${encodeURIComponent(id)}/activate`,
