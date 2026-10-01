@@ -7,6 +7,7 @@ import { cn } from "@/utils/cn";
 
 export type MultiStepFormStep = {
   description?: string;
+  heading?: string;
   id: string;
   title: string;
 };
@@ -107,7 +108,7 @@ export function MultiStepFormLayout({
           className="text-xl font-bold tracking-tight text-foreground"
           id={titleId}
         >
-          {activeStep?.title}
+          {activeStep?.heading ?? activeStep?.title}
         </h1>
         {activeStep?.description ? (
           <p className="mt-1 text-sm text-muted-foreground">

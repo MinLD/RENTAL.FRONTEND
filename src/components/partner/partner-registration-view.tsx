@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -11,10 +10,12 @@ import {
   type MultiStepFormStep,
 } from "@/components/forms/multi-step-form-layout";
 import { BusinessInformationStep } from "@/components/partner/business-information-step";
+import { ContactInformationStep } from "@/components/partner/contact-information-step";
 import { LegalInformationStep } from "@/components/partner/legal-information-step";
 import { Button } from "@/components/ui/button";
 import {
   BUSINESS_INFORMATION_FIELDS,
+  CONTACT_INFORMATION_FIELDS,
   LEGAL_INFORMATION_FIELDS,
   partnerRegistrationSchema,
   type PartnerRegistrationFormValues,
@@ -33,14 +34,19 @@ const PARTNER_REGISTRATION_STEPS = [
     description:
       "Các thông tin này được sử dụng để xác minh doanh nghiệp trước khi cho phép đăng thiết bị.",
   },
-  { id: "contact", title: "Địa chỉ & liên hệ" },
+  {
+    id: "contact",
+    title: "Địa chỉ & liên hệ",
+    heading: "Địa chỉ & thông tin liên hệ",
+    description:
+      "Thông tin này giúp DPRENTAL và khách hàng có thể liên hệ với doanh nghiệp khi cần thiết.",
+  },
   { id: "confirmation", title: "Xác nhận" },
 ] as const satisfies readonly MultiStepFormStep[];
 
 type PartnerStepId = (typeof PARTNER_REGISTRATION_STEPS)[number]["id"];
 
 export function PartnerRegistrationView() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<PartnerStepId>(
     PARTNER_REGISTRATION_STEPS[0].id,
   );
@@ -55,6 +61,11 @@ export function PartnerRegistrationView() {
   const pendingFocus = useRef<keyof PartnerRegistrationFormValues | null>(null);
   const form = useForm<PartnerRegistrationFormValues>({
     defaultValues: {
+      contactEmail: "",
+      contactPhone: "",
+      province: "",
+      ward: "",
+      address: "",
       businessLicenseNumber: "",
       businessLicenseIssuedDate: "",
       businessLicenseIssuedPlace: "",
@@ -80,7 +91,7 @@ export function PartnerRegistrationView() {
   );
   const previousStep = PARTNER_REGISTRATION_STEPS[currentStepIndex - 1];
   const nextStep = PARTNER_REGISTRATION_STEPS[currentStepIndex + 1];
-  const canContinue = currentStep === "business" || currentStep === "legal";
+  const canContinue = currentStep !== "confirmation";
 
   useEffect(() => {
     if (pendingFocus.current) {
@@ -118,7 +129,9 @@ export function PartnerRegistrationView() {
               ? BUSINESS_INFORMATION_FIELDS
               : step.id === "legal"
                 ? LEGAL_INFORMATION_FIELDS
-                : null;
+                : step.id === "contact"
+                  ? CONTACT_INFORMATION_FIELDS
+                  : null;
 
           if (!fields) continue;
 
@@ -172,7 +185,11 @@ export function PartnerRegistrationView() {
           completedStepIds={completedStepIds}
           currentStep={currentStep}
           footer={
-            <div className="flex items-center justify-self-end-safe gap-3">
+            <div
+              className={currentStep === "contact"
+                ? "flex w-full items-center justify-between gap-3 border-t border-border/60 pt-4"
+                : "flex items-center justify-self-end-safe gap-3"}
+            >
               {previousStep && (
                 <>
                   <Button
@@ -223,6 +240,7 @@ export function PartnerRegistrationView() {
               onLicenseUploadingChange={setIsUploadingLicense}
             />
           ) : null}
+          {currentStep === "contact" ? <ContactInformationStep /> : null}
         </MultiStepFormLayout>
       </form>
     </FormProvider>

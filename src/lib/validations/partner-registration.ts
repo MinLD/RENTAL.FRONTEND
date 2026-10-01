@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { findProvince, isProvinceWardPair } from "@/lib/locations/vietnam-divisions";
+
 const guidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const emptyGuid = "00000000-0000-0000-0000-000000000000";
@@ -90,9 +92,45 @@ export const legalInformationSchema = z.object({
   businessLicenseDocumentMediaId: businessLicenseMediaIdSchema,
 });
 
-export const partnerRegistrationSchema = businessInformationSchema.extend(
-  legalInformationSchema.shape,
-);
+const contactInformationFieldsSchema = z.object({
+  contactEmail: z.string().trim()
+    .min(1, "Vui lòng nhập email liên hệ.")
+    .email("Email liên hệ không hợp lệ.")
+    .max(254, "Email liên hệ không được quá 254 ký tự."),
+  contactPhone: z.string().trim()
+    .regex(/^(0|\+84)\d{9}$/, "Số điện thoại phải gồm 0 và 9 số hoặc +84 và 9 số."),
+  province: z.string().trim()
+    .min(1, "Vui lòng chọn tỉnh / thành phố.")
+    .max(100, "Tỉnh / thành phố không được quá 100 ký tự.")
+    .refine((value) => !value || Boolean(findProvince(value)), "Tỉnh / thành phố không hợp lệ."),
+  ward: z.string().trim()
+    .min(1, "Vui lòng chọn phường / xã.")
+    .max(100, "Phường / xã không được quá 100 ký tự."),
+  address: z.string().trim()
+    .min(1, "Vui lòng nhập địa chỉ chi tiết.")
+    .max(250, "Địa chỉ chi tiết không được quá 250 ký tự."),
+});
+
+// Apply the same relationship check to the step and the full form schemas.
+function validateProvinceWard(
+  value: { province: string; ward: string },
+  context: z.RefinementCtx,
+) {
+  if (value.province && value.ward && !isProvinceWardPair(value.province, value.ward)) {
+    context.addIssue({
+      code: "custom",
+      path: ["ward"],
+      message: "Phường / xã không thuộc tỉnh / thành phố đã chọn.",
+    });
+  }
+}
+
+export const contactInformationSchema = contactInformationFieldsSchema.superRefine(validateProvinceWard);
+
+export const partnerRegistrationSchema = businessInformationSchema
+  .extend(legalInformationSchema.shape)
+  .extend(contactInformationFieldsSchema.shape)
+  .superRefine(validateProvinceWard);
 
 export type PartnerRegistrationFormValues = z.infer<
   typeof partnerRegistrationSchema
@@ -115,4 +153,12 @@ export const LEGAL_INFORMATION_FIELDS = [
   "legalRepresentativeName",
   "legalRepresentativeCitizenId",
   "businessLicenseDocumentMediaId",
+] as const satisfies readonly (keyof PartnerRegistrationFormValues)[];
+
+export const CONTACT_INFORMATION_FIELDS = [
+  "contactEmail",
+  "contactPhone",
+  "province",
+  "ward",
+  "address",
 ] as const satisfies readonly (keyof PartnerRegistrationFormValues)[];
