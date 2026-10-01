@@ -2,6 +2,7 @@
 
 import { useId, useMemo, type Ref } from "react";
 
+import { ProvinceField } from "@/components/forms/province-field";
 import { SearchableSelectField } from "@/components/forms/searchable-select-field";
 import {
   VIETNAM_PROVINCES,
@@ -42,10 +43,6 @@ export function ProvinceWardFields({
   const prefix = idPrefix ?? generatedId;
   const province = provinces.find((item) => item.name === value.province);
   const ward = province?.wards.find((item) => item.name === value.ward);
-  const provinceOptions = useMemo(
-    () => provinces.map((item) => ({ label: item.name, value: item.code })),
-    [provinces],
-  );
   const wardOptions = useMemo(
     () => province?.wards.map((item) => ({ label: item.name, value: item.code })) ?? [],
     [province],
@@ -53,23 +50,22 @@ export function ProvinceWardFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <SearchableSelectField
+      <ProvinceField
         disabled={disabled}
         error={provinceError}
         id={`${prefix}-province`}
         label="Tỉnh / Thành phố"
         onBlur={onProvinceBlur}
-        onChange={(code) => {
-          const nextProvince = provinces.find((item) => item.code === code);
-          if (nextProvince && nextProvince.name !== value.province) {
-            onChange({ province: nextProvince.name, ward: "" });
+        onChange={(name) => {
+          if (name !== value.province) {
+            onChange({ province: name, ward: "" });
           }
         }}
-        options={provinceOptions}
+        provinces={provinces}
         placeholder="Chọn tỉnh / thành phố"
         ref={provinceRef}
         required={required}
-        value={province?.code ?? ""}
+        value={value.province}
       />
       <SearchableSelectField
         disabled={disabled || !province}

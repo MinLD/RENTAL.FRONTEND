@@ -59,7 +59,7 @@ export function LegalInformationStep({
             id="partner-license-place"
             label="Nơi cấp"
             maxLength={200}
-            placeholder="Ví dụ: Sở KH&ĐT TP. Hồ Chí Minh"
+            placeholder="Nhập tên cơ quan cấp giấy phép kinh doanh"
             {...register("businessLicenseIssuedPlace")}
           />
         </div>
