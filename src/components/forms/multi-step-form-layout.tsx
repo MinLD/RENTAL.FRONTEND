@@ -5,6 +5,7 @@ import { type ReactNode, useId } from "react";
 import { cn } from "@/utils/cn";
 
 export type MultiStepFormStep = {
+  description?: string;
   id: string;
   title: string;
 };
@@ -13,6 +14,8 @@ type MultiStepFormLayoutProps = {
   children?: ReactNode;
   className?: string;
   currentStep: string;
+  footer?: ReactNode;
+  isStepNavigationDisabled?: boolean;
   onStepChange: (stepId: string) => void;
   steps: readonly MultiStepFormStep[];
 };
@@ -23,6 +26,8 @@ export function MultiStepFormLayout({
   children,
   className,
   currentStep,
+  footer,
+  isStepNavigationDisabled = false,
   onStepChange,
   steps,
 }: MultiStepFormLayoutProps) {
@@ -53,12 +58,13 @@ export function MultiStepFormLayout({
                   aria-current={isActive ? "step" : undefined}
                   className={cn(
                     "flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors",
-                    "hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    "hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
                     isActive
                       ? "font-semibold text-primary"
                       : "font-medium text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => onStepChange(step.id)}
+                  disabled={isStepNavigationDisabled}
                   type="button"
                 >
                   <span
@@ -82,7 +88,7 @@ export function MultiStepFormLayout({
 
       <section
         aria-labelledby={titleId}
-        className="min-h-[400px] min-w-0 rounded-xl border border-border/60 bg-background p-6 sm:min-h-[560px] md:p-8"
+        className="flex min-h-[400px] min-w-0 flex-col rounded-xl border border-border/60 bg-background p-6 sm:min-h-[560px] md:p-8"
         id={contentId}
       >
         <h1
@@ -92,7 +98,13 @@ export function MultiStepFormLayout({
         >
           {activeStep?.title}
         </h1>
-        {children}
+        {activeStep?.description ? (
+          <p className="mt-1 text-sm text-muted-foreground">{activeStep.description}</p>
+        ) : null}
+        <div className="flex-1">{children}</div>
+        {footer ? (
+          <div className="mt-6 border-t border-border/60 pt-4">{footer}</div>
+        ) : null}
       </section>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, LoaderCircle } from "lucide-react";
+import { Camera, LoaderCircle, Upload } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +27,7 @@ type MediaAvatarUploadProps = {
   size?: "md" | "lg" | "xl";
   uploadFile?: (file: File) => Promise<MediaUploadResponse>;
   uploadFiles?: (files: File[]) => Promise<MediaUploadResponse[]>;
+  variant?: "avatar" | "logo";
 };
 
 const sizeClassName = {
@@ -54,6 +55,7 @@ export function MediaAvatarUpload({
   size = "lg",
   uploadFile,
   uploadFiles,
+  variant = "avatar",
 }: MediaAvatarUploadProps) {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,9 +63,12 @@ export function MediaAvatarUpload({
   const [localPreviewUrls, setLocalPreviewUrls] = useState<string[]>([]);
   const isMultiple = mode === "multiple";
   const previewUrls = normalizeArray(previewUrl);
-  const visiblePreviewUrls = localPreviewUrls.length
-    ? localPreviewUrls
-    : previewUrls;
+  const visiblePreviewUrls =
+    variant === "logo" && previewUrl !== undefined
+      ? previewUrls
+      : localPreviewUrls.length
+        ? localPreviewUrls
+        : previewUrls;
 
   async function handleFileChange(files: FileList | null) {
     const selectedFiles = Array.from(files ?? []);
@@ -115,6 +120,9 @@ export function MediaAvatarUpload({
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
       <input
         accept={accept}
+        aria-label={
+          variant === "logo" ? "Chọn logo doanh nghiệp" : "Chọn ảnh đại diện"
+        }
         className="sr-only"
         disabled={disabled || isUploading}
         id={inputId}
@@ -126,7 +134,43 @@ export function MediaAvatarUpload({
         type="file"
       />
 
-      {isMultiple && visiblePreviewUrls.length ? (
+      {variant === "logo" ? (
+        <button
+          aria-label={
+            visiblePreviewUrls[0]
+              ? "Thay logo doanh nghiệp"
+              : "Tải logo doanh nghiệp"
+          }
+          className={cn(
+            "relative flex shrink-0 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-primary/40 bg-primary/5 text-xs font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
+            sizeClassName[size],
+          )}
+          disabled={disabled || isUploading}
+          onClick={() => fileInputRef.current?.click()}
+          type="button"
+        >
+          {visiblePreviewUrls[0] ? (
+            <AvatarWithSkeleton
+              alt="Logo doanh nghiệp"
+              className="size-full rounded-none bg-transparent"
+              fallback="Logo"
+              fallbackClassName="rounded-none bg-primary/5 text-primary"
+              imageClassName="object-contain p-2"
+              src={visiblePreviewUrls[0]}
+            />
+          ) : (
+            <>
+              <Upload className="size-5" />
+              <span>Tải logo</span>
+            </>
+          )}
+          {isUploading ? (
+            <span className="absolute inset-0 grid place-items-center bg-background/80">
+              <LoaderCircle className="size-5 animate-spin" />
+            </span>
+          ) : null}
+        </button>
+      ) : isMultiple && visiblePreviewUrls.length ? (
         visiblePreviewUrls.map((url, index) => (
           <AvatarPreview
             fallbackText={`${index + 1}`}
@@ -145,22 +189,24 @@ export function MediaAvatarUpload({
         />
       )}
 
-      <button
-        aria-label="Cập nhật ảnh"
-        className={cn(
-          "relative z-20 -ml-10 mt-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover",
-          "disabled:cursor-not-allowed disabled:opacity-70",
-        )}
-        disabled={disabled || isUploading}
-        onClick={() => fileInputRef.current?.click()}
-        type="button"
-      >
-        {isUploading ? (
-          <LoaderCircle className="size-4 animate-spin" />
-        ) : (
-          <Camera size={16} />
-        )}
-      </button>
+      {variant === "avatar" ? (
+        <button
+          aria-label="Cập nhật ảnh"
+          className={cn(
+            "relative z-20 -ml-10 mt-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover",
+            "disabled:cursor-not-allowed disabled:opacity-70",
+          )}
+          disabled={disabled || isUploading}
+          onClick={() => fileInputRef.current?.click()}
+          type="button"
+        >
+          {isUploading ? (
+            <LoaderCircle className="size-4 animate-spin" />
+          ) : (
+            <Camera size={16} />
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }
