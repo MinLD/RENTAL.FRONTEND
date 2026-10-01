@@ -9,8 +9,10 @@ import {
   Send,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   MultiStepFormLayout,
@@ -32,6 +34,8 @@ import { ApiClientError } from "@/services/api-client";
 import { registerOrganization } from "@/services/organization-service";
 import type { MediaUploadResponse } from "@/types/media";
 import type { OrganizationRegisteredResponse } from "@/types/organization";
+
+const PROFILE_NOT_COMPLETED_ERROR_CODE = "Profile.NotCompleted";
 
 const PARTNER_REGISTRATION_STEPS = [
   {
@@ -63,6 +67,7 @@ const PARTNER_REGISTRATION_STEPS = [
 type PartnerStepId = (typeof PARTNER_REGISTRATION_STEPS)[number]["id"];
 
 export function PartnerRegistrationView() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<PartnerStepId>(
     PARTNER_REGISTRATION_STEPS[0].id,
   );
@@ -229,6 +234,17 @@ export function PartnerRegistrationView() {
       }
       setRegisteredOrganization(registration);
     } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        isProfileNotCompletedError(error)
+      ) {
+        toast.error(
+          "Bạn cần cập nhật CCCD, số điện thoại và ngày sinh trước khi đăng ký tổ chức.",
+        );
+        router.push("/account");
+        return;
+      }
+
       setSubmissionError(
         error instanceof ApiClientError
           ? error.message
@@ -370,5 +386,18 @@ export function PartnerRegistrationView() {
         </MultiStepFormLayout>
       </form>
     </FormProvider>
+  );
+}
+
+function isProfileNotCompletedError(error: ApiClientError) {
+  const body = error.responseBody;
+
+  if (!body || typeof body !== "object") {
+    return false;
+  }
+
+  return (
+    ("title" in body && body.title === PROFILE_NOT_COMPLETED_ERROR_CODE) ||
+    ("code" in body && body.code === PROFILE_NOT_COMPLETED_ERROR_CODE)
   );
 }
