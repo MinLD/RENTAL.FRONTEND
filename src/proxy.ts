@@ -8,16 +8,14 @@ import {
   mergeAuthCookiesIntoCookieHeader,
 } from "@/services/auth-cookie";
 import { refreshBackendSession } from "@/services/auth-refresh";
-import {
-  getJwtRoles,
-  shouldRefreshJwtToken,
-} from "@/services/auth-token";
+import { getJwtRoles, shouldRefreshJwtToken } from "@/services/auth-token";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import type { AuthUser } from "@/types/auth";
 
 const REFRESH_BUFFER_SECONDS = 60;
 const ACCOUNT_ROUTE = "/account";
+const PARTNER_ROUTE = "/partner";
 
 const PORTAL_ROUTES = [
   {
@@ -25,19 +23,14 @@ const PORTAL_ROUTES = [
     role: "adm",
   },
   {
-    path: "/company",
-    role: "com",
-  },
-  {
-    path: "/supplier",
-    role: "sup",
+    path: "/ops",
+    role: "ops",
   },
 ] as const;
 
 const ROLE_ALIASES: Record<(typeof PORTAL_ROUTES)[number]["role"], string[]> = {
   adm: ["adm", "admin", "administrator"],
-  com: ["com", "company"],
-  sup: ["sup", "supplier"],
+  ops: ["ops", "ops"],
 };
 
 const AUTH_ROUTES = [
@@ -47,7 +40,7 @@ const AUTH_ROUTES = [
   "/supplier-register",
 ] as const;
 
-const AUTHENTICATED_ROUTES = [ACCOUNT_ROUTE] as const;
+const AUTHENTICATED_ROUTES = [ACCOUNT_ROUTE, PARTNER_ROUTE] as const;
 
 type RouteAuthState = {
   roles: string[];
@@ -97,9 +90,9 @@ function normalizeRole(role: string) {
 
 function hasRouteRole(authState: RouteAuthState, role: string) {
   const acceptedRoles = new Set(
-    (ROLE_ALIASES[role as (typeof PORTAL_ROUTES)[number]["role"]] ?? [role]).map(
-      normalizeRole,
-    ),
+    (
+      ROLE_ALIASES[role as (typeof PORTAL_ROUTES)[number]["role"]] ?? [role]
+    ).map(normalizeRole),
   );
 
   return authState.roles.some((userRole) =>
@@ -358,7 +351,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

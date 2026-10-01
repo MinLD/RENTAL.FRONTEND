@@ -28,6 +28,7 @@ import type { DashboardNavigationItem } from "@/types/dashboard-navigation";
 import { cn } from "@/utils/cn";
 
 type DashboardSidebarProps = {
+  homeHref?: string;
   items: DashboardNavigationItem[];
   user?: {
     avatarUrl?: string | null;
@@ -36,7 +37,11 @@ type DashboardSidebarProps = {
   } | null;
 };
 
-export function DashboardSidebar({ items, user }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  homeHref = "/admin",
+  items,
+  user,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -46,7 +51,7 @@ export function DashboardSidebar({ items, user }: DashboardSidebarProps) {
     >
       <SidebarHeader className=" px-4 py-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
         <Link
-          href="/admin"
+          href={homeHref}
           className="flex min-w-0 overflow-hidden group-data-[collapsible=icon]:justify-center"
         >
           <span className="hidden size-9 shrink-0 items-center justify-center overflow-hidden  group-data-[collapsible=icon]:flex">

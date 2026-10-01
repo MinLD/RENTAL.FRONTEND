@@ -18,7 +18,7 @@ export async function uploadMediaFile(
   const [upload] = await uploadMediaFiles([file], options);
 
   if (!upload) {
-    throw new Error("Không nhận được phản hồi upload ảnh.");
+    throw new Error("Không nhận được phản hồi upload tệp.");
   }
 
   return upload;
@@ -59,13 +59,13 @@ function normalizeUploadResults(results: MediaUploadResult[]) {
         throw new Error(
           result.error.message ??
             result.error.code ??
-            `Không thể tải ảnh ${result.fileName ?? ""} lên.`.trim(),
+            `Không thể tải tệp ${result.fileName ?? ""} lên.`.trim(),
         );
       }
 
       if (!result.media) {
         throw new Error(
-          `Không nhận được media cho ảnh ${result.fileName ?? ""}.`.trim(),
+          `Không nhận được media cho tệp ${result.fileName ?? ""}.`.trim(),
         );
       }
 

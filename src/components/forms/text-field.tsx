@@ -11,7 +11,7 @@ export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ className, error, id, label, leftIcon, ...props }, ref) => {
+  ({ className, error, id, label, leftIcon, required, ...props }, ref) => {
     return (
       <div className="space-y-1.5">
         <label
@@ -19,6 +19,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           htmlFor={id}
         >
           {label}
+          {required ? <span className="ml-1 text-error">*</span> : null}
         </label>
         <div className="relative">
           {leftIcon ? (
@@ -27,16 +28,19 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             </span>
           ) : null}
           <Input
+            aria-describedby={error && id ? `${id}-error` : undefined}
             aria-invalid={error ? true : undefined}
             className={cn(leftIcon ? "pl-9" : undefined, className)}
             id={id}
             ref={ref}
+            required={required}
             {...props}
           />
         </div>
         {error ? (
           <p
             className="text-xs font-medium text-error"
+            id={id ? `${id}-error` : undefined}
           >
             {error}
           </p>
