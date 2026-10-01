@@ -21,6 +21,7 @@ type MultiStepFormLayoutProps = {
   isStepNavigationDisabled?: boolean;
   onStepChange: (stepId: string) => void;
   steps: readonly MultiStepFormStep[];
+  variant?: "card" | "plain";
 };
 
 // Adapted from Formcn's sidebarStepper layout:
@@ -34,6 +35,7 @@ export function MultiStepFormLayout({
   isStepNavigationDisabled = false,
   onStepChange,
   steps,
+  variant = "card",
 }: MultiStepFormLayoutProps) {
   const layoutId = useId();
   const contentId = `${layoutId}-content`;
@@ -100,7 +102,10 @@ export function MultiStepFormLayout({
 
       <section
         aria-labelledby={titleId}
-        className="flex min-h-[400px] min-w-0 flex-col rounded-xl border border-border/60 bg-background p-6 sm:min-h-[560px] md:p-8"
+        className={cn(
+          "flex min-w-0 flex-col",
+          variant === "card" && "min-h-[400px] rounded-xl border border-border/60 bg-background p-6 sm:min-h-[560px] md:p-8",
+        )}
         id={contentId}
       >
         <h1
