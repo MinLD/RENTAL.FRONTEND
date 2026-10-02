@@ -1,8 +1,8 @@
 import type { DashboardNavigationItem } from "@/types/dashboard-navigation";
 
-export const OPS_NAVIGATION: DashboardNavigationItem[] = [
+export const OW_NAVIGATION: DashboardNavigationItem[] = [
   {
-    href: "/ops",
+    href: "/ow",
     icon: "layout-dashboard",
     label: "Dashboard",
   },

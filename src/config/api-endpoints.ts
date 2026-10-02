@@ -4,6 +4,13 @@ type ListAdminUsersParams = {
   pageSize: number;
 };
 
+type ListAdminOrganizationsParams = {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: 0 | 1 | 2 | 3;
+};
+
 function buildQueryEndpoint(
   pathname: string,
   params: Record<string, string | number | undefined>,
@@ -30,6 +37,25 @@ export const API_ENDPOINTS = {
       mine: "/api/v1/auth/organizations/mine",
       detail: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
       profile: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
+    },
+    adminOrganizations: {
+      approve: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/approve`,
+      activate: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/activate`,
+      detail: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}`,
+      list: ({ page, pageSize, search, status }: ListAdminOrganizationsParams) =>
+        buildQueryEndpoint("/api/v1/auth/admin/organizations", {
+          Page: page,
+          PageSize: pageSize,
+          Search: search?.trim(),
+          status,
+        }),
+      reject: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/reject`,
+      suspend: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/suspend`,
     },
     adminUsers: {
       activate: (id: string) =>

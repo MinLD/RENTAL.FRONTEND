@@ -11,6 +11,11 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
     icon: "user-pen",
     label: "Quản lý người dùng",
   },
+  {
+    href: "/admin/organizations",
+    icon: "building",
+    label: "Quản lý tổ chức",
+  },
   // {
   //   href: "/admin/orders",
   //   icon: "file-text",

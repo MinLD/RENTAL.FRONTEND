@@ -22,27 +22,38 @@ type AccountProfileFormProps = {
   user: AuthUser;
 };
 
+type AvatarPreview = {
+  mediaId: string;
+  previewUrl: string;
+};
+
 export function AccountProfileForm({
   initialExternalLogins,
   initialProfile,
   initialSessions,
   user,
 }: AccountProfileFormProps) {
-  const [avatarDraft, setAvatarDraft] = useState<{
-    mediaId: string;
-    previewUrl: string;
-  } | null>(null);
+  const [avatarDraft, setAvatarDraft] = useState<AvatarPreview | null>(null);
+  const [savedAvatarPreview, setSavedAvatarPreview] =
+    useState<AvatarPreview | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const savedAvatarMediaId = initialProfile.avatarMediaId ?? "";
 
-  // The saved ID acknowledges the upload. Preview URLs can differ or expire.
+  // A matching saved ID acknowledges the upload without discarding its image.
+  // The profile URL may be unavailable even though the upload preview works.
   if (avatarDraft && avatarDraft.mediaId === savedAvatarMediaId) {
+    setSavedAvatarPreview(avatarDraft);
     setAvatarDraft(null);
   }
-  const isAvatarDirty = avatarDraft !== null && avatarDraft.mediaId !== savedAvatarMediaId;
+  const isAvatarDirty =
+    avatarDraft !== null && avatarDraft.mediaId !== savedAvatarMediaId;
   const avatarMediaId = isAvatarDirty ? avatarDraft.mediaId : savedAvatarMediaId;
-  const avatarPreviewUrl = isAvatarDirty ? avatarDraft.previewUrl : initialProfile.avatarUrl ?? "";
+  const savedAvatarUrl =
+    savedAvatarPreview?.mediaId === savedAvatarMediaId
+      ? savedAvatarPreview.previewUrl
+      : initialProfile.avatarUrl ?? "";
+  const avatarPreviewUrl = avatarDraft?.previewUrl ?? savedAvatarUrl;
 
   function resetAvatar() {
     setAvatarDraft(null);
