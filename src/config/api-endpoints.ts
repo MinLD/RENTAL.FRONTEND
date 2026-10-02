@@ -41,6 +41,8 @@ export const API_ENDPOINTS = {
     adminOrganizations: {
       approve: (id: string) =>
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/approve`,
+      activate: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/activate`,
       detail: (id: string) =>
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}`,
       list: ({ page, pageSize, search, status }: ListAdminOrganizationsParams) =>
@@ -52,6 +54,8 @@ export const API_ENDPOINTS = {
         }),
       reject: (id: string) =>
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/reject`,
+      suspend: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/suspend`,
     },
     adminUsers: {
       activate: (id: string) =>

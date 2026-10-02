@@ -1,6 +1,6 @@
 "use client";
 
-import { XCircle } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 import { TextareaField } from "@/components/forms/textarea-field";
@@ -13,23 +13,37 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { rejectAdminOrganizationSchema } from "@/lib/validations/admin-organizations";
+import { adminOrganizationReasonSchema } from "@/lib/validations/admin-organizations";
 
-type OrganizationRejectDialogProps = {
+type OrganizationReasonDialogProps = {
+  confirmClassName?: string;
+  confirmLabel: string;
+  description: string;
+  fieldLabel: string;
+  icon: ReactNode;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (reason: string) => void;
   open: boolean;
-  organizationName?: string | null;
+  placeholder: string;
+  submittingLabel: string;
+  title: string;
 };
 
-export function OrganizationRejectDialog({
+export function OrganizationReasonDialog({
+  confirmClassName,
+  confirmLabel,
+  description,
+  fieldLabel,
+  icon,
   isSubmitting = false,
   onOpenChange,
   onSubmit,
   open,
-  organizationName,
-}: OrganizationRejectDialogProps) {
+  placeholder,
+  submittingLabel,
+  title,
+}: OrganizationReasonDialogProps) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | undefined>();
   const characterCount = useMemo(() => reason.length, [reason]);
@@ -47,10 +61,10 @@ export function OrganizationRejectDialog({
   }
 
   function handleSubmit() {
-    const parsed = rejectAdminOrganizationSchema.safeParse({ reason });
+    const parsed = adminOrganizationReasonSchema.safeParse({ reason });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Lý do từ chối không hợp lệ.");
+      setError(parsed.error.issues[0]?.message ?? "Lý do không hợp lệ.");
       return;
     }
 
@@ -64,13 +78,11 @@ export function OrganizationRejectDialog({
         <div className="p-8">
           <DialogHeader className="space-y-5 text-left">
             <div className="flex items-center gap-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
-                <XCircle className="size-5" />
-              </span>
-              <DialogTitle>Từ chối hồ sơ tổ chức?</DialogTitle>
+              {icon}
+              <DialogTitle>{title}</DialogTitle>
             </div>
             <DialogDescription className="leading-6">
-              {`Nhập lý do từ chối hồ sơ "${organizationName || "này"}" để chủ tổ chức biết cần bổ sung gì.`}
+              {description}
             </DialogDescription>
           </DialogHeader>
 
@@ -79,14 +91,14 @@ export function OrganizationRejectDialog({
               characterCount={characterCount}
               disabled={isSubmitting}
               error={error}
-              id="organization-reject-reason"
-              label="Lý do từ chối"
+              id="organization-action-reason"
+              label={fieldLabel}
               maxLength={500}
               onChange={(event) => {
                 setReason(event.target.value);
                 if (error) setError(undefined);
               }}
-              placeholder="Ví dụ: Hồ sơ thiếu giấy phép kinh doanh hợp lệ."
+              placeholder={placeholder}
               requiredIndicator
               rows={5}
               value={reason}
@@ -103,12 +115,12 @@ export function OrganizationRejectDialog({
               Hủy
             </Button>
             <Button
-              className="bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline-red-500"
+              className={confirmClassName}
               disabled={isSubmitting}
               onClick={handleSubmit}
               type="button"
             >
-              {isSubmitting ? "Đang từ chối..." : "Từ chối hồ sơ"}
+              {isSubmitting ? submittingLabel : confirmLabel}
             </Button>
           </DialogFooter>
         </div>

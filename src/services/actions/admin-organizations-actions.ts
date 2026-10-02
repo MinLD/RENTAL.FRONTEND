@@ -7,7 +7,7 @@ import {
   adminOrganizationDetailSchema,
   adminOrganizationListSchema,
   adminOrganizationsQuerySchema,
-  rejectAdminOrganizationSchema,
+  adminOrganizationReasonSchema,
 } from "@/lib/validations/admin-organizations";
 import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
@@ -77,13 +77,7 @@ export async function approveAdminOrganizationAction(
     "Không thể duyệt hồ sơ tổ chức.",
     { method: "PATCH" },
   );
-  const parsed = adminOrganizationDetailSchema.safeParse(data);
-
-  if (!parsed.success) {
-    throw new Error("Dữ liệu hồ sơ tổ chức sau khi duyệt không hợp lệ.");
-  }
-
-  return parsed.data;
+  return parseOrganizationMutationDetail(id, data, "Dữ liệu hồ sơ tổ chức sau khi duyệt không hợp lệ.");
 }
 
 export async function rejectAdminOrganizationAction(
@@ -94,7 +88,7 @@ export async function rejectAdminOrganizationAction(
     throw new Error("ID tổ chức không hợp lệ.");
   }
 
-  const parsedRequest = rejectAdminOrganizationSchema.safeParse({ reason });
+  const parsedRequest = adminOrganizationReasonSchema.safeParse({ reason });
 
   if (!parsedRequest.success) {
     throw new Error(parsedRequest.error.issues[0]?.message ?? "Lý do từ chối không hợp lệ.");
@@ -109,13 +103,48 @@ export async function rejectAdminOrganizationAction(
       method: "PATCH",
     },
   );
-  const parsed = adminOrganizationDetailSchema.safeParse(data);
+  return parseOrganizationMutationDetail(id, data, "Dữ liệu hồ sơ tổ chức sau khi từ chối không hợp lệ.");
+}
 
-  if (!parsed.success) {
-    throw new Error("Dữ liệu hồ sơ tổ chức sau khi từ chối không hợp lệ.");
+export async function suspendAdminOrganizationAction(
+  id: string,
+  reason: string,
+): Promise<AdminOrganizationDetail> {
+  if (!z.uuid().safeParse(id).success) {
+    throw new Error("ID tổ chức không hợp lệ.");
   }
 
-  return parsed.data;
+  const parsedRequest = adminOrganizationReasonSchema.safeParse({ reason });
+
+  if (!parsedRequest.success) {
+    throw new Error(parsedRequest.error.issues[0]?.message ?? "Lý do tạm khóa không hợp lệ.");
+  }
+
+  const data = await fetchOrganizationJson(
+    API_ENDPOINTS.backend.adminOrganizations.suspend(id),
+    "Không thể tạm khóa tổ chức.",
+    {
+      body: JSON.stringify(parsedRequest.data),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    },
+  );
+  return parseOrganizationMutationDetail(id, data, "Dữ liệu tổ chức sau khi tạm khóa không hợp lệ.");
+}
+
+export async function activateAdminOrganizationAction(
+  id: string,
+): Promise<AdminOrganizationDetail> {
+  if (!z.uuid().safeParse(id).success) {
+    throw new Error("ID tổ chức không hợp lệ.");
+  }
+
+  const data = await fetchOrganizationJson(
+    API_ENDPOINTS.backend.adminOrganizations.activate(id),
+    "Không thể mở khóa tổ chức.",
+    { method: "POST" },
+  );
+  return parseOrganizationMutationDetail(id, data, "Dữ liệu tổ chức sau khi mở khóa không hợp lệ.");
 }
 
 async function fetchOrganizationJson(
@@ -129,5 +158,27 @@ async function fetchOrganizationJson(
     throw new Error(await getActionResponseErrorMessage(response, fallbackMessage));
   }
 
+  if (response.status === 204) {
+    return undefined;
+  }
+
   return response.json() as Promise<unknown>;
+}
+
+async function parseOrganizationMutationDetail(
+  id: string,
+  data: unknown,
+  invalidMessage: string,
+) {
+  if (data === undefined) {
+    return getAdminOrganizationDetailAction(id);
+  }
+
+  const parsed = adminOrganizationDetailSchema.safeParse(data);
+
+  if (!parsed.success) {
+    throw new Error(invalidMessage);
+  }
+
+  return parsed.data;
 }

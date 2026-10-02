@@ -22,13 +22,17 @@ import { OrganizationStatusActions } from "./organization-status-actions";
 
 type OrganizationDetailDrawerProps = {
   error: string | null;
+  isActivating?: boolean;
   isApproving?: boolean;
   isLoading: boolean;
   isRejecting?: boolean;
+  isSuspending?: boolean;
+  onActivate?: (organization: AdminOrganizationDetail) => void;
   onApprove?: (organization: AdminOrganizationDetail) => void;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
   onReject?: (organization: AdminOrganizationDetail) => void;
+  onSuspend?: (organization: AdminOrganizationDetail) => void;
   open: boolean;
   organization: AdminOrganizationDetail | null;
   selectedName?: string | null;
@@ -36,13 +40,17 @@ type OrganizationDetailDrawerProps = {
 
 export function OrganizationDetailDrawer({
   error,
+  isActivating = false,
   isApproving = false,
+  onActivate,
   onApprove,
   isLoading,
   isRejecting = false,
+  isSuspending = false,
   onOpenChange,
   onRefresh,
   onReject,
+  onSuspend,
   open,
   organization,
   selectedName,
@@ -59,10 +67,14 @@ export function OrganizationDetailDrawer({
           </Button>
           {organization ? (
             <OrganizationStatusActions
+              isActivating={isActivating}
               isApproving={isApproving}
               isRejecting={isRejecting}
+              isSuspending={isSuspending}
+              onActivate={() => onActivate?.(organization)}
               onApprove={() => onApprove?.(organization)}
               onReject={() => onReject?.(organization)}
+              onSuspend={() => onSuspend?.(organization)}
               status={organization.status}
             />
           ) : null}

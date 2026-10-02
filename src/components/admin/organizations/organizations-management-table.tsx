@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Eye } from "lucide-react";
+import {
+  CheckCircle2,
+  Eye,
+  LockKeyhole,
+  UnlockKeyhole,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/data-table";
@@ -20,24 +26,34 @@ import type {
 import { ORGANIZATION_STATUS_OPTIONS } from "@/utils/organization";
 
 import { OrganizationDetailDrawer } from "./organization-detail-drawer";
-import { OrganizationRejectDialog } from "./organization-reject-dialog";
+import { OrganizationReasonDialog } from "./organization-reason-dialog";
 import { OrganizationStatusActions } from "./organization-status-actions";
 import { organizationColumns } from "./organizations-table-columns";
 
 type OrganizationsManagementTableProps = {
+  activateOrganization: (id: string) => Promise<AdminOrganizationDetail>;
   approveOrganization: (id: string) => Promise<AdminOrganizationDetail>;
   fetchOrganizations: (
     params: DataTableFetchParams<AdminOrganizationsFilters>,
   ) => Promise<DataTableFetchResult<AdminOrganizationSummary>>;
   fetchOrganizationDetail: (id: string) => Promise<AdminOrganizationDetail>;
-  rejectOrganization: (id: string, reason: string) => Promise<AdminOrganizationDetail>;
+  rejectOrganization: (
+    id: string,
+    reason: string,
+  ) => Promise<AdminOrganizationDetail>;
+  suspendOrganization: (
+    id: string,
+    reason: string,
+  ) => Promise<AdminOrganizationDetail>;
 };
 
 export function OrganizationsManagementTable({
+  activateOrganization,
   approveOrganization,
   fetchOrganizations,
   fetchOrganizationDetail,
   rejectOrganization,
+  suspendOrganization,
 }: OrganizationsManagementTableProps) {
   const controller = useAdminOrganizationsController(fetchOrganizationDetail);
   const listRefreshRef = useRef<(() => void) | null>(null);
@@ -47,8 +63,16 @@ export function OrganizationsManagementTable({
   const [rejectTarget, setRejectTarget] = useState<
     AdminOrganizationDetail | AdminOrganizationSummary | null
   >(null);
+  const [suspendTarget, setSuspendTarget] = useState<
+    AdminOrganizationDetail | AdminOrganizationSummary | null
+  >(null);
+  const [activateTarget, setActivateTarget] = useState<
+    AdminOrganizationDetail | AdminOrganizationSummary | null
+  >(null);
+  const [isActivating, setIsActivating] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isSuspending, setIsSuspending] = useState(false);
 
   async function handleApproveConfirm() {
     if (!approveTarget) {
@@ -66,7 +90,9 @@ export function OrganizationsManagementTable({
       setApproveTarget(null);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Không thể duyệt hồ sơ tổ chức.",
+        error instanceof Error
+          ? error.message
+          : "Không thể duyệt hồ sơ tổ chức.",
       );
     } finally {
       setIsApproving(false);
@@ -81,7 +107,10 @@ export function OrganizationsManagementTable({
     setIsRejecting(true);
 
     try {
-      const rejectedOrganization = await rejectOrganization(rejectTarget.id, reason);
+      const rejectedOrganization = await rejectOrganization(
+        rejectTarget.id,
+        reason,
+      );
 
       toast.success("Đã từ chối hồ sơ tổ chức.");
       controller.handleOrganizationUpdated(rejectedOrganization);
@@ -89,10 +118,63 @@ export function OrganizationsManagementTable({
       setRejectTarget(null);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Không thể từ chối hồ sơ tổ chức.",
+        error instanceof Error
+          ? error.message
+          : "Không thể từ chối hồ sơ tổ chức.",
       );
     } finally {
       setIsRejecting(false);
+    }
+  }
+
+  async function handleSuspendSubmit(reason: string) {
+    if (!suspendTarget) {
+      return;
+    }
+
+    setIsSuspending(true);
+
+    try {
+      const suspendedOrganization = await suspendOrganization(
+        suspendTarget.id,
+        reason,
+      );
+
+      toast.success("Đã tạm khóa tổ chức.");
+      controller.handleOrganizationUpdated(suspendedOrganization);
+      listRefreshRef.current?.();
+      setSuspendTarget(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể tạm khóa tổ chức.",
+      );
+    } finally {
+      setIsSuspending(false);
+    }
+  }
+
+  async function handleActivateConfirm() {
+    if (!activateTarget) {
+      return;
+    }
+
+    setIsActivating(true);
+
+    try {
+      const activatedOrganization = await activateOrganization(
+        activateTarget.id,
+      );
+
+      toast.success("Đã mở khóa tổ chức.");
+      controller.handleOrganizationUpdated(activatedOrganization);
+      listRefreshRef.current?.();
+      setActivateTarget(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể mở khóa tổ chức.",
+      );
+    } finally {
+      setIsActivating(false);
     }
   }
 
@@ -149,14 +231,24 @@ export function OrganizationsManagementTable({
               size="icon"
               title="Xem chi tiết tổ chức"
               type="button"
-              variant="ghost"
+              variant="default"
             >
               <Eye className="size-4" />
             </Button>
             <OrganizationStatusActions
               iconOnly
+              isActivating={
+                isActivating && activateTarget?.id === organization.id
+              }
               isApproving={isApproving && approveTarget?.id === organization.id}
               isRejecting={isRejecting && rejectTarget?.id === organization.id}
+              isSuspending={
+                isSuspending && suspendTarget?.id === organization.id
+              }
+              onActivate={() => {
+                listRefreshRef.current = refresh;
+                setActivateTarget(organization);
+              }}
               onApprove={() => {
                 listRefreshRef.current = refresh;
                 setApproveTarget(organization);
@@ -164,6 +256,10 @@ export function OrganizationsManagementTable({
               onReject={() => {
                 listRefreshRef.current = refresh;
                 setRejectTarget(organization);
+              }}
+              onSuspend={() => {
+                listRefreshRef.current = refresh;
+                setSuspendTarget(organization);
               }}
               status={organization.status}
             />
@@ -177,15 +273,29 @@ export function OrganizationsManagementTable({
 
       <OrganizationDetailDrawer
         error={controller.detailError}
-        isApproving={isApproving && approveTarget?.id === controller.detailOrganization?.id}
+        isActivating={
+          isActivating &&
+          activateTarget?.id === controller.detailOrganization?.id
+        }
+        isApproving={
+          isApproving && approveTarget?.id === controller.detailOrganization?.id
+        }
         isLoading={controller.isLoadingDetail}
-        isRejecting={isRejecting && rejectTarget?.id === controller.detailOrganization?.id}
+        isRejecting={
+          isRejecting && rejectTarget?.id === controller.detailOrganization?.id
+        }
+        isSuspending={
+          isSuspending &&
+          suspendTarget?.id === controller.detailOrganization?.id
+        }
+        onActivate={setActivateTarget}
         onApprove={setApproveTarget}
         onOpenChange={(open) => {
           if (!open) controller.closeDetail();
         }}
         onRefresh={controller.refreshDetail}
         onReject={setRejectTarget}
+        onSuspend={setSuspendTarget}
         open={Boolean(controller.selectedOrganization)}
         organization={controller.detailOrganization}
         selectedName={controller.selectedOrganization?.name}
@@ -207,7 +317,16 @@ export function OrganizationsManagementTable({
         title="Duyệt hồ sơ tổ chức?"
       />
 
-      <OrganizationRejectDialog
+      <OrganizationReasonDialog
+        confirmClassName="bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline-red-500"
+        confirmLabel="Từ chối hồ sơ"
+        description={`Nhập lý do từ chối hồ sơ "${rejectTarget?.name || "này"}" để chủ tổ chức biết cần bổ sung gì.`}
+        fieldLabel="Lý do từ chối"
+        icon={
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <XCircle className="size-5" />
+          </span>
+        }
         isSubmitting={isRejecting}
         onOpenChange={(open) => {
           if (!open) setRejectTarget(null);
@@ -216,7 +335,48 @@ export function OrganizationsManagementTable({
           void handleRejectSubmit(reason);
         }}
         open={Boolean(rejectTarget)}
-        organizationName={rejectTarget?.name}
+        placeholder="Ví dụ: Hồ sơ thiếu giấy phép kinh doanh hợp lệ."
+        submittingLabel="Đang từ chối..."
+        title="Từ chối hồ sơ tổ chức?"
+      />
+
+      <OrganizationReasonDialog
+        confirmClassName="bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline-red-500"
+        confirmLabel="Tạm khóa tổ chức"
+        description={`Nhập lý do tạm khóa tổ chức "${suspendTarget?.name || "này"}".`}
+        fieldLabel="Lý do tạm khóa"
+        icon={
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <LockKeyhole className="size-5" />
+          </span>
+        }
+        isSubmitting={isSuspending}
+        onOpenChange={(open) => {
+          if (!open) setSuspendTarget(null);
+        }}
+        onSubmit={(reason) => {
+          void handleSuspendSubmit(reason);
+        }}
+        open={Boolean(suspendTarget)}
+        placeholder="Ví dụ: Tổ chức vi phạm chính sách vận hành."
+        submittingLabel="Đang tạm khóa..."
+        title="Tạm khóa tổ chức?"
+      />
+
+      <ConfirmDialog
+        confirmLabel="Mở khóa tổ chức"
+        description={`Tổ chức "${activateTarget?.name || "này"}" sẽ chuyển lại trạng thái Hoạt động.`}
+        icon={<UnlockKeyhole className="size-5 text-green-600" />}
+        isSubmitting={isActivating}
+        onConfirm={() => {
+          void handleActivateConfirm();
+        }}
+        onOpenChange={(open) => {
+          if (!open) setActivateTarget(null);
+        }}
+        open={Boolean(activateTarget)}
+        submittingLabel="Đang mở khóa..."
+        title="Mở khóa tổ chức?"
       />
     </div>
   );
