@@ -51,7 +51,7 @@ export function useAdminOrganizationsController(
     }
   }
 
-  function handleOrganizationApproved(organization: AdminOrganizationDetail) {
+  function handleOrganizationUpdated(organization: AdminOrganizationDetail) {
     setDetailOrganization((currentOrganization) =>
       currentOrganization?.id === organization.id ? organization : currentOrganization,
     );
@@ -75,7 +75,7 @@ export function useAdminOrganizationsController(
     closeDetail,
     detailError,
     detailOrganization,
-    handleOrganizationApproved,
+    handleOrganizationUpdated,
     handleViewOrganization,
     isLoadingDetail,
     refreshDetail,

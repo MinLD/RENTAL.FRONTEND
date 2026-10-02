@@ -20,6 +20,7 @@ import type {
 import { ORGANIZATION_STATUS_OPTIONS } from "@/utils/organization";
 
 import { OrganizationDetailDrawer } from "./organization-detail-drawer";
+import { OrganizationRejectDialog } from "./organization-reject-dialog";
 import { OrganizationStatusActions } from "./organization-status-actions";
 import { organizationColumns } from "./organizations-table-columns";
 
@@ -29,19 +30,25 @@ type OrganizationsManagementTableProps = {
     params: DataTableFetchParams<AdminOrganizationsFilters>,
   ) => Promise<DataTableFetchResult<AdminOrganizationSummary>>;
   fetchOrganizationDetail: (id: string) => Promise<AdminOrganizationDetail>;
+  rejectOrganization: (id: string, reason: string) => Promise<AdminOrganizationDetail>;
 };
 
 export function OrganizationsManagementTable({
   approveOrganization,
   fetchOrganizations,
   fetchOrganizationDetail,
+  rejectOrganization,
 }: OrganizationsManagementTableProps) {
   const controller = useAdminOrganizationsController(fetchOrganizationDetail);
   const listRefreshRef = useRef<(() => void) | null>(null);
   const [approveTarget, setApproveTarget] = useState<
     AdminOrganizationDetail | AdminOrganizationSummary | null
   >(null);
+  const [rejectTarget, setRejectTarget] = useState<
+    AdminOrganizationDetail | AdminOrganizationSummary | null
+  >(null);
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   async function handleApproveConfirm() {
     if (!approveTarget) {
@@ -54,7 +61,7 @@ export function OrganizationsManagementTable({
       const approvedOrganization = await approveOrganization(approveTarget.id);
 
       toast.success("Đã duyệt hồ sơ tổ chức.");
-      controller.handleOrganizationApproved(approvedOrganization);
+      controller.handleOrganizationUpdated(approvedOrganization);
       listRefreshRef.current?.();
       setApproveTarget(null);
     } catch (error) {
@@ -63,6 +70,29 @@ export function OrganizationsManagementTable({
       );
     } finally {
       setIsApproving(false);
+    }
+  }
+
+  async function handleRejectSubmit(reason: string) {
+    if (!rejectTarget) {
+      return;
+    }
+
+    setIsRejecting(true);
+
+    try {
+      const rejectedOrganization = await rejectOrganization(rejectTarget.id, reason);
+
+      toast.success("Đã từ chối hồ sơ tổ chức.");
+      controller.handleOrganizationUpdated(rejectedOrganization);
+      listRefreshRef.current?.();
+      setRejectTarget(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể từ chối hồ sơ tổ chức.",
+      );
+    } finally {
+      setIsRejecting(false);
     }
   }
 
@@ -126,9 +156,14 @@ export function OrganizationsManagementTable({
             <OrganizationStatusActions
               iconOnly
               isApproving={isApproving && approveTarget?.id === organization.id}
+              isRejecting={isRejecting && rejectTarget?.id === organization.id}
               onApprove={() => {
                 listRefreshRef.current = refresh;
                 setApproveTarget(organization);
+              }}
+              onReject={() => {
+                listRefreshRef.current = refresh;
+                setRejectTarget(organization);
               }}
               status={organization.status}
             />
@@ -144,11 +179,13 @@ export function OrganizationsManagementTable({
         error={controller.detailError}
         isApproving={isApproving && approveTarget?.id === controller.detailOrganization?.id}
         isLoading={controller.isLoadingDetail}
+        isRejecting={isRejecting && rejectTarget?.id === controller.detailOrganization?.id}
         onApprove={setApproveTarget}
         onOpenChange={(open) => {
           if (!open) controller.closeDetail();
         }}
         onRefresh={controller.refreshDetail}
+        onReject={setRejectTarget}
         open={Boolean(controller.selectedOrganization)}
         organization={controller.detailOrganization}
         selectedName={controller.selectedOrganization?.name}
@@ -168,6 +205,18 @@ export function OrganizationsManagementTable({
         open={Boolean(approveTarget)}
         submittingLabel="Đang duyệt..."
         title="Duyệt hồ sơ tổ chức?"
+      />
+
+      <OrganizationRejectDialog
+        isSubmitting={isRejecting}
+        onOpenChange={(open) => {
+          if (!open) setRejectTarget(null);
+        }}
+        onSubmit={(reason) => {
+          void handleRejectSubmit(reason);
+        }}
+        open={Boolean(rejectTarget)}
+        organizationName={rejectTarget?.name}
       />
     </div>
   );

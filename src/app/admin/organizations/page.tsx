@@ -3,6 +3,7 @@ import {
   approveAdminOrganizationAction,
   getAdminOrganizationDetailAction,
   getAdminOrganizationsAction,
+  rejectAdminOrganizationAction,
 } from "@/services/actions/admin-organizations-actions";
 
 export default function OrganizationsPage() {
@@ -11,6 +12,7 @@ export default function OrganizationsPage() {
       approveOrganization={approveAdminOrganizationAction}
       fetchOrganizations={getAdminOrganizationsAction}
       fetchOrganizationDetail={getAdminOrganizationDetailAction}
+      rejectOrganization={rejectAdminOrganizationAction}
     />
   );
 }

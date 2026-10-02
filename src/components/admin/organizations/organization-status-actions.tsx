@@ -3,21 +3,32 @@ import { Check, LockKeyhole, UnlockKeyhole, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ORGANIZATION_STATUS } from "@/types/organization";
 
+type OrganizationStatusAction = {
+  disabled: boolean;
+  Icon: typeof Check;
+  label: string;
+  onClick?: () => void;
+};
+
 export function OrganizationStatusActions({
   iconOnly = false,
   isApproving = false,
+  isRejecting = false,
   onApprove,
+  onReject,
   status,
 }: {
   iconOnly?: boolean;
   isApproving?: boolean;
+  isRejecting?: boolean;
   onApprove?: () => void;
+  onReject?: () => void;
   status: number;
 }) {
-  const actions = status === ORGANIZATION_STATUS.pending
+  const actions: OrganizationStatusAction[] = status === ORGANIZATION_STATUS.pending
     ? [
         { disabled: !onApprove || isApproving, label: "Duyệt hồ sơ", Icon: Check, onClick: onApprove },
-        { disabled: true, label: "Từ chối hồ sơ", Icon: X },
+        { disabled: !onReject || isRejecting, label: "Từ chối hồ sơ", Icon: X, onClick: onReject },
       ]
     : status === ORGANIZATION_STATUS.active
       ? [{ disabled: true, label: "Tạm khóa tổ chức", Icon: LockKeyhole }]
@@ -37,7 +48,13 @@ export function OrganizationStatusActions({
       variant={iconOnly ? "ghost" : "secondary"}
     >
       <Icon className="size-4" />
-      {!iconOnly ? (isApproving && label === "Duyệt hồ sơ" ? "Đang duyệt..." : label) : null}
+      {!iconOnly
+        ? isApproving && label === "Duyệt hồ sơ"
+          ? "Đang duyệt..."
+          : isRejecting && label === "Từ chối hồ sơ"
+            ? "Đang từ chối..."
+            : label
+        : null}
     </Button>
   ));
 }

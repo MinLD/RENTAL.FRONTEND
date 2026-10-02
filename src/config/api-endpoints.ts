@@ -50,6 +50,8 @@ export const API_ENDPOINTS = {
           Search: search?.trim(),
           status,
         }),
+      reject: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/reject`,
     },
     adminUsers: {
       activate: (id: string) =>

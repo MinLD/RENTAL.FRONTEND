@@ -24,9 +24,11 @@ type OrganizationDetailDrawerProps = {
   error: string | null;
   isApproving?: boolean;
   isLoading: boolean;
+  isRejecting?: boolean;
   onApprove?: (organization: AdminOrganizationDetail) => void;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
+  onReject?: (organization: AdminOrganizationDetail) => void;
   open: boolean;
   organization: AdminOrganizationDetail | null;
   selectedName?: string | null;
@@ -37,8 +39,10 @@ export function OrganizationDetailDrawer({
   isApproving = false,
   onApprove,
   isLoading,
+  isRejecting = false,
   onOpenChange,
   onRefresh,
+  onReject,
   open,
   organization,
   selectedName,
@@ -56,7 +60,9 @@ export function OrganizationDetailDrawer({
           {organization ? (
             <OrganizationStatusActions
               isApproving={isApproving}
+              isRejecting={isRejecting}
               onApprove={() => onApprove?.(organization)}
+              onReject={() => onReject?.(organization)}
               status={organization.status}
             />
           ) : null}

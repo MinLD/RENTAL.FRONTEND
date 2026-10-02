@@ -30,3 +30,11 @@ export const adminOrganizationListSchema = z.object({
 export const adminOrganizationDetailSchema = organizationResponseSchema.extend({
   reviewedAtUtc: z.string().nullable().optional(),
 });
+
+export const rejectAdminOrganizationSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập lý do từ chối.")
+    .max(500, "Lý do từ chối tối đa 500 ký tự."),
+});
