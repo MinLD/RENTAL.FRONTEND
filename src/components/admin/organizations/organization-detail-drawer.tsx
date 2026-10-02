@@ -22,7 +22,9 @@ import { OrganizationStatusActions } from "./organization-status-actions";
 
 type OrganizationDetailDrawerProps = {
   error: string | null;
+  isApproving?: boolean;
   isLoading: boolean;
+  onApprove?: (organization: AdminOrganizationDetail) => void;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
   open: boolean;
@@ -32,6 +34,8 @@ type OrganizationDetailDrawerProps = {
 
 export function OrganizationDetailDrawer({
   error,
+  isApproving = false,
+  onApprove,
   isLoading,
   onOpenChange,
   onRefresh,
@@ -49,7 +53,13 @@ export function OrganizationDetailDrawer({
             <RefreshCw className={isLoading ? "size-4 animate-spin" : "size-4"} />
             Tải lại
           </Button>
-          {organization ? <OrganizationStatusActions status={organization.status} /> : null}
+          {organization ? (
+            <OrganizationStatusActions
+              isApproving={isApproving}
+              onApprove={() => onApprove?.(organization)}
+              status={organization.status}
+            />
+          ) : null}
           <Button onClick={() => onOpenChange(false)} size="sm" type="button" variant="secondary">
             Đóng
           </Button>

@@ -51,10 +51,31 @@ export function useAdminOrganizationsController(
     }
   }
 
+  function handleOrganizationApproved(organization: AdminOrganizationDetail) {
+    setDetailOrganization((currentOrganization) =>
+      currentOrganization?.id === organization.id ? organization : currentOrganization,
+    );
+    setSelectedOrganization((currentOrganization) =>
+      currentOrganization?.id === organization.id
+        ? {
+            ...currentOrganization,
+            logoMediaId: organization.logoMediaId,
+            logoUrl: organization.logoUrl,
+            name: organization.name,
+            province: organization.province,
+            slug: organization.slug,
+            status: organization.status,
+            type: organization.type,
+          }
+        : currentOrganization,
+    );
+  }
+
   return {
     closeDetail,
     detailError,
     detailOrganization,
+    handleOrganizationApproved,
     handleViewOrganization,
     isLoadingDetail,
     refreshDetail,

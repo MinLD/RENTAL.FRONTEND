@@ -1,5 +1,6 @@
 import { OrganizationsManagementTable } from "@/components/admin/organizations/organizations-management-table";
 import {
+  approveAdminOrganizationAction,
   getAdminOrganizationDetailAction,
   getAdminOrganizationsAction,
 } from "@/services/actions/admin-organizations-actions";
@@ -7,6 +8,7 @@ import {
 export default function OrganizationsPage() {
   return (
     <OrganizationsManagementTable
+      approveOrganization={approveAdminOrganizationAction}
       fetchOrganizations={getAdminOrganizationsAction}
       fetchOrganizationDetail={getAdminOrganizationDetailAction}
     />

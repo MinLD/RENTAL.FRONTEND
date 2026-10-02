@@ -39,6 +39,8 @@ export const API_ENDPOINTS = {
       profile: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
     },
     adminOrganizations: {
+      approve: (id: string) =>
+        `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/approve`,
       detail: (id: string) =>
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}`,
       list: ({ page, pageSize, search, status }: ListAdminOrganizationsParams) =>

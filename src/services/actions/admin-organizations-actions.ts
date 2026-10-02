@@ -64,8 +64,33 @@ export async function getAdminOrganizationDetailAction(
   return parsed.data;
 }
 
-async function fetchOrganizationJson(endpoint: string, fallbackMessage: string) {
-  const response = await serverApi(endpoint, { method: "GET", cache: "no-store" });
+export async function approveAdminOrganizationAction(
+  id: string,
+): Promise<AdminOrganizationDetail> {
+  if (!z.uuid().safeParse(id).success) {
+    throw new Error("ID tổ chức không hợp lệ.");
+  }
+
+  const data = await fetchOrganizationJson(
+    API_ENDPOINTS.backend.adminOrganizations.approve(id),
+    "Không thể duyệt hồ sơ tổ chức.",
+    { method: "PATCH" },
+  );
+  const parsed = adminOrganizationDetailSchema.safeParse(data);
+
+  if (!parsed.success) {
+    throw new Error("Dữ liệu hồ sơ tổ chức sau khi duyệt không hợp lệ.");
+  }
+
+  return parsed.data;
+}
+
+async function fetchOrganizationJson(
+  endpoint: string,
+  fallbackMessage: string,
+  init: RequestInit = { method: "GET", cache: "no-store" },
+) {
+  const response = await serverApi(endpoint, init);
 
   if (!response.ok) {
     throw new Error(await getActionResponseErrorMessage(response, fallbackMessage));
