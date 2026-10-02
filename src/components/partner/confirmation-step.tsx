@@ -11,12 +11,12 @@ import {
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { PartnerRegistrationFormValues } from "@/lib/validations/partner-registration";
-import type { MediaUploadResponse } from "@/types/media";
+import type { MediaDocumentReference } from "@/types/media";
 
 type ConfirmationStepProps = {
   confirmed: boolean;
   disabled?: boolean;
-  licenseDocument: MediaUploadResponse | null;
+  licenseDocument: MediaDocumentReference | null;
   logoPreviewUrl: string;
   onConfirmedChange: (confirmed: boolean) => void;
   onEdit: (step: "business" | "legal" | "contact") => void;

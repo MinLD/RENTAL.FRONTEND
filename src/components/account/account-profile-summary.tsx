@@ -12,15 +12,19 @@ import {
 
 type AccountProfileSummaryProps = {
   avatarPreviewUrl?: string;
+  disabled?: boolean;
   initialProfile: AccountProfileInitialData;
   onAvatarChange?: (mediaId: string, previewUrl: string) => void;
+  onAvatarUploadingChange?: (isUploading: boolean) => void;
   user: AuthUser;
 };
 
 export function AccountProfileSummary({
   avatarPreviewUrl,
+  disabled,
   initialProfile,
   onAvatarChange,
+  onAvatarUploadingChange,
   user,
 }: AccountProfileSummaryProps) {
   const visibleAvatarUrl = avatarPreviewUrl ?? initialProfile.avatarUrl;
@@ -31,12 +35,14 @@ export function AccountProfileSummary({
     <aside className="self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
       <div className="flex flex-col items-center text-center">
         <MediaAvatarUpload
+          disabled={disabled}
           fallbackText={getUserInitials(displayName)}
           onChange={(mediaId, upload) => {
             if (typeof mediaId === "string" && !Array.isArray(upload)) {
               onAvatarChange?.(mediaId, upload.previewUrl);
             }
           }}
+          onUploadingChange={onAvatarUploadingChange}
           previewUrl={visibleAvatarUrl}
           size="lg"
         />

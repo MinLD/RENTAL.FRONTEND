@@ -4,11 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
   LoaderCircle,
   Send,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -31,9 +29,9 @@ import {
   type PartnerRegistrationFormValues,
 } from "@/lib/validations/partner-registration";
 import { ApiClientError } from "@/services/api-client";
-import { registerOrganization } from "@/services/organization-service";
-import type { MediaUploadResponse } from "@/types/media";
-import type { OrganizationRegisteredResponse } from "@/types/organization";
+import { registerOrganization, updateOrganizationProfile } from "@/services/organization-service";
+import type { MediaDocumentReference } from "@/types/media";
+import type { OrganizationApplication, OrganizationResponse } from "@/types/organization";
 
 const PROFILE_NOT_COMPLETED_ERROR_CODE = "Profile.NotCompleted";
 
@@ -66,46 +64,59 @@ const PARTNER_REGISTRATION_STEPS = [
 
 type PartnerStepId = (typeof PARTNER_REGISTRATION_STEPS)[number]["id"];
 
-export function PartnerRegistrationView() {
+type PartnerRegistrationViewProps = {
+  initialOrganization?: OrganizationResponse;
+  onSubmitted: (organization: OrganizationApplication) => void;
+  onCancel?: () => void;
+};
+
+export function PartnerRegistrationView({
+  initialOrganization,
+  onSubmitted,
+  onCancel,
+}: PartnerRegistrationViewProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<PartnerStepId>(
     PARTNER_REGISTRATION_STEPS[0].id,
   );
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState("");
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState(initialOrganization?.logoUrl ?? "");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [licenseDocument, setLicenseDocument] =
-    useState<MediaUploadResponse | null>(null);
+    useState<MediaDocumentReference | null>(() => initialOrganization?.businessLicenseDocumentMediaId ? {
+      mediaId: initialOrganization.businessLicenseDocumentMediaId,
+      originalFileName: "Giấy phép kinh doanh đã tải lên",
+      previewUrl: initialOrganization.businessLicenseDocumentUrl ?? "",
+    } : null);
   const [isUploadingLicense, setIsUploadingLicense] = useState(false);
   const [completedStepIds, setCompletedStepIds] = useState<PartnerStepId[]>([]);
   const [isValidatingStep, setIsValidatingStep] = useState(false);
   const [hasConfirmedInformation, setHasConfirmedInformation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
-  const [registeredOrganization, setRegisteredOrganization] =
-    useState<OrganizationRegisteredResponse | null>(null);
+  const hasSubmitted = useRef(false);
   const submissionInProgress = useRef(false);
   const isChangingStep = useRef(false);
   const pendingFocus = useRef<keyof PartnerRegistrationFormValues | null>(null);
   const form = useForm<PartnerRegistrationFormValues>({
     defaultValues: {
-      contactEmail: "",
-      contactPhone: "",
-      province: "",
-      ward: "",
-      address: "",
-      businessLicenseNumber: "",
-      businessLicenseIssuedDate: "",
-      businessLicenseIssuedPlace: "",
-      businessLicenseDocumentMediaId: "",
-      legalRepresentativeName: "",
+      contactEmail: initialOrganization?.contactEmail ?? "",
+      contactPhone: initialOrganization?.contactPhone ?? "",
+      province: initialOrganization?.province ?? "",
+      ward: initialOrganization?.ward ?? "",
+      address: initialOrganization?.address ?? "",
+      businessLicenseNumber: initialOrganization?.businessLicenseNumber ?? "",
+      businessLicenseIssuedDate: initialOrganization?.businessLicenseIssuedDate ?? "",
+      businessLicenseIssuedPlace: initialOrganization?.businessLicenseIssuedPlace ?? "",
+      businessLicenseDocumentMediaId: initialOrganization?.businessLicenseDocumentMediaId ?? "",
+      legalRepresentativeName: initialOrganization?.legalRepresentativeName ?? "",
       legalRepresentativeCitizenId: "",
-      description: "",
-      establishedDate: "",
-      logoMediaId: "",
-      name: "",
-      taxCode: "",
+      description: initialOrganization?.description ?? "",
+      establishedDate: initialOrganization?.establishedDate ?? "",
+      logoMediaId: initialOrganization?.logoMediaId ?? "",
+      name: initialOrganization?.name ?? "",
+      taxCode: initialOrganization?.taxCode ?? "",
       type: 1,
-      website: "",
+      website: initialOrganization?.website ?? "",
     },
     mode: "onTouched",
     resolver: zodResolver(partnerRegistrationSchema),
@@ -213,7 +224,7 @@ export function PartnerRegistrationView() {
       !hasConfirmedInformation ||
       isNavigationDisabled ||
       submissionInProgress.current ||
-      registeredOrganization
+      hasSubmitted.current
     ) {
       return;
     }
@@ -228,11 +239,24 @@ export function PartnerRegistrationView() {
         return;
       }
 
-      const registration = await registerOrganization(form.getValues());
-      if (!registration?.organizationId) {
-        throw new Error("Missing registration response.");
+      if (initialOrganization) {
+        const updated = await updateOrganizationProfile(initialOrganization.id, form.getValues());
+        hasSubmitted.current = true;
+        onSubmitted(updated);
+      } else {
+        const registration = await registerOrganization(form.getValues());
+        if (!registration?.organizationId || !Number.isInteger(registration.status)) {
+          throw new Error("Missing registration response.");
+        }
+        hasSubmitted.current = true;
+        // Render from the POST response immediately; no additional GET after creation.
+        onSubmitted({
+          id: registration.organizationId,
+          status: registration.status,
+          createdAtUtc: registration.createdAtUtc,
+          submittedAtUtc: registration.submittedAtUtc,
+        });
       }
-      setRegisteredOrganization(registration);
     } catch (error) {
       if (
         error instanceof ApiClientError &&
@@ -254,25 +278,6 @@ export function PartnerRegistrationView() {
       submissionInProgress.current = false;
       setIsSubmitting(false);
     }
-  }
-
-  if (registeredOrganization) {
-    return (
-      <section
-        className="mx-auto max-w-2xl rounded-xl border border-border/60 bg-background p-8 text-center sm:p-12"
-        role="status"
-      >
-        <CheckCircle2 aria-hidden="true" className="mx-auto mb-4 size-12 text-success" />
-        <h1 className="text-2xl font-bold text-foreground">Hồ sơ đã được gửi</h1>
-        <p className="mt-3 break-words text-sm leading-6 text-muted-foreground">
-          Hồ sơ của {form.getValues("name")} đã được tiếp nhận và đang chờ xét duyệt.
-          Bạn có thể đăng thiết bị cho thuê sau khi doanh nghiệp được duyệt.
-        </p>
-        <Button asChild className="mt-6">
-          <Link href="/">Về trang chủ</Link>
-        </Button>
-      </section>
-    );
   }
 
   return (
@@ -317,6 +322,16 @@ export function PartnerRegistrationView() {
                     <ArrowLeft className="size-4" /> Quay lại
                   </Button>
                 </>
+              )}
+              {!previousStep && onCancel && (
+                <Button
+                  disabled={isNavigationDisabled}
+                  onClick={onCancel}
+                  type="button"
+                  variant="secondary"
+                >
+                  Hủy chỉnh sửa
+                </Button>
               )}
               {canContinue && nextStep ? (
                 <Button

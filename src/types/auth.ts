@@ -25,6 +25,10 @@ export type CurrentUserResponse = {
 
 export type AuthUser = CurrentUserResponse;
 
+export type CurrentUserCitizenIdResponse = {
+  citizenId: string | null;
+};
+
 export type UserSessionResponse = {
   createdAtUtc: string;
   deviceName: string | null;

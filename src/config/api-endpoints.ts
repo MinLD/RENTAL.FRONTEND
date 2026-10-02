@@ -27,6 +27,9 @@ export const API_ENDPOINTS = {
   backend: {
     organizations: {
       register: "/api/v1/auth/organizations/register",
+      mine: "/api/v1/auth/organizations/mine",
+      detail: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
+      profile: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
     },
     adminUsers: {
       activate: (id: string) =>
@@ -54,6 +57,7 @@ export const API_ENDPOINTS = {
       register: "/api/v1/auth/register",
     },
     currentUser: {
+      citizenId: "/api/v1/auth/users/me/citizen-id",
       changePassword: "/api/v1/auth/users/change-password",
       deactivate: "/api/v1/auth/users/deactivate",
       externalLogins: "/api/v1/auth/users/external-logins",
