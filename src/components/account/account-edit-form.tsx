@@ -2,14 +2,19 @@
 
 import {
   CalendarDays,
-  IdCard,
   Mail,
   Phone,
   Save,
   UserRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { toast } from "sonner";
 
 import {
@@ -17,6 +22,7 @@ import {
   type AccountProfileUpdatedEventDetail,
 } from "@/components/account/account-profile-events";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
+import { AccountCitizenIdField } from "@/components/account/account-citizen-id-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +35,9 @@ type AccountEditFormProps = {
   avatarPreviewUrl?: string;
   initialProfile: AccountProfileInitialData;
   isAvatarDirty?: boolean;
+  isAvatarUploading?: boolean;
   onCancel?: () => void;
+  onSavingChange?: (isSaving: boolean) => void;
   userId: string;
 };
 
@@ -42,7 +50,9 @@ export function AccountEditForm({
   avatarPreviewUrl,
   initialProfile,
   isAvatarDirty = false,
+  isAvatarUploading = false,
   onCancel,
+  onSavingChange,
   userId,
 }: AccountEditFormProps) {
   const router = useRouter();
@@ -54,11 +64,17 @@ export function AccountEditForm({
     initialUpdateProfileActionState,
   );
   const isDirty = isFieldsDirty || isAvatarDirty;
+  const isBusy = isPending || isAvatarUploading;
+  const submissionInProgress = useRef(false);
+  const handledActionState = useRef(initialUpdateProfileActionState);
 
   useEffect(() => {
-    if (!state.message) {
+    if (!state.message || handledActionState.current === state) {
       return;
     }
+    handledActionState.current = state;
+    submissionInProgress.current = false;
+    onSavingChange?.(false);
 
     if (state.success) {
       toast.success(state.message);
@@ -84,9 +100,10 @@ export function AccountEditForm({
     }
 
     toast.error(state.message);
-  }, [avatarPreviewUrl, initialProfile.avatarUrl, router, state, userId]);
+  }, [avatarPreviewUrl, initialProfile.avatarUrl, onSavingChange, router, state, userId]);
 
   function handleCancel() {
+    if (isBusy || submissionInProgress.current) return;
     formRef.current?.reset();
     setIsFieldsDirty(false);
     onCancel?.();
@@ -94,11 +111,19 @@ export function AccountEditForm({
   }
 
   function handleFormAction(formData: FormData) {
+    if (!isDirty || isBusy || submissionInProgress.current) return;
+    submissionInProgress.current = true;
     setIsFieldsDirty(false);
     formAction(formData);
   }
 
-  function handleFormChange() {
+  function handleFormChange(event: FormEvent<HTMLFormElement>) {
+    // The CCCD field reports its next draft directly, before its hidden input updates.
+    if ((event.target as HTMLElement).id === "identityNumber") return;
+    updateDirtyState();
+  }
+
+  function updateDirtyState(identityNumber?: string) {
     const form = formRef.current;
 
     if (!form) {
@@ -111,7 +136,9 @@ export function AccountEditForm({
       getTextValue(formData, "fullName") !== initialProfile.fullName ||
         getTextValue(formData, "phoneNumber") !== initialProfile.phoneNumber ||
         getTextValue(formData, "dateOfBirth") !== initialProfile.dateOfBirth ||
-        normalizeIdentityNumberValue(getTextValue(formData, "identityNumber")) !==
+        normalizeIdentityNumberValue(
+          identityNumber ?? getTextValue(formData, "identityNumber"),
+        ) !==
           normalizeIdentityNumberValue(initialProfile.identityNumber),
     );
   }
@@ -133,6 +160,14 @@ export function AccountEditForm({
         key={formKey}
         onChange={handleFormChange}
         onInput={handleFormChange}
+        onSubmit={(event) => {
+          if (!isDirty || isBusy || submissionInProgress.current) {
+            event.preventDefault();
+          } else {
+            // Lock avatar selection before the form action starts its transition.
+            onSavingChange?.(true);
+          }
+        }}
         ref={formRef}
       >
         <input
@@ -189,28 +224,25 @@ export function AccountEditForm({
             type="date"
           />
 
-          <TextField
-            defaultValue={initialProfile.identityNumber}
+          <AccountCitizenIdField
+            disabled={isPending}
             error={state.fieldErrors?.identityNumber}
-            id="identityNumber"
-            inputMode="numeric"
-            label="CCCD/CMND"
-            leftIcon={<IdCard size={16} />}
-            name="identityNumber"
-            placeholder="Chưa cập nhật"
+            initialValue={initialProfile.identityNumber ?? ""}
+            key={`${userId}:${initialProfile.identityNumber ?? ""}`}
+            onValueChange={updateDirtyState}
           />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <Button
-            disabled={!isDirty || isPending}
+            disabled={!isDirty || isBusy}
             onClick={handleCancel}
             type="button"
             variant="secondary"
           >
             Hủy
           </Button>
-          <Button disabled={!isDirty || isPending} type="submit">
+          <Button disabled={!isDirty || isBusy} type="submit">
             <Save size={16} />
             {isPending ? "Đang lưu..." : "Lưu"}
           </Button>

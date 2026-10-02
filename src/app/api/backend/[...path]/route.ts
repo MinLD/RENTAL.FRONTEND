@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ENDPOINTS } from "@/config/api-endpoints";
 
 import { buildBackendApiUrl } from "@/services/backend-api";
 import {
@@ -43,9 +44,13 @@ function buildForwardedHeaders(request: NextRequest, cookieHeader?: string) {
   return headers;
 }
 
-function createProxyResponse(backendResponse: Response) {
+function createProxyResponse(backendResponse: Response, preventCaching = false) {
   const responseHeaders = new Headers();
   const contentType = backendResponse.headers.get("content-type");
+
+  if (preventCaching) {
+    responseHeaders.set("Cache-Control", "private, no-store");
+  }
 
   if (contentType) {
     responseHeaders.set("content-type", contentType);
@@ -77,6 +82,11 @@ async function proxyBackendRequest(
 ) {
   const { path } = await context.params;
   const backendPath = `/${path.join("/")}`;
+  const createResponse = (response: Response) =>
+    createProxyResponse(
+      response,
+      backendPath === API_ENDPOINTS.backend.currentUser.citizenId,
+    );
   const backendUrl = new URL(buildBackendApiUrl(backendPath));
   backendUrl.search = request.nextUrl.search;
 
@@ -94,14 +104,14 @@ async function proxyBackendRequest(
   const backendResponse = await requestBackend();
 
   if (backendResponse.status !== 401 || isAuthRefreshEndpoint(backendPath)) {
-    return createProxyResponse(backendResponse);
+    return createResponse(backendResponse);
   }
 
   const cookieHeader = request.headers.get("cookie");
   const refreshResponse = await refreshBackendSession(cookieHeader);
 
   if (!refreshResponse.ok) {
-    const response = await createProxyResponse(backendResponse);
+    const response = await createResponse(backendResponse);
 
     if (refreshResponse.status === 401) {
       clearAuthCookies(response);
@@ -113,7 +123,7 @@ async function proxyBackendRequest(
   const retryResponse = await requestBackend(
     mergeAuthCookiesIntoCookieHeader(cookieHeader, refreshResponse.headers),
   );
-  const response = await createProxyResponse(retryResponse);
+  const response = await createResponse(retryResponse);
 
   copyAuthCookies(refreshResponse.headers, response);
 

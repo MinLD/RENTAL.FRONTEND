@@ -8,10 +8,14 @@ export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   label: string;
   leftIcon?: ReactNode;
+  rightElement?: ReactNode;
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ className, error, id, label, leftIcon, required, ...props }, ref) => {
+  (
+    { className, error, id, label, leftIcon, rightElement, required, ...props },
+    ref,
+  ) => {
     return (
       <div className="space-y-1.5">
         <label
@@ -30,12 +34,21 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           <Input
             aria-describedby={error && id ? `${id}-error` : undefined}
             aria-invalid={error ? true : undefined}
-            className={cn(leftIcon ? "pl-9" : undefined, className)}
+            className={cn(
+              leftIcon ? "pl-9" : undefined,
+              rightElement ? "pr-11" : undefined,
+              className,
+            )}
             id={id}
             ref={ref}
             required={required}
             {...props}
           />
+          {rightElement ? (
+            <span className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center">
+              {rightElement}
+            </span>
+          ) : null}
         </div>
         {error ? (
           <p

@@ -64,7 +64,7 @@ export function MediaAvatarUpload({
   const isMultiple = mode === "multiple";
   const previewUrls = normalizeArray(previewUrl);
   const visiblePreviewUrls =
-    variant === "logo" && previewUrl !== undefined
+    previewUrl !== undefined
       ? previewUrls
       : localPreviewUrls.length
         ? localPreviewUrls

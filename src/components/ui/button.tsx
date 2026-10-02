@@ -15,6 +15,8 @@ const buttonVariants = cva(
           "border border-border bg-background text-foreground hover:border-primary hover:text-primary focus-visible:outline-primary",
         ghost:
           "text-foreground hover:bg-primary/10 hover:text-primary focus-visible:outline-primary",
+        default:
+          "text-foreground  hover:text-primary focus-visible:outline-primary",
       },
       size: {
         sm: "h-8 px-3 text-xs",

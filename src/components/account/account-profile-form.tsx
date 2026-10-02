@@ -28,30 +28,36 @@ export function AccountProfileForm({
   initialSessions,
   user,
 }: AccountProfileFormProps) {
-  const [avatarMediaId, setAvatarMediaId] = useState(
-    initialProfile.avatarMediaId ?? "",
-  );
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
-    initialProfile.avatarUrl ?? "",
-  );
-  const isAvatarDirty =
-    avatarMediaId !== (initialProfile.avatarMediaId ?? "") ||
-    avatarPreviewUrl !== (initialProfile.avatarUrl ?? "");
+  const [avatarDraft, setAvatarDraft] = useState<{
+    mediaId: string;
+    previewUrl: string;
+  } | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const savedAvatarMediaId = initialProfile.avatarMediaId ?? "";
+
+  // The saved ID acknowledges the upload. Preview URLs can differ or expire.
+  if (avatarDraft && avatarDraft.mediaId === savedAvatarMediaId) {
+    setAvatarDraft(null);
+  }
+  const isAvatarDirty = avatarDraft !== null && avatarDraft.mediaId !== savedAvatarMediaId;
+  const avatarMediaId = isAvatarDirty ? avatarDraft.mediaId : savedAvatarMediaId;
+  const avatarPreviewUrl = isAvatarDirty ? avatarDraft.previewUrl : initialProfile.avatarUrl ?? "";
 
   function resetAvatar() {
-    setAvatarMediaId(initialProfile.avatarMediaId ?? "");
-    setAvatarPreviewUrl(initialProfile.avatarUrl ?? "");
+    setAvatarDraft(null);
   }
 
   return (
     <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
       <AccountProfileSummary
         avatarPreviewUrl={avatarPreviewUrl}
+        disabled={isSavingProfile}
         initialProfile={initialProfile}
         onAvatarChange={(mediaId, previewUrl) => {
-          setAvatarMediaId(mediaId);
-          setAvatarPreviewUrl(previewUrl);
+          setAvatarDraft({ mediaId, previewUrl });
         }}
+        onAvatarUploadingChange={setIsUploadingAvatar}
         user={user}
       />
 
@@ -61,7 +67,9 @@ export function AccountProfileForm({
           avatarPreviewUrl={avatarPreviewUrl}
           initialProfile={initialProfile}
           isAvatarDirty={isAvatarDirty}
+          isAvatarUploading={isUploadingAvatar}
           onCancel={resetAvatar}
+          onSavingChange={setIsSavingProfile}
           userId={user.id}
         />
         <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />
