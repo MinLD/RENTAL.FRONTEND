@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileDown, RefreshCw, Search } from "lucide-react";
 
 import { DataTableBodySkeletonRows } from "@/components/data-table/data-table-skeleton";
+import { DataTableState } from "@/components/data-table/data-table-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +43,7 @@ export type DataTableColumn<TData> = {
   headerClassName?: string;
   id: string;
   minWidth?: number;
+  skeleton?: ReactNode;
   width?: number | string;
 };
 
@@ -82,10 +84,7 @@ export type DataTableToolbarContext = {
   refresh: () => void;
 };
 
-export type DataTableProps<
-  TData,
-  TFilters = Record<string, unknown>,
-> = {
+export type DataTableProps<TData, TFilters = Record<string, unknown>> = {
   actionsHeader?: ReactNode;
   bodyClassName?: string;
   className?: string;
@@ -115,6 +114,7 @@ export type DataTableProps<
   onRowDoubleClick?: (row: TData) => void;
   onSearchChange?: (value: string) => void;
   pagination?: DataTablePagination;
+  pageSizeOptions?: number[];
   renderDetail?: (row: TData) => ReactNode;
   renderFilters?: (context: DataTableFilterContext<TFilters>) => ReactNode;
   renderRowActions?: (
@@ -123,6 +123,7 @@ export type DataTableProps<
   ) => ReactNode;
   renderToolbarActions?: (context: DataTableToolbarContext) => ReactNode;
   searchDebounceMs?: number;
+  searchMaxLength?: number;
   searchPlaceholder?: string;
   searchTypes?: string[];
   showCsvExport?: boolean;
@@ -142,7 +143,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   description,
   detailDescription,
   detailTitle,
-  emptyState = "Không có dữ liệu.",
+  emptyState,
   errorState,
   fetchData,
   fetchDependencies = [],
@@ -158,11 +159,13 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   onRowDoubleClick,
   onSearchChange,
   pagination,
+  pageSizeOptions,
   renderDetail,
   renderFilters,
   renderRowActions,
   renderToolbarActions,
   searchDebounceMs = 350,
+  searchMaxLength,
   searchPlaceholder = "Tìm kiếm...",
   searchTypes,
   showCsvExport = true,
@@ -197,6 +200,13 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   const activeTotalItems =
     pagination?.totalItems ??
     (isRemoteDataTable ? remoteTotalItems : activeData.length);
+  const showTableState =
+    !isLoading && (Boolean(fetchError) || !activeData.length);
+  const hasSearchOrFilters =
+    Boolean(activeKeyword.trim()) ||
+    Object.values(activeFilterParams ?? {}).some(
+      (value) => value !== undefined && value !== null && value !== "",
+    );
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(activeTotalItems / activePageSize));
   }, [activePageSize, activeTotalItems]);
@@ -251,9 +261,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
         }
 
         setFetchError(
-          error instanceof Error
-            ? error
-            : new Error("Không thể tải dữ liệu."),
+          error instanceof Error ? error : new Error("Không thể tải dữ liệu."),
         );
       } finally {
         if (fetchRequestIdRef.current === requestId) {
@@ -370,9 +378,9 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     variant="secondary"
                   >
                     <FileDown className="size-4" />
-                  Xuất CSV
-                </Button>
-              ) : null}
+                    Xuất CSV
+                  </Button>
+                ) : null}
                 {toolbarActions}
                 {renderToolbarActions?.({ refresh: triggerRefresh })}
               </div>
@@ -397,6 +405,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="pl-9"
+                  maxLength={searchMaxLength}
                   onChange={(event) => handleSearchChange(event.target.value)}
                   placeholder={searchPlaceholder}
                   value={activeKeyword}
@@ -441,129 +450,133 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
 
         <div
           className={cn(
-            "scrollbar-gutter-stable min-h-0 flex-1 overflow-y-scroll overflow-x-auto overscroll-contain",
+            "scrollbar-gutter-stable min-h-0 flex-1 overscroll-contain",
+            showTableState
+              ? "grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
+              : "overflow-y-scroll overflow-x-auto",
             bodyClassName,
           )}
         >
-          <Table
-            className="min-w-full table-fixed"
-            style={{ minWidth: tableMinWidth }}
+          <div
+            className={showTableState ? "min-w-0 overflow-x-auto" : undefined}
           >
-            <colgroup>
-              {columns.map((column) => (
-                <col
-                  key={column.id}
-                  style={{
-                    width: column.width ?? column.minWidth,
-                  }}
-                />
-              ))}
-              {hasActions ? <col style={{ width: actionColumnWidth }} /> : null}
-            </colgroup>
-            <TableHeader>
-              <TableRow>
+            <Table
+              className="min-w-full table-fixed"
+              style={{ minWidth: tableMinWidth }}
+            >
+              <colgroup>
                 {columns.map((column) => (
-                  <TableHead
-                    className={cn(
-                      "sticky top-0 z-20 bg-[#f8fafc]",
-                      column.headerClassName,
-                    )}
+                  <col
                     key={column.id}
-                    style={
-                      column.minWidth
-                        ? { minWidth: column.minWidth }
-                        : undefined
-                    }
-                  >
-                    {column.header}
-                  </TableHead>
+                    style={{
+                      width: column.width ?? column.minWidth,
+                    }}
+                  />
                 ))}
                 {hasActions ? (
-                  <TableHead className="sticky right-0 top-0 z-30 w-[132px] bg-[#f8fafc] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
-                    {actionsHeader}
-                  </TableHead>
+                  <col style={{ width: actionColumnWidth }} />
                 ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fetchError ? (
+              </colgroup>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    className="h-28 text-center text-muted-foreground"
-                    colSpan={columns.length + (hasActions ? 1 : 0)}
-                  >
-                    {errorState?.(fetchError, triggerRefresh) ?? (
-                      <div className="grid justify-items-center gap-3">
-                        <span>{fetchError.message}</span>
-                        <Button
-                          onClick={triggerRefresh}
-                          type="button"
-                          variant="secondary"
-                        >
-                          Thử lại
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ) : isLoading ? (
-                typeof loadingState === "string" &&
-                loadingState === "Đang tải dữ liệu..." ? (
-                  <DataTableBodySkeletonRows
-                    columnCount={columns.length}
-                    rowCount={skeletonRowCount ?? Math.min(activePageSize, 10)}
-                    showActions={hasActions}
-                  />
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      className="h-28 text-center text-muted-foreground"
-                      colSpan={columns.length + (hasActions ? 1 : 0)}
-                    >
-                      {loadingState}
-                    </TableCell>
-                  </TableRow>
-                )
-              ) : activeData.length ? (
-                activeData.map((row) => (
-                  <TableRow
-                    className={cn(
-                      "group",
-                      canInteractWithRow && "cursor-pointer",
-                    )}
-                    key={getRowId(row)}
-                    onDoubleClick={() => {
-                      if (onRowDoubleClick) {
-                        onRowDoubleClick(row);
-                      } else if (canOpenDetail) {
-                        setSelectedRow(row);
+                  {columns.map((column) => (
+                    <TableHead
+                      className={cn(
+                        "sticky top-0 z-20 bg-[#f8fafc]",
+                        column.headerClassName,
+                      )}
+                      key={column.id}
+                      style={
+                        column.minWidth
+                          ? { minWidth: column.minWidth }
+                          : undefined
                       }
-                    }}
-                  >
-                    {columns.map((column) => (
-                      <TableCell className={column.className} key={column.id}>
-                        {column.cell?.(row)}
-                      </TableCell>
-                    ))}
-                    {hasActions ? (
-                      <TableCell className="sticky right-0 z-10 bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-muted/60">
-                        {renderRowActions?.(row, { refresh: triggerRefresh })}
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    className="h-28 text-center text-muted-foreground"
-                    colSpan={columns.length + (hasActions ? 1 : 0)}
-                  >
-                    {emptyState}
-                  </TableCell>
+                    >
+                      {column.header}
+                    </TableHead>
+                  ))}
+                  {hasActions ? (
+                    <TableHead className="sticky right-0 top-0 z-30 w-[132px] bg-[#f8fafc] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
+                      {actionsHeader}
+                    </TableHead>
+                  ) : null}
                 </TableRow>
+              </TableHeader>
+              <TableBody>
+                {showTableState ? null : isLoading ? (
+                  typeof loadingState === "string" &&
+                  loadingState === "Đang tải dữ liệu..." ? (
+                    <DataTableBodySkeletonRows
+                      columns={columns}
+                      rowCount={
+                        skeletonRowCount ?? Math.min(activePageSize, 10)
+                      }
+                      showActions={hasActions}
+                    />
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        className="h-28 text-center text-muted-foreground"
+                        colSpan={columns.length + (hasActions ? 1 : 0)}
+                      >
+                        {loadingState}
+                      </TableCell>
+                    </TableRow>
+                  )
+                ) : activeData.length ? (
+                  activeData.map((row) => (
+                    <TableRow
+                      className={cn(
+                        "group",
+                        canInteractWithRow && "cursor-pointer",
+                      )}
+                      key={getRowId(row)}
+                      onDoubleClick={() => {
+                        if (onRowDoubleClick) {
+                          onRowDoubleClick(row);
+                        } else if (canOpenDetail) {
+                          setSelectedRow(row);
+                        }
+                      }}
+                    >
+                      {columns.map((column) => (
+                        <TableCell className={column.className} key={column.id}>
+                          {column.cell?.(row)}
+                        </TableCell>
+                      ))}
+                      {hasActions ? (
+                        <TableCell className="sticky right-0 z-10 bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-muted/60">
+                          {renderRowActions?.(row, { refresh: triggerRefresh })}
+                        </TableCell>
+                      ) : null}
+                    </TableRow>
+                  ))
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
+          {showTableState ? (
+            <div className="grid min-h-64 min-w-0 place-items-center overflow-y-auto p-5 sm:p-8">
+              {fetchError ? (
+                (errorState?.(fetchError, triggerRefresh) ?? (
+                  <DataTableState
+                    message={fetchError.message}
+                    onRetry={triggerRefresh}
+                    variant="error"
+                  />
+                ))
+              ) : emptyState !== undefined &&
+                typeof emptyState !== "string" &&
+                typeof emptyState !== "number" ? (
+                emptyState
+              ) : (
+                <DataTableState
+                  filtered={hasSearchOrFilters}
+                  message={emptyState}
+                />
               )}
-            </TableBody>
-          </Table>
+            </div>
+          ) : null}
         </div>
 
         {pagination || fetchData ? (
@@ -572,7 +585,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
             onPageSizeChange={handlePageSizeChange}
             page={activePage}
             pageSize={activePageSize}
-            pageSizeOptions={pagination?.pageSizeOptions}
+            pageSizeOptions={pagination?.pageSizeOptions ?? pageSizeOptions}
             totalPages={totalPages}
           />
         ) : null}
@@ -617,8 +630,9 @@ function exportRowsToCsv<TData>({
     return;
   }
 
-  const csvColumns =
-    columns?.length ? columns : inferCsvColumnsFromRow(rows[0]);
+  const csvColumns = columns?.length
+    ? columns
+    : inferCsvColumnsFromRow(rows[0]);
   const csvLines = [
     csvColumns.map((column) => escapeCsvValue(column.header)).join(","),
     ...rows.map((row) =>
@@ -639,7 +653,9 @@ function exportRowsToCsv<TData>({
   URL.revokeObjectURL(url);
 }
 
-function inferCsvColumnsFromRow<TData>(row: TData): DataTableCsvColumn<TData>[] {
+function inferCsvColumnsFromRow<TData>(
+  row: TData,
+): DataTableCsvColumn<TData>[] {
   if (!row || typeof row !== "object") {
     return [];
   }

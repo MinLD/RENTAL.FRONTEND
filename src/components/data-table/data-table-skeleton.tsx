@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -90,6 +92,10 @@ type DataTableRowsSkeletonProps = {
   showHeader?: boolean;
 };
 
+type DataTableSkeletonColumn = {
+  skeleton?: ReactNode;
+};
+
 export function DataTableRowsSkeleton({
   columnCount,
   rowCount,
@@ -132,16 +138,24 @@ export function DataTableRowsSkeleton({
 
 export function DataTableBodySkeletonRows({
   columnCount,
+  columns,
   rowCount,
   showActions = true,
-}: Omit<DataTableRowsSkeletonProps, "showHeader">) {
+}: Omit<DataTableRowsSkeletonProps, "columnCount" | "showHeader"> & {
+  columnCount?: number;
+  columns?: DataTableSkeletonColumn[];
+}) {
+  const skeletonColumns =
+    columns ??
+    Array.from({ length: columnCount ?? 0 }, () => ({ skeleton: undefined }));
+
   return (
     <>
       {Array.from({ length: rowCount }, (_, rowIndex) => (
         <TableRow key={rowIndex}>
-          {Array.from({ length: columnCount }, (_, columnIndex) => (
+          {skeletonColumns.map((column, columnIndex) => (
             <TableCell key={columnIndex}>
-              {columnIndex === 0 ? (
+              {column.skeleton ?? (columnIndex === 0 ? (
                 <div className="flex items-center gap-3">
                   <Skeleton className="size-9 rounded-full" />
                   <Skeleton className="h-4 w-28" />
@@ -157,7 +171,7 @@ export function DataTableBodySkeletonRows({
                         : "w-44",
                   )}
                 />
-              )}
+              ))}
             </TableCell>
           ))}
           {showActions ? (
