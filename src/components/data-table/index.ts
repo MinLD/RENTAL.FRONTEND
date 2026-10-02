@@ -1,4 +1,5 @@
 export { DataTable } from "@/components/data-table/data-table";
+export { DataTableState } from "@/components/data-table/data-table-state";
 export {
   DataTableBodySkeletonRows,
   DataTableRowsSkeleton,

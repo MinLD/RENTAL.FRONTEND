@@ -23,14 +23,14 @@ const PORTAL_ROUTES = [
     role: "adm",
   },
   {
-    path: "/ops",
-    role: "ops",
+    path: "/ow",
+    role: "ow",
   },
 ] as const;
 
 const ROLE_ALIASES: Record<(typeof PORTAL_ROUTES)[number]["role"], string[]> = {
   adm: ["adm", "admin", "administrator"],
-  ops: ["ops", "ops"],
+  ow: ["ow"],
 };
 
 const AUTH_ROUTES = [

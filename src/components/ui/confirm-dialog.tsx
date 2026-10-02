@@ -54,49 +54,48 @@ export function ConfirmDialog({
       }}
     >
       <DialogContent className="max-w-[490px] p-0" showCloseButton={false}>
-        <div className="grid grid-cols-[32px_1fr] gap-4 p-8">
-          {icon ? (
-            <div
-              className={cn(
-                "mt-1 flex size-8 items-center justify-center rounded-full",
-          
-              )}
-            >
-              {icon}
-            </div>
-          ) : null}
-
-          <div className={icon ? undefined : "col-span-2"}>
-            <DialogHeader>
+        <div className="p-8">
+          <DialogHeader className="space-y-5 text-left">
+            <div className="flex items-center gap-3">
+              {icon ? (
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-full",
+                    isDanger ? "text-red-600" : "text-primary",
+                  )}
+                >
+                  {icon}
+                </span>
+              ) : null}
               <DialogTitle>{title}</DialogTitle>
-              <DialogDescription className="max-w-[360px] leading-6">
-                {description}
-              </DialogDescription>
-            </DialogHeader>
+            </div>
+            <DialogDescription className="leading-6">
+              {description}
+            </DialogDescription>
+          </DialogHeader>
 
-            <DialogFooter className="mt-16">
-              <Button
-                disabled={isSubmitting}
-                onClick={() => onOpenChange(false)}
-                type="button"
-                variant="secondary"
-              >
-                {cancelLabel}
-              </Button>
-              <Button
-                className={cn(
-                  isDanger
-                    ? "bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline-red-500"
-                    : undefined,
-                )}
-                disabled={isSubmitting}
-                onClick={onConfirm}
-                type="button"
-              >
-                {isSubmitting ? submittingLabel : confirmLabel}
-              </Button>
-            </DialogFooter>
-          </div>
+          <DialogFooter className="mt-16">
+            <Button
+              disabled={isSubmitting}
+              onClick={() => onOpenChange(false)}
+              type="button"
+              variant="secondary"
+            >
+              {cancelLabel}
+            </Button>
+            <Button
+              className={cn(
+                isDanger
+                  ? "bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline-red-500"
+                  : undefined,
+              )}
+              disabled={isSubmitting}
+              onClick={onConfirm}
+              type="button"
+            >
+              {isSubmitting ? submittingLabel : confirmLabel}
+            </Button>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>

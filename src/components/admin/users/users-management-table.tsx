@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Eye,
-  LockKeyhole,
-  Plus,
-  UnlockKeyhole,
-} from "lucide-react";
+import { Eye, LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -88,13 +83,12 @@ export function UsersManagementTable({
               }}
               size="icon"
               type="button"
-              variant="ghost"
+              variant="default"
             >
               <Eye className="size-4" />
             </Button>
             <Button
               aria-label={user.status === "active" ? "Tạm khóa" : "Mở khóa"}
-              className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
               onClick={() =>
                 setPendingAction({
                   action: user.status === "active" ? "lock" : "unlock",
@@ -104,7 +98,7 @@ export function UsersManagementTable({
               }
               size="icon"
               type="button"
-              variant="ghost"
+              variant="default"
             >
               {user.status === "active" ? (
                 <LockKeyhole className="size-4" />

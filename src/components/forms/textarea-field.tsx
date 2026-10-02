@@ -7,11 +7,22 @@ type TextareaFieldProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   characterCount?: number;
   error?: string;
   label: string;
+  requiredIndicator?: boolean;
 };
 
 export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>(
   (
-    { characterCount, className, error, id, label, maxLength, required, ...props },
+    {
+      characterCount,
+      className,
+      error,
+      id,
+      label,
+      maxLength,
+      required,
+      requiredIndicator = required,
+      ...props
+    },
     ref,
   ) => {
     const errorId = id ? `${id}-error` : undefined;
@@ -23,7 +34,7 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
           htmlFor={id}
         >
           {label}
-          {required ? <span className="ml-1 text-error">*</span> : null}
+          {requiredIndicator ? <span className="ml-1 text-error">*</span> : null}
         </label>
         <div className="relative">
           <textarea
