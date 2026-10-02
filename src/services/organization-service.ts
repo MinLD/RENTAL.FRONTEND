@@ -3,14 +3,49 @@ import {
   partnerRegistrationSchema,
   type PartnerRegistrationFormValues,
 } from "@/lib/validations/partner-registration";
-import { authApiClientJson } from "@/services/api-client";
+import { organizationResponseSchema } from "@/lib/validations/organization";
+import { authApiClient, authApiClientJson } from "@/services/api-client";
 import type {
   OrganizationRegisteredResponse,
   OrganizationRegistrationRequest,
+  OrganizationResponse,
 } from "@/types/organization";
 
 function nullIfBlank(value: string) {
   return value.trim() || null;
+}
+
+export async function getMyOrganization(
+  signal?: AbortSignal,
+): Promise<OrganizationResponse | null> {
+  const response = await authApiClient(API_ENDPOINTS.backend.organizations.mine, {
+    cache: "no-store",
+    signal,
+  });
+  if (response.status === 204) return null;
+  if (response.status !== 200) throw new Error("Unexpected organization response.");
+  return organizationResponseSchema.parse(await response.json());
+}
+
+export async function getOrganization(id: string): Promise<OrganizationResponse> {
+  const data = await authApiClientJson<unknown>(API_ENDPOINTS.backend.organizations.detail(id), {
+    cache: "no-store",
+  });
+  return organizationResponseSchema.parse(data);
+}
+
+export async function updateOrganizationProfile(
+  id: string,
+  values: PartnerRegistrationFormValues,
+) {
+  const payload = buildOrganizationRegistrationRequest(values);
+  const { type: organizationType, ...profile } = payload;
+  void organizationType;
+  const data = await authApiClientJson<unknown>(API_ENDPOINTS.backend.organizations.profile(id), {
+    json: profile,
+    method: "PUT",
+  });
+  return organizationResponseSchema.parse(data);
 }
 
 export function buildOrganizationRegistrationRequest(

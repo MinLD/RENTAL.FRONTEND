@@ -8,6 +8,10 @@ export type MediaUploadResponse = {
   status: string;
 };
 
+// Saved documents have an ID and optional preview, without upload-only metadata.
+export type MediaDocumentReference = Pick<MediaUploadResponse, "mediaId" | "originalFileName" | "previewUrl"> &
+  Partial<Omit<MediaUploadResponse, "mediaId" | "originalFileName" | "previewUrl">>;
+
 export type MediaCompletedDto = {
   contentType: string | null;
   mediaId: string;

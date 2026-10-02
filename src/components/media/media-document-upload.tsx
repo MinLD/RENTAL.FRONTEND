@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { uploadMediaFile } from "@/services/media-service";
-import type { MediaUploadResponse } from "@/types/media";
+import type { MediaDocumentReference, MediaUploadResponse } from "@/types/media";
 import { cn } from "@/utils/cn";
 
 const DEFAULT_CONTENT_TYPES = [
@@ -25,7 +25,7 @@ type MediaDocumentUploadProps = {
   onChange: (upload: MediaUploadResponse | null) => void;
   onUploadingChange?: (isUploading: boolean) => void;
   uploadFile?: (file: File) => Promise<MediaUploadResponse>;
-  value?: MediaUploadResponse | null;
+  value?: MediaDocumentReference | null;
 };
 
 export const MediaDocumentUpload = forwardRef<
@@ -190,7 +190,7 @@ export const MediaDocumentUpload = forwardRef<
           {value ? (
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-blue-100 px-4 py-2">
               <span className="text-xs text-muted-foreground">
-                Đã tải lên · {formatFileSize(value.sizeBytes)}
+                Đã tải lên{value.sizeBytes !== undefined ? ` · ${formatFileSize(value.sizeBytes)}` : ""}
               </span>
               <div className="flex items-center gap-2">
                 {value.previewUrl ? (
