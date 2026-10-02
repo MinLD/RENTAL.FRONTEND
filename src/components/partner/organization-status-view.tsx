@@ -9,11 +9,12 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { refreshSession } from "@/services/auth-service";
 import {
   ORGANIZATION_STATUS,
   type OrganizationApplication,
@@ -83,7 +84,9 @@ export function OrganizationStatusView({
   onRefresh,
   onEdit,
 }: OrganizationStatusViewProps) {
+  const router = useRouter();
   const [isCopying, setIsCopying] = useState(false);
+  const [isEnteringOw, setIsEnteringOw] = useState(false);
   const isPending = organization.status === ORGANIZATION_STATUS.pending;
   const isActive = organization.status === ORGANIZATION_STATUS.active;
   const isRejected = organization.status === ORGANIZATION_STATUS.rejected;
@@ -125,6 +128,23 @@ export function OrganizationStatusView({
       );
     } finally {
       setIsCopying(false);
+    }
+  }
+
+  async function enterOwPortal() {
+    if (isEnteringOw) return;
+
+    setIsEnteringOw(true);
+
+    try {
+      await refreshSession();
+      router.push("/ow");
+      router.refresh();
+    } catch {
+      toast.error("Phiên đăng nhập cần được cập nhật. Vui lòng đăng nhập lại.");
+      router.push("/login");
+    } finally {
+      setIsEnteringOw(false);
     }
   }
 
@@ -291,8 +311,14 @@ export function OrganizationStatusView({
           </Button>
         )}
         {isActive && (
-          <Button asChild>
-            <Link href="/account">Quản lý tài khoản</Link>
+          <Button
+            disabled={isEnteringOw}
+            onClick={() => {
+              void enterOwPortal();
+            }}
+            type="button"
+          >
+            {isEnteringOw ? "Đang vào trang quản lý..." : "Vào trang quản lý"}
           </Button>
         )}
         {isSuspended && (
