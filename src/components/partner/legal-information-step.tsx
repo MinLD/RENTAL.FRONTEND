@@ -10,11 +10,11 @@ import {
   type PartnerRegistrationFormValues,
 } from "@/lib/validations/partner-registration";
 import { uploadMediaFile } from "@/services/media-service";
-import type { MediaUploadResponse } from "@/types/media";
+import type { MediaDocumentReference } from "@/types/media";
 
 type LegalInformationStepProps = {
-  licenseDocument: MediaUploadResponse | null;
-  onLicenseDocumentChange: (upload: MediaUploadResponse | null) => void;
+  licenseDocument: MediaDocumentReference | null;
+  onLicenseDocumentChange: (upload: MediaDocumentReference | null) => void;
   onLicenseUploadingChange: (isUploading: boolean) => void;
 };
 
