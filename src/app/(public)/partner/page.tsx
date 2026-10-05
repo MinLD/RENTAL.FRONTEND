@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-
 import { Container } from "@/components/layout/container";
-import { PartnerView } from "@/components/partner/partner-view";
-import { ApiClientError } from "@/services/api-client";
+import {
+  PartnerView,
+  type PartnerProfileCompletion,
+} from "@/components/partner/partner-view";
 import { getMyOrganizationOnServer } from "@/services/organization-server-service";
+import { getCurrentUser } from "@/services/session-service";
 import type { OrganizationResponse } from "@/types/organization";
 
 export const metadata: Metadata = {
@@ -13,15 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default async function PartnerPage() {
-  let organization: OrganizationResponse | null = null;
-  let error = "";
-  try {
-    organization = await getMyOrganizationOnServer();
-  } catch (cause) {
-    if (cause instanceof ApiClientError && cause.status === 401)
-      redirect("/login");
-    error = "Không thể kiểm tra trạng thái hồ sơ. Vui lòng thử lại.";
-  }
+  const currentUser = await getCurrentUser();
+  const profileCompletion = getPartnerProfileCompletion(currentUser);
+  const organization: OrganizationResponse | null = await getMyOrganizationOnServer();
   return (
     <div className="flex flex-1 flex-col bg-background py-8 sm:py-10">
       <Container>
@@ -39,14 +34,42 @@ export default async function PartnerPage() {
         </nav>
 
         <PartnerView
-          initialError={error}
           initialOrganization={organization}
-          key={
-            error ||
-            `${organization?.id ?? "new"}:${organization?.status ?? "new"}:${organization?.submittedAtUtc ?? ""}`
-          }
+          profileCompletion={profileCompletion}
+          key={`${organization?.id ?? "new"}:${organization?.status ?? "new"}:${organization?.submittedAtUtc ?? ""}`}
         />
       </Container>
     </div>
   );
+}
+
+function getPartnerProfileCompletion(
+  user: Awaited<ReturnType<typeof getCurrentUser>>,
+): PartnerProfileCompletion {
+  if (!user) {
+    return { isComplete: true, missingFields: [] };
+  }
+
+  const missingFields: string[] = [];
+
+  if (!user.maskedCitizenId?.trim()) {
+    missingFields.push("CCCD/CMND");
+  }
+
+  if (!user.phoneNumber?.trim()) {
+    missingFields.push("Số điện thoại");
+  }
+
+  if (!user.dateOfBirth?.trim()) {
+    missingFields.push("Ngày sinh");
+  }
+
+  if (!user.isProfileCompleted && missingFields.length === 0) {
+    missingFields.push("Thông tin hồ sơ cá nhân");
+  }
+
+  return {
+    isComplete: user.isProfileCompleted && missingFields.length === 0,
+    missingFields,
+  };
 }

@@ -25,6 +25,7 @@ import type { AccountProfileInitialData } from "@/components/account/account-typ
 import { AccountCitizenIdField } from "@/components/account/account-citizen-id-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
+import { profileSchema } from "@/lib/validations/profile";
 import {
   updateProfileAction,
   type UpdateProfileActionState,
@@ -45,6 +46,8 @@ const initialUpdateProfileActionState: UpdateProfileActionState = {
   success: false,
 };
 
+type AccountFieldErrors = NonNullable<UpdateProfileActionState["fieldErrors"]>;
+
 export function AccountEditForm({
   avatarMediaId,
   avatarPreviewUrl,
@@ -59,12 +62,17 @@ export function AccountEditForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
   const [isFieldsDirty, setIsFieldsDirty] = useState(false);
+  const [clientFieldErrors, setClientFieldErrors] = useState<AccountFieldErrors>({});
   const [state, formAction, isPending] = useActionState(
     updateProfileAction,
     initialUpdateProfileActionState,
   );
   const isDirty = isFieldsDirty || isAvatarDirty;
   const isBusy = isPending || isAvatarUploading;
+  const displayedFieldErrors = isFieldsDirty
+    ? clientFieldErrors
+    : (state.fieldErrors ?? {});
+  const hasClientFieldErrors = Object.values(clientFieldErrors).some(Boolean);
   const submissionInProgress = useRef(false);
   const handledActionState = useRef(initialUpdateProfileActionState);
 
@@ -106,12 +114,14 @@ export function AccountEditForm({
     if (isBusy || submissionInProgress.current) return;
     formRef.current?.reset();
     setIsFieldsDirty(false);
+    setClientFieldErrors({});
     onCancel?.();
     setFormKey((currentKey) => currentKey + 1);
   }
 
   function handleFormAction(formData: FormData) {
     if (!isDirty || isBusy || submissionInProgress.current) return;
+    if (!validateProfileForm(formData)) return;
     submissionInProgress.current = true;
     setIsFieldsDirty(false);
     formAction(formData);
@@ -141,6 +151,35 @@ export function AccountEditForm({
         ) !==
           normalizeIdentityNumberValue(initialProfile.identityNumber),
     );
+    validateProfileForm(formData, identityNumber);
+  }
+
+  function validateProfileForm(formData: FormData, identityNumber?: string) {
+    const parsedForm = profileSchema.safeParse({
+      dateOfBirth: formData.get("dateOfBirth"),
+      email: formData.get("email"),
+      fullName: formData.get("fullName"),
+      identityNumber: normalizeMaskedIdentityNumberValue(
+        identityNumber ?? getTextValue(formData, "identityNumber"),
+      ),
+      phoneNumber: formData.get("phoneNumber"),
+    });
+
+    if (parsedForm.success) {
+      setClientFieldErrors({});
+      return true;
+    }
+
+    const flattenedError = parsedForm.error.flatten();
+
+    setClientFieldErrors({
+      dateOfBirth: flattenedError.fieldErrors.dateOfBirth?.[0],
+      fullName: flattenedError.fieldErrors.fullName?.[0],
+      identityNumber: flattenedError.fieldErrors.identityNumber?.[0],
+      phoneNumber: flattenedError.fieldErrors.phoneNumber?.[0],
+    });
+
+    return false;
   }
 
   return (
@@ -161,7 +200,7 @@ export function AccountEditForm({
         onChange={handleFormChange}
         onInput={handleFormChange}
         onSubmit={(event) => {
-          if (!isDirty || isBusy || submissionInProgress.current) {
+          if (!isDirty || isBusy || hasClientFieldErrors || submissionInProgress.current) {
             event.preventDefault();
           } else {
             // Lock avatar selection before the form action starts its transition.
@@ -181,7 +220,7 @@ export function AccountEditForm({
           <TextField
             autoComplete="name"
             defaultValue={initialProfile.fullName}
-            error={state.fieldErrors?.fullName}
+            error={displayedFieldErrors.fullName}
             id="fullName"
             label="Họ và tên"
             leftIcon={<UserRound size={16} />}
@@ -205,7 +244,7 @@ export function AccountEditForm({
           <TextField
             autoComplete="tel"
             defaultValue={initialProfile.phoneNumber}
-            error={state.fieldErrors?.phoneNumber}
+            error={displayedFieldErrors.phoneNumber}
             id="phoneNumber"
             label="Số điện thoại"
             leftIcon={<Phone size={16} />}
@@ -215,7 +254,7 @@ export function AccountEditForm({
 
           <TextField
             defaultValue={initialProfile.dateOfBirth}
-            error={state.fieldErrors?.dateOfBirth}
+            error={displayedFieldErrors.dateOfBirth}
             id="dateOfBirth"
             label="Ngày sinh"
             leftIcon={<CalendarDays size={16} />}
@@ -226,7 +265,7 @@ export function AccountEditForm({
 
           <AccountCitizenIdField
             disabled={isPending}
-            error={state.fieldErrors?.identityNumber}
+            error={displayedFieldErrors.identityNumber}
             initialValue={initialProfile.identityNumber ?? ""}
             key={`${userId}:${initialProfile.identityNumber ?? ""}`}
             onValueChange={updateDirtyState}
@@ -242,7 +281,7 @@ export function AccountEditForm({
           >
             Hủy
           </Button>
-          <Button disabled={!isDirty || isBusy} type="submit">
+          <Button disabled={!isDirty || isBusy || hasClientFieldErrors} type="submit">
             <Save size={16} />
             {isPending ? "Đang lưu..." : "Lưu"}
           </Button>
@@ -262,4 +301,8 @@ function normalizeIdentityNumberValue(value?: string) {
   const normalizedValue = value?.trim() ?? "";
 
   return normalizedValue.includes("*") ? "" : normalizedValue;
+}
+
+function normalizeMaskedIdentityNumberValue(value?: string) {
+  return normalizeIdentityNumberValue(value);
 }

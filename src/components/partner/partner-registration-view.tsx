@@ -118,8 +118,9 @@ export function PartnerRegistrationView({
       type: 1,
       website: initialOrganization?.website ?? "",
     },
-    mode: "onTouched",
+    mode: "onChange",
     resolver: zodResolver(partnerRegistrationSchema),
+    reValidateMode: "onChange",
     shouldUnregister: false,
   });
   const isUploading = isUploadingLogo || isUploadingLicense;
