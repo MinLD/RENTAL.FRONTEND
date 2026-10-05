@@ -31,6 +31,27 @@ export const adminOrganizationDetailSchema = organizationResponseSchema.extend({
   reviewedAtUtc: z.string().nullable().optional(),
 });
 
+export const adminOrganizationHistoryQuerySchema = z.object({
+  page: z.number().int().positive().default(1),
+  pageSize: z.number().int().min(1).max(100).default(10),
+  search: z.string().trim().max(200, "Tìm kiếm tối đa 200 ký tự.").default(""),
+});
+
+export const adminOrganizationHistorySchema = z.object({
+  items: z.array(z.object({
+    action: z.string(),
+    actorId: z.uuid(),
+    id: z.uuid(),
+    reason: z.string().nullable().optional(),
+    result: z.string(),
+    timestamp: z.string(),
+  })),
+  page: z.number().int().nonnegative(),
+  pageSize: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+});
+
 export const adminOrganizationReasonSchema = z.object({
   reason: z
     .string()

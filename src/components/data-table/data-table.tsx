@@ -185,6 +185,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   const [remoteData, setRemoteData] = useState<TData[]>([]);
   const [remoteTotalItems, setRemoteTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasCompletedRemoteLoad, setHasCompletedRemoteLoad] = useState(false);
   const [fetchError, setFetchError] = useState<Error | null>(null);
   const [refreshIndex, setRefreshIndex] = useState(0);
   const fetchRequestIdRef = useRef(0);
@@ -200,8 +201,13 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   const activeTotalItems =
     pagination?.totalItems ??
     (isRemoteDataTable ? remoteTotalItems : activeData.length);
+  const isWaitingForFirstRemoteLoad =
+    isRemoteDataTable && !hasCompletedRemoteLoad && !fetchError;
+  const isTableLoading = isLoading || isWaitingForFirstRemoteLoad;
   const showTableState =
-    !isLoading && (Boolean(fetchError) || !activeData.length);
+    !isTableLoading &&
+    (!isRemoteDataTable || hasCompletedRemoteLoad) &&
+    (Boolean(fetchError) || !activeData.length);
   const hasSearchOrFilters =
     Boolean(activeKeyword.trim()) ||
     Object.values(activeFilterParams ?? {}).some(
@@ -237,6 +243,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
 
       const requestId = fetchRequestIdRef.current + 1;
       fetchRequestIdRef.current = requestId;
+      setHasCompletedRemoteLoad(false);
       setIsLoading(true);
       setFetchError(null);
 
@@ -265,6 +272,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
         );
       } finally {
         if (fetchRequestIdRef.current === requestId) {
+          setHasCompletedRemoteLoad(true);
           setIsLoading(false);
         }
       }
@@ -325,6 +333,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   }
 
   function triggerRefresh() {
+    setHasCompletedRemoteLoad(false);
     setIsLoading(Boolean(fetchData));
     setRefreshIndex((currentValue) => currentValue + 1);
   }
@@ -428,19 +437,19 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
             ) : null}
             {renderFilters?.({
               filters: activeFilterParams,
-              isLoading,
+              isLoading: isTableLoading,
               refresh: triggerRefresh,
               setFilters: handleFilterParamsChange,
             })}
             {fetchData ? (
               <Button
-                disabled={isLoading}
+                disabled={isTableLoading}
                 onClick={triggerRefresh}
                 type="button"
                 variant="secondary"
               >
                 <RefreshCw
-                  className={cn("size-4", isLoading && "animate-spin")}
+                  className={cn("size-4", isTableLoading && "animate-spin")}
                 />
                 Làm mới
               </Button>
@@ -503,7 +512,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {showTableState ? null : isLoading ? (
+                {showTableState ? null : isTableLoading ? (
                   typeof loadingState === "string" &&
                   loadingState === "Đang tải dữ liệu..." ? (
                     <DataTableBodySkeletonRows
@@ -560,6 +569,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
               {fetchError ? (
                 (errorState?.(fetchError, triggerRefresh) ?? (
                   <DataTableState
+                    filtered={hasSearchOrFilters}
                     message={fetchError.message}
                     onRetry={triggerRefresh}
                     variant="error"
@@ -693,23 +703,32 @@ function toKebabCase(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function DataTablePaginationBar({
-  onPageChange,
-  onPageSizeChange,
-  page,
-  pageSize,
-  pageSizeOptions = [10, 25, 50, 100],
-  totalPages,
-}: {
+export type DataTablePaginationBarProps = {
+  className?: string;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   page: number;
   pageSize: number;
   pageSizeOptions?: number[];
   totalPages: number;
-}) {
+};
+
+export function DataTablePaginationBar({
+  className,
+  onPageChange,
+  onPageSizeChange,
+  page,
+  pageSize,
+  pageSizeOptions = [10, 25, 50, 100],
+  totalPages,
+}: DataTablePaginationBarProps) {
   return (
-    <div className="z-20 min-w-0 overflow-x-auto border-t border-border bg-background px-4 py-3 shadow-[0_-8px_18px_-18px_rgba(15,23,42,0.55)]">
+    <div
+      className={cn(
+        "z-20 min-w-0 overflow-x-auto border-t border-border bg-background px-4 py-3 shadow-[0_-8px_18px_-18px_rgba(15,23,42,0.55)]",
+        className,
+      )}
+    >
       <Pagination className="min-w-max">
         <PaginationContent>
           <PaginationItem className="gap-2">

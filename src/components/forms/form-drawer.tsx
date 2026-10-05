@@ -13,24 +13,33 @@ import {
 import { cn } from "@/utils/cn";
 
 type FormDrawerProps = {
+  activeTab?: string;
   bodyClassName?: string;
   children: ReactNode;
   className?: string;
   description?: ReactNode;
   footer?: ReactNode;
   onOpenChange: (open: boolean) => void;
+  onTabChange?: (value: string) => void;
   open: boolean;
+  tabs?: Array<{
+    label: ReactNode;
+    value: string;
+  }>;
   title: ReactNode;
 };
 
 export function FormDrawer({
+  activeTab,
   bodyClassName,
   children,
   className,
   description,
   footer,
   onOpenChange,
+  onTabChange,
   open,
+  tabs,
   title,
 }: FormDrawerProps) {
   return (
@@ -45,6 +54,35 @@ export function FormDrawer({
               </SheetDescription>
             ) : null}
           </SheetHeader>
+
+          {tabs?.length ? (
+            <div
+              className="flex shrink-0 gap-1 overflow-x-auto px-6 pb-3 pt-4"
+              role="tablist"
+            >
+              {tabs.map((tab) => {
+                const isActive = tab.value === activeTab;
+
+                return (
+                  <button
+                    aria-selected={isActive}
+                    className={cn(
+                      "h-9 rounded px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                    )}
+                    key={tab.value}
+                    onClick={() => onTabChange?.(tab.value)}
+                    role="tab"
+                    type="button"
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div
             className={cn(

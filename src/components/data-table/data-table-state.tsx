@@ -21,22 +21,23 @@ export function DataTableState({
   const isNotFound =
     typeof message === "string" &&
     /^(?:404[\s:-]*)?not\s*found[.!]?$/i.test(message.trim());
-  const Icon = isError
-    ? isNotFound
-      ? FolderSearch
-      : CircleAlert
+  const shouldShowAsError = isError && !isNotFound;
+  const Icon = shouldShowAsError
+    ? CircleAlert
     : filtered
       ? FolderSearch
       : Inbox;
-  const title = isError
+  const title = shouldShowAsError
     ? "Không thể tải dữ liệu"
     : filtered
       ? "Không tìm thấy kết quả"
       : "Chưa có dữ liệu";
   const description = isNotFound
-    ? "Không tìm thấy dữ liệu được yêu cầu. Vui lòng thử lại."
+    ? filtered
+      ? "Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại."
+      : "Dữ liệu sẽ xuất hiện ở đây khi có bản ghi mới."
     : (message ??
-      (isError
+      (shouldShowAsError
         ? "Đã xảy ra lỗi khi tải danh sách. Vui lòng thử lại."
         : filtered
           ? "Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại."
@@ -46,7 +47,7 @@ export function DataTableState({
     <div
       className="grid w-full max-w-lg justify-items-center gap-4 rounded-xl px-6 py-8 text-center sm:px-8 sm:py-10"
       data-slot="data-table-state"
-      role={isError ? "alert" : "status"}
+      role={shouldShowAsError ? "alert" : "status"}
     >
       <div
         className={cn(
@@ -63,7 +64,7 @@ export function DataTableState({
           {description}
         </div>
       </div>
-      {isError && onRetry ? (
+      {shouldShowAsError && onRetry ? (
         <Button onClick={onRetry} type="button">
           <RefreshCw aria-hidden="true" className="size-4" />
           Thử lại

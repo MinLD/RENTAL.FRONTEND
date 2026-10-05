@@ -5,6 +5,8 @@ import { z } from "zod";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import {
   adminOrganizationDetailSchema,
+  adminOrganizationHistoryQuerySchema,
+  adminOrganizationHistorySchema,
   adminOrganizationListSchema,
   adminOrganizationsQuerySchema,
   adminOrganizationReasonSchema,
@@ -13,6 +15,7 @@ import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
 import { serverApi } from "@/services/server-api";
 import type {
   AdminOrganizationDetail,
+  AdminOrganizationHistoryResult,
   AdminOrganizationSummary,
   AdminOrganizationsFilters,
 } from "@/types/admin-organizations";
@@ -60,6 +63,41 @@ export async function getAdminOrganizationDetailAction(
 
   if (!parsed.success) {
     throw new Error("Dữ liệu hồ sơ tổ chức không hợp lệ.");
+  }
+
+  return parsed.data;
+}
+
+export async function getAdminOrganizationHistoryAction(
+  id: string,
+  params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  },
+): Promise<AdminOrganizationHistoryResult> {
+  if (!z.uuid().safeParse(id).success) {
+    throw new Error("ID tổ chức không hợp lệ.");
+  }
+
+  const query = adminOrganizationHistoryQuerySchema.safeParse({
+    page: params.page,
+    pageSize: params.pageSize,
+    search: params.search,
+  });
+
+  if (!query.success) {
+    throw new Error(query.error.issues[0]?.message ?? "Bộ lọc lịch sử không hợp lệ.");
+  }
+
+  const data = await fetchOrganizationJson(
+    API_ENDPOINTS.backend.adminOrganizations.history(id, query.data),
+    "Không thể tải lịch sử tổ chức.",
+  );
+  const parsed = adminOrganizationHistorySchema.safeParse(data);
+
+  if (!parsed.success) {
+    throw new Error("Dữ liệu lịch sử tổ chức không hợp lệ.");
   }
 
   return parsed.data;
