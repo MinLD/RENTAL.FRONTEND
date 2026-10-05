@@ -14,6 +14,35 @@ export type CatalogSpecDataType =
   | "text"
   | (string & {});
 
+export type CatalogBrandDto = {
+  code?: string | null;
+  createdAt?: string;
+  id?: string;
+  isActive?: boolean;
+  logoMediaId?: string | null;
+  logoUrl?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  updatedAt?: string | null;
+};
+
+export type CatalogBrandListResponse = {
+  items?: CatalogBrandDto[] | null;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+};
+
+export type CreateCatalogBrandRequest = {
+  code?: string | null;
+  logoMediaId?: string | null;
+  name?: string | null;
+  slug?: string | null;
+};
+
+export type UpdateCatalogBrandRequest = CreateCatalogBrandRequest;
+
 export type CatalogCategoryDto = {
   id?: string;
   imageMediaId?: string | null;
@@ -149,8 +178,16 @@ export type ValidateCatalogSpecificationRequest = {
   specValues: unknown;
 };
 
+export type CatalogSpecificationValidationErrorCode =
+  | "INVALID_ENUM_OPTION"
+  | "OUT_OF_RANGE"
+  | "REQUIRED"
+  | "TYPE_MISMATCH"
+  | "UNKNOWN_FIELD"
+  | (string & {});
+
 export type CatalogSpecificationValidationError = {
-  code?: string | null;
+  code?: CatalogSpecificationValidationErrorCode | null;
   field?: string | null;
   message?: string | null;
 };
@@ -168,12 +205,35 @@ export type CatalogEquipmentTypeListParams = {
   sort?: string;
 };
 
+export type CatalogBrandListParams = {
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+};
+
+export type AdminCatalogBrandListParams = CatalogBrandListParams & {
+  isActive?: boolean;
+};
+
 export type CatalogPagedResult<TItem> = {
   data: TItem[];
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
+};
+
+export type CatalogBrand = {
+  code: string;
+  createdAt?: string;
+  id: string;
+  isActive: boolean;
+  logoMediaId?: string;
+  logoUrl?: string;
+  name: string;
+  slug?: string;
+  updatedAt?: string;
 };
 
 export type CatalogCategory = {

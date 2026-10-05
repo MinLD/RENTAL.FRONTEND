@@ -1,5 +1,7 @@
 import {
   CATALOG_EQUIPMENT_TYPE_STATUS,
+  type CatalogBrand,
+  type CatalogBrandDto,
   type CatalogCategory,
   type CatalogCategoryDetail,
   type CatalogCategoryDetailResponse,
@@ -25,6 +27,35 @@ const EQUIPMENT_TYPE_STATUS_LABELS: Record<CatalogEquipmentTypeStatus, string> =
   [CATALOG_EQUIPMENT_TYPE_STATUS.Published]: "Published",
   [CATALOG_EQUIPMENT_TYPE_STATUS.Disabled]: "Disabled",
 };
+
+export function normalizeCatalogBrand(brand: CatalogBrandDto): CatalogBrand {
+  return {
+    code: normalizeText(brand.code) ?? "",
+    ...(normalizeText(brand.createdAt)
+      ? { createdAt: normalizeText(brand.createdAt) }
+      : {}),
+    id: brand.id ?? "",
+    isActive: brand.isActive === true,
+    ...(normalizeText(brand.logoMediaId)
+      ? { logoMediaId: normalizeText(brand.logoMediaId) }
+      : {}),
+    ...(normalizeText(brand.logoUrl)
+      ? { logoUrl: normalizeText(brand.logoUrl) }
+      : {}),
+    name:
+      normalizeText(brand.name) ??
+      normalizeText(brand.code) ??
+      "Chưa đặt tên",
+    ...(normalizeText(brand.slug) ? { slug: normalizeText(brand.slug) } : {}),
+    ...(normalizeText(brand.updatedAt)
+      ? { updatedAt: normalizeText(brand.updatedAt) }
+      : {}),
+  };
+}
+
+export function getCatalogBrandStatusLabel(isActive: boolean) {
+  return isActive ? "Đang hoạt động" : "Ngừng hoạt động";
+}
 
 export function normalizeCatalogCategory(
   category: CatalogCategoryDto,

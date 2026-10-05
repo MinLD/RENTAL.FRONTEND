@@ -19,6 +19,17 @@ type ListCatalogEquipmentTypesParams = {
   sort?: string;
 };
 
+type ListCatalogBrandsParams = {
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+};
+
+type ListAdminCatalogBrandsParams = ListCatalogBrandsParams & {
+  isActive?: boolean;
+};
+
 type ListAdminOrganizationHistoryParams = {
   page: number;
   pageSize: number;
@@ -109,6 +120,45 @@ export const API_ENDPOINTS = {
       register: "/api/v1/auth/register",
     },
     catalog: {
+      brands: {
+        adminDetail: (brandId: string) =>
+          `/api/v1/catalog/admin/brands/${encodeURIComponent(brandId)}`,
+        adminList: ({
+          isActive,
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListAdminCatalogBrandsParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/admin/brands", {
+            IsActive: isActive === undefined ? undefined : String(isActive),
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
+        create: "/api/v1/catalog/brands",
+        detail: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}`,
+        disable: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}/disable`,
+        enable: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}/enable`,
+        list: ({
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListCatalogBrandsParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/brands", {
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
+        update: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}`,
+      },
       categories: {
         create: "/api/v1/catalog/categories",
         detail: (id: string) =>

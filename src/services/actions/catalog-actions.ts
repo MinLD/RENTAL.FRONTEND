@@ -3,6 +3,11 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { serverApiJson } from "@/services/server-api";
 import type {
+  AdminCatalogBrandListParams,
+  CatalogBrand,
+  CatalogBrandDto,
+  CatalogBrandListParams,
+  CatalogBrandListResponse,
   CatalogCategoryDetail,
   CatalogCategoryDetailResponse,
   CatalogEquipmentTypeDetail,
@@ -15,13 +20,16 @@ import type {
   CatalogSpecDefinition,
   CatalogSpecSchema,
   CatalogSpecificationValidationResult,
+  CreateCatalogBrandRequest,
   CreateCatalogCategoryRequest,
   CreateCatalogEquipmentTypeRequest,
+  UpdateCatalogBrandRequest,
   UpdateCatalogCategoryRequest,
   UpdateCatalogEquipmentTypeRequest,
   ValidateCatalogSpecificationRequest,
 } from "@/types/catalog";
 import {
+  normalizeCatalogBrand,
   normalizeCatalogCategoryDetail,
   normalizeCatalogEquipmentTypeDetail,
   normalizeCatalogEquipmentTypeListItem,
@@ -32,6 +40,119 @@ import {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function listCatalogBrandsAction(
+  params: CatalogBrandListParams = {},
+): Promise<CatalogPagedResult<CatalogBrand>> {
+  const response = await serverApiJson<CatalogBrandListResponse>(
+    API_ENDPOINTS.backend.catalog.brands.list(params),
+    "Không thể tải danh sách thương hiệu.",
+  );
+
+  return mapCatalogBrandPagedResult(response, params);
+}
+
+export async function getCatalogBrandAction(
+  brandId: string,
+): Promise<CatalogBrand> {
+  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
+
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.detail(brandId),
+    "Không thể tải chi tiết thương hiệu.",
+  );
+
+  return normalizeCatalogBrand(response);
+}
+
+export async function listAdminCatalogBrandsAction(
+  params: AdminCatalogBrandListParams = {},
+): Promise<CatalogPagedResult<CatalogBrand>> {
+  const response = await serverApiJson<CatalogBrandListResponse>(
+    API_ENDPOINTS.backend.catalog.brands.adminList(params),
+    "Không thể tải danh sách thương hiệu.",
+  );
+
+  return mapCatalogBrandPagedResult(response, params);
+}
+
+export async function getAdminCatalogBrandAction(
+  brandId: string,
+): Promise<CatalogBrand> {
+  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
+
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.adminDetail(brandId),
+    "Không thể tải chi tiết thương hiệu.",
+  );
+
+  return normalizeCatalogBrand(response);
+}
+
+export async function createCatalogBrandAction(
+  request: CreateCatalogBrandRequest,
+): Promise<CatalogBrand> {
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.create,
+    "Không thể tạo thương hiệu.",
+    {
+      json: request,
+      method: "POST",
+    },
+  );
+
+  return normalizeCatalogBrand(response);
+}
+
+export async function updateCatalogBrandAction(
+  brandId: string,
+  request: UpdateCatalogBrandRequest,
+): Promise<CatalogBrand> {
+  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
+
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.update(brandId),
+    "Không thể cập nhật thương hiệu.",
+    {
+      json: request,
+      method: "PATCH",
+    },
+  );
+
+  return normalizeCatalogBrand(response);
+}
+
+export async function disableCatalogBrandAction(
+  brandId: string,
+): Promise<CatalogBrand> {
+  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
+
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.disable(brandId),
+    "Không thể vô hiệu hóa thương hiệu.",
+    {
+      method: "POST",
+    },
+  );
+
+  return normalizeCatalogBrand(response);
+}
+
+export async function enableCatalogBrandAction(
+  brandId: string,
+): Promise<CatalogBrand> {
+  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
+
+  const response = await serverApiJson<CatalogBrandDto>(
+    API_ENDPOINTS.backend.catalog.brands.enable(brandId),
+    "Không thể kích hoạt thương hiệu.",
+    {
+      method: "POST",
+    },
+  );
+
+  return normalizeCatalogBrand(response);
+}
 
 export async function listCatalogCategoriesAction(): Promise<
   CatalogCategoryDetail[]
@@ -327,6 +448,19 @@ export async function publishCatalogSpecSchemaDraftAction(
   );
 
   return normalizeCatalogSpecSchema(response);
+}
+
+function mapCatalogBrandPagedResult(
+  response: CatalogBrandListResponse,
+  params: CatalogBrandListParams = {},
+): CatalogPagedResult<CatalogBrand> {
+  return {
+    data: (response.items ?? []).map(normalizeCatalogBrand),
+    page: response.page ?? params.page ?? 1,
+    pageSize: response.pageSize ?? params.pageSize ?? 0,
+    totalItems: response.totalCount ?? 0,
+    totalPages: response.totalPages ?? 0,
+  };
 }
 
 function assertUuid(value: string, message: string) {
