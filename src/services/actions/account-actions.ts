@@ -5,7 +5,7 @@ import { refresh } from "next/cache";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
-import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
+import { getResponseErrorMessage } from "@/services/api-error";
 import { serverApi } from "@/services/server-api";
 import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
@@ -68,7 +68,7 @@ export async function updateProfileAction(
 
   if (!response.ok) {
     return {
-      message: await getActionResponseErrorMessage(
+      message: await getResponseErrorMessage(
         response,
         "Không thể cập nhật thông tin cá nhân.",
       ),
@@ -122,7 +122,7 @@ export async function changePasswordAction(
 
   if (!response.ok) {
     return {
-      message: await getActionResponseErrorMessage(
+      message: await getResponseErrorMessage(
         response,
         "Không thể đổi mật khẩu. Vui lòng thử lại.",
       ),

@@ -6,6 +6,7 @@ import {
   refreshBackendSession,
 } from "@/services/auth-refresh";
 import { buildBackendApiUrl } from "@/services/backend-api";
+import { getApiErrorMessage, readResponseJson } from "@/services/api-error";
 
 type ServerApiInit = Omit<RequestInit, "body" | "headers"> & {
   body?: BodyInit | null;
@@ -13,6 +14,24 @@ type ServerApiInit = Omit<RequestInit, "body" | "headers"> & {
   headers?: HeadersInit;
   json?: unknown;
 };
+
+export class ServerApiError extends Error {
+  readonly responseBody: unknown;
+  readonly status: number;
+  readonly statusText: string;
+
+  constructor(
+    response: Response,
+    responseBody: unknown,
+    fallbackMessage: string,
+  ) {
+    super(getApiErrorMessage(responseBody) ?? fallbackMessage);
+    this.name = "ServerApiError";
+    this.responseBody = responseBody;
+    this.status = response.status;
+    this.statusText = response.statusText;
+  }
+}
 
 export async function serverApi(endpoint: string, init?: ServerApiInit) {
   const {
@@ -72,4 +91,36 @@ export async function serverApi(endpoint: string, init?: ServerApiInit) {
       refreshResponse.headers,
     ),
   );
+}
+
+export async function serverApiOk(
+  endpoint: string,
+  fallbackMessage: string,
+  init?: ServerApiInit,
+) {
+  const response = await serverApi(endpoint, init);
+
+  if (!response.ok) {
+    throw new ServerApiError(
+      response,
+      await readResponseJson(response),
+      fallbackMessage,
+    );
+  }
+
+  return response;
+}
+
+export async function serverApiJson<TResponse>(
+  endpoint: string,
+  fallbackMessage: string,
+  init?: ServerApiInit,
+): Promise<TResponse> {
+  const response = await serverApiOk(endpoint, fallbackMessage, init);
+
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
+  return response.json() as Promise<TResponse>;
 }

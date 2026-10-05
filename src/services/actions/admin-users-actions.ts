@@ -3,8 +3,7 @@
 import { z } from "zod";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
-import { serverApi } from "@/services/server-api";
+import { serverApiJson, serverApiOk } from "@/services/server-api";
 import type {
   AdminRoleOption,
   AdminUserRow,
@@ -106,13 +105,12 @@ const updateAdminUserRequestSchema = z.object({
 export async function getUsersAction(
   params: DataTableFetchParams<AdminUsersFilterParams>,
 ): Promise<DataTableFetchResult<AdminUserRow>> {
-  const response = await fetchBackendJson<AdminUserListApiResponse>(
+  const response = await serverApiJson<AdminUserListApiResponse>(
     API_ENDPOINTS.backend.adminUsers.list({
       keyword: params.keyword,
       page: params.page,
       pageSize: params.pageSize,
     }),
-    undefined,
     "Không thể tải danh sách user.",
   );
 
@@ -123,9 +121,8 @@ export async function getUsersAction(
 }
 
 export async function getUserDetailAction(id: string) {
-  const response = await fetchBackendJson<AdminUserDetailApiResponse>(
+  const response = await serverApiJson<AdminUserDetailApiResponse>(
     API_ENDPOINTS.backend.adminUsers.detail(id),
-    undefined,
     "Không thể tải chi tiết user.",
   );
 
@@ -141,13 +138,13 @@ export async function createUserAction(request: CreateAdminUserRequest) {
     throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
   }
 
-  const response = await fetchBackend(
+  const response = await serverApiOk(
     API_ENDPOINTS.backend.adminUsers.create,
+    "Không thể tạo user.",
     {
       json: parsedRequest.data,
       method: "POST",
     },
-    "Không thể tạo user.",
   );
 
   return response.json() as Promise<string>;
@@ -165,82 +162,47 @@ export async function updateUserAction(
     throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
   }
 
-  await fetchBackend(
+  await serverApiOk(
     API_ENDPOINTS.backend.adminUsers.update(id),
+    "Không thể cập nhật user.",
     {
       json: parsedRequest.data,
       method: "PUT",
     },
-    "Không thể cập nhật user.",
   );
 
   return getUserDetailAction(id);
 }
 
 export async function lockUserAction(id: string) {
-  await fetchBackend(
+  await serverApiOk(
     API_ENDPOINTS.backend.adminUsers.suspend(id),
+    "Không thể tạm khóa user.",
     {
       method: "POST",
     },
-    "Không thể tạm khóa user.",
   );
 }
 
 export async function unlockUserAction(id: string) {
-  await fetchBackend(
+  await serverApiOk(
     API_ENDPOINTS.backend.adminUsers.activate(id),
+    "Không thể mở khóa user.",
     {
       method: "POST",
     },
-    "Không thể mở khóa user.",
   );
 }
 
 export async function getAdminRolesAction() {
-  const response = await fetchBackendJson<AdminRolesApiResponse>(
+  const response = await serverApiJson<AdminRolesApiResponse>(
     API_ENDPOINTS.backend.adminUsers.roles,
-    undefined,
     "Không thể tải danh sách vai trò.",
   );
 
   return unwrapApiValue<RawAdminRoleOption[]>(response)
     .map(normalizeRoleOption)
     .filter((role): role is AdminRoleOption => Boolean(role));
-}
-
-async function fetchBackendJson<TResponse>(
-  endpoint: string,
-  init: RequestInit | undefined,
-  fallbackMessage: string,
-): Promise<TResponse> {
-  const response = await fetchBackend(endpoint, init, fallbackMessage);
-
-  if (response.status === 204) {
-    return undefined as TResponse;
-  }
-
-  return response.json() as Promise<TResponse>;
-}
-
-async function fetchBackend(
-  endpoint: string,
-  init:
-    | (Omit<RequestInit, "body"> & {
-        json?: unknown;
-      })
-    | undefined,
-  fallbackMessage: string,
-) {
-  const response = await serverApi(endpoint, init);
-
-  if (!response.ok) {
-    throw new Error(
-      await getActionResponseErrorMessage(response, fallbackMessage),
-    );
-  }
-
-  return response;
 }
 
 function mapAdminUserListItem(user: AdminUserListItemDto): AdminUserRow {
