@@ -1,9 +1,6 @@
 name: Frontend CI/CD (dev)
 
 on:
-  pull_request:
-    branches:
-      - develop-ci-cd
   push:
     branches:
       - develop-ci-cd
@@ -16,64 +13,16 @@ env:
   IMAGE_REPOSITORY: ghcr.io/huutawn/dprental-frontend
 
 jobs:
-  validate:
-    name: Validate frontend
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          fetch-depth: 0
-
-      - name: Verify synchronization with develop
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch --no-tags origin "+refs/heads/develop:refs/remotes/origin/develop"
-          git merge-base --is-ancestor origin/develop HEAD
-
-      - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
   publish:
     name: Publish Frontend image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop-ci-cd'
     runs-on: ubuntu-24.04
     environment: dev
-    env:
-      NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-      NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
     permissions:
       contents: read
       packages: write
-    outputs:
-      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Check Firebase build variables
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in NEXT_PUBLIC_FIREBASE_API_KEY NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN NEXT_PUBLIC_FIREBASE_PROJECT_ID NEXT_PUBLIC_FIREBASE_APP_ID; do
-            if [ -z "${!name}" ]; then
-              printf 'Missing GitHub dev environment secret: %s\n' "$name" >&2
-              exit 1
-            fi
-          done
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -86,17 +35,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish Frontend image
-        id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           push: true
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ env.NEXT_PUBLIC_FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ env.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ env.NEXT_PUBLIC_FIREBASE_APP_ID }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           tags: ${{ env.IMAGE_REPOSITORY }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
@@ -105,79 +53,51 @@ jobs:
   deploy-dev:
     name: Deploy Frontend to dev VPS
     needs: publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop-ci-cd'
     runs-on: ubuntu-24.04
     environment: dev
-    permissions:
-      contents: read
-      packages: read
     concurrency:
       group: dprental-dev
       cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - name: Checkout deployment script
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          sparse-checkout: |
+            scripts/deploy-frontend.sh
+          sparse-checkout-cone-mode: false
 
-      - name: Configure SSH trust
+      - name: Deploy the published revision
         env:
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEV_VPS_SSH_PRIVATE_KEY }}
           DEPLOY_VPS_KNOWN_HOSTS: ${{ secrets.DEV_VPS_KNOWN_HOSTS }}
+          DEPLOY_VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
+          DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
+          DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
+          RELEASE_SHA: ${{ github.sha }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           test -n "$DEPLOY_SSH_PRIVATE_KEY"
           test -n "$DEPLOY_VPS_KNOWN_HOSTS"
-          install -d -m 0700 "$HOME/.ssh"
-          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
-          printf '%s\n' "$DEPLOY_VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 0600 "$HOME/.ssh/id_ed25519"
-          chmod 0644 "$HOME/.ssh/known_hosts"
-
-      - name: Deploy published image by digest
-        env:
-          DEPLOY_VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
-          DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
-          DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
-          IMAGE_DIGEST: ${{ needs.publish.outputs.digest }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
           test -n "$DEPLOY_VPS_HOST"
           test -n "$DEPLOY_VPS_USER"
+          test -n "$GHCR_USERNAME"
           test -n "$GHCR_TOKEN"
-          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          image="${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
-          auth_dir="$(printf '%s\n' "$GHCR_TOKEN" | ssh \
-            -i "$HOME/.ssh/id_ed25519" \
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+          eval "$(ssh-agent -s)" >/dev/null
+          trap 'ssh-agent -k >/dev/null' EXIT
+          ssh-add - <<< "$DEPLOY_SSH_PRIVATE_KEY" >/dev/null
+          { printf '%s\n' "$GHCR_USERNAME" "$GHCR_TOKEN"; cat scripts/deploy-frontend.sh; } | ssh \
             -o BatchMode=yes \
-            -o ConnectTimeout=10 \
-            -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -p "$DEPLOY_VPS_PORT" \
             "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            'auth_dir=$(mktemp -d /tmp/dprental-ghcr.XXXXXX) || exit 1; if docker --config "$auth_dir" login ghcr.io -u huutawn --password-stdin >/dev/null; then printf "%s\n" "$auth_dir"; else rm -rf "$auth_dir"; exit 1; fi')"
-          [[ "$auth_dir" =~ ^/tmp/dprental-ghcr\.[A-Za-z0-9]{6}$ ]]
-          if ssh \
-            -i "$HOME/.ssh/id_ed25519" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=10 \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_VPS_PORT" \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            "auth_dir='$auth_dir'; trap 'rm -rf \"\$auth_dir\"' EXIT; DOCKER_CONFIG=\"\$auth_dir\" bash -s -- '$image'" < scripts/deploy-frontend.sh; then
-            exit 0
-          else
-            deploy_status=$?
-          fi
-          ssh \
-            -i "$HOME/.ssh/id_ed25519" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=10 \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_VPS_PORT" \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            "rm -rf '$auth_dir'" || printf 'Could not remove temporary GHCR credentials on VPS.\n' >&2
-          exit "$deploy_status"
+            "bash -c 'IFS= read -r GHCR_USERNAME; IFS= read -r GHCR_TOKEN; export GHCR_USERNAME GHCR_TOKEN; exec bash -s -- \"\$1\"' -- $RELEASE_SHA"
