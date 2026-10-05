@@ -11,6 +11,12 @@ type ListAdminOrganizationsParams = {
   status?: 0 | 1 | 2 | 3;
 };
 
+type ListAdminOrganizationHistoryParams = {
+  page: number;
+  pageSize: number;
+  search?: string;
+};
+
 function buildQueryEndpoint(
   pathname: string,
   params: Record<string, string | number | undefined>,
@@ -45,6 +51,18 @@ export const API_ENDPOINTS = {
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/activate`,
       detail: (id: string) =>
         `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}`,
+      history: (
+        id: string,
+        { page, pageSize, search }: ListAdminOrganizationHistoryParams,
+      ) =>
+        buildQueryEndpoint(
+          `/api/v1/auth/admin/organizations/${encodeURIComponent(id)}/history`,
+          {
+            Page: page,
+            PageSize: pageSize,
+            Search: search?.trim(),
+          },
+        ),
       list: ({ page, pageSize, search, status }: ListAdminOrganizationsParams) =>
         buildQueryEndpoint("/api/v1/auth/admin/organizations", {
           Page: page,

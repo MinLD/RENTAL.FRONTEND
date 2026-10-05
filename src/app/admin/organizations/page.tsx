@@ -3,6 +3,7 @@ import {
   activateAdminOrganizationAction,
   approveAdminOrganizationAction,
   getAdminOrganizationDetailAction,
+  getAdminOrganizationHistoryAction,
   getAdminOrganizationsAction,
   rejectAdminOrganizationAction,
   suspendAdminOrganizationAction,
@@ -15,6 +16,7 @@ export default function OrganizationsPage() {
       activateOrganization={activateAdminOrganizationAction}
       fetchOrganizations={getAdminOrganizationsAction}
       fetchOrganizationDetail={getAdminOrganizationDetailAction}
+      fetchOrganizationHistory={getAdminOrganizationHistoryAction}
       rejectOrganization={rejectAdminOrganizationAction}
       suspendOrganization={suspendAdminOrganizationAction}
     />

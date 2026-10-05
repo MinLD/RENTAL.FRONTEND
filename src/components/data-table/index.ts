@@ -1,4 +1,7 @@
-export { DataTable } from "@/components/data-table/data-table";
+export {
+  DataTable,
+  DataTablePaginationBar,
+} from "@/components/data-table/data-table";
 export { DataTableState } from "@/components/data-table/data-table-state";
 export {
   DataTableBodySkeletonRows,
@@ -11,6 +14,7 @@ export type {
   DataTableFilterContext,
   DataTableFilter,
   DataTablePagination,
+  DataTablePaginationBarProps,
   DataTableProps,
   DataTableRowActionContext,
   DataTableToolbarContext,

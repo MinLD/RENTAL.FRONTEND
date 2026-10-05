@@ -14,3 +14,20 @@ export type AdminOrganizationSummary = Pick<
 export type AdminOrganizationDetail = OrganizationResponse & {
   reviewedAtUtc?: string | null;
 };
+
+export type AdminOrganizationHistoryItem = {
+  action: string;
+  actorId: string;
+  id: string;
+  reason?: string | null;
+  result: string;
+  timestamp: string;
+};
+
+export type AdminOrganizationHistoryResult = {
+  items: AdminOrganizationHistoryItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminOrganizationsController } from "@/hooks/use-admin-organizations-controller";
 import type {
   AdminOrganizationDetail,
+  AdminOrganizationHistoryResult,
   AdminOrganizationSummary,
   AdminOrganizationsFilters,
 } from "@/types/admin-organizations";
@@ -37,6 +38,10 @@ type OrganizationsManagementTableProps = {
     params: DataTableFetchParams<AdminOrganizationsFilters>,
   ) => Promise<DataTableFetchResult<AdminOrganizationSummary>>;
   fetchOrganizationDetail: (id: string) => Promise<AdminOrganizationDetail>;
+  fetchOrganizationHistory: (
+    id: string,
+    params: { page?: number; pageSize?: number; search?: string },
+  ) => Promise<AdminOrganizationHistoryResult>;
   rejectOrganization: (
     id: string,
     reason: string,
@@ -52,6 +57,7 @@ export function OrganizationsManagementTable({
   approveOrganization,
   fetchOrganizations,
   fetchOrganizationDetail,
+  fetchOrganizationHistory,
   rejectOrganization,
   suspendOrganization,
 }: OrganizationsManagementTableProps) {
@@ -288,6 +294,7 @@ export function OrganizationsManagementTable({
           isSuspending &&
           suspendTarget?.id === controller.detailOrganization?.id
         }
+        fetchHistory={fetchOrganizationHistory}
         onActivate={setActivateTarget}
         onApprove={setApproveTarget}
         onOpenChange={(open) => {
