@@ -2,7 +2,7 @@ import { CategoryManagementTable } from "@/components/admin/catalog/categories/c
 import {
   createCatalogCategoryAction,
   getAdminCatalogCategoriesAction,
-  getCatalogCategoryAction,
+  getAdminCatalogCategoryAction,
   updateCatalogCategoryAction,
 } from "@/services/actions/catalog-actions";
 
@@ -11,7 +11,7 @@ export default function AdminCatalogCategoriesPage() {
     <CategoryManagementTable
       createCategory={createCatalogCategoryAction}
       fetchCategories={getAdminCatalogCategoriesAction}
-      fetchCategoryDetail={getCatalogCategoryAction}
+      fetchCategoryDetail={getAdminCatalogCategoryAction}
       updateCategory={updateCatalogCategoryAction}
     />
   );

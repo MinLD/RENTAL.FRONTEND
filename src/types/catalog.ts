@@ -214,13 +214,18 @@ export type CatalogEquipmentTypeListParams = {
   page?: number;
   pageSize?: number;
   sort?: string;
-  status?: CatalogEquipmentTypeStatus;
+};
+
+export type AdminCatalogEquipmentTypeListParams = CatalogEquipmentTypeListParams & {
+  status?: CatalogEquipmentTypeStatus | CatalogEquipmentTypeStatus[];
 };
 
 export type AdminCatalogEquipmentTypeFilterParams = Pick<
   CatalogEquipmentTypeListParams,
-  "categoryId" | "sort" | "status"
->;
+  "categoryId" | "sort"
+> & {
+  status?: CatalogEquipmentTypeStatus;
+};
 
 export type CatalogBrandSort = "name_asc" | "name_desc" | "newest";
 

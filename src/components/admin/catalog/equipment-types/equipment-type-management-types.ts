@@ -3,6 +3,8 @@ import type {
   CatalogCategoryDetail,
   CatalogEquipmentTypeDetail,
   CatalogEquipmentTypeListItem,
+  CatalogSpecDefinition,
+  CatalogSpecSchema,
   CreateCatalogEquipmentTypeRequest,
   UpdateCatalogEquipmentTypeRequest,
 } from "@/types/catalog";
@@ -20,6 +22,7 @@ export type EquipmentTypePendingAction = {
 } | null;
 
 export type EquipmentTypeManagementTableProps = {
+  schemaActions: CatalogSpecSchemaActions;
   createEquipmentType: (
     request: CreateCatalogEquipmentTypeRequest,
   ) => Promise<CatalogEquipmentTypeDetail>;
@@ -34,4 +37,19 @@ export type EquipmentTypeManagementTableProps = {
     id: string,
     request: UpdateCatalogEquipmentTypeRequest,
   ) => Promise<CatalogEquipmentTypeDetail>;
+};
+
+export type CatalogSpecSchemaActions = {
+  createDraft: (
+    id: string,
+    definition: CatalogSpecDefinition,
+  ) => Promise<CatalogSpecSchema>;
+  fetchVersion: (id: string, version: number) => Promise<CatalogSpecSchema>;
+  fetchVersions: (id: string) => Promise<CatalogSpecSchema[]>;
+  publishDraft: (id: string, version: number) => Promise<CatalogSpecSchema>;
+  replaceDraft: (
+    id: string,
+    version: number,
+    definition: CatalogSpecDefinition,
+  ) => Promise<CatalogSpecSchema>;
 };

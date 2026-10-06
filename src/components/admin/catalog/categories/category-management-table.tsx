@@ -71,7 +71,7 @@ export function CategoryManagementTable({
           },
         ]}
         csvFilename="danh-sach-danh-muc.csv"
-        description="Quản lý danh mục thiết bị trong catalog"
+        description="Quản lý danh mục thiết bị"
         emptyState="Không có danh mục phù hợp."
         fetchData={fetchCategories}
         getRowId={(category) => category.id}

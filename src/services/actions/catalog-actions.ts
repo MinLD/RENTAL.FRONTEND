@@ -7,6 +7,7 @@ import type {
   AdminCatalogBrandFilterParams,
   AdminCatalogCategoryFilterParams,
   AdminCatalogEquipmentTypeFilterParams,
+  AdminCatalogEquipmentTypeListParams,
   CatalogBrand,
   CatalogBrandDto,
   CatalogBrandListParams,
@@ -188,34 +189,52 @@ export async function enableCatalogBrandAction(
   return normalizeCatalogBrand(response);
 }
 
-export async function listCatalogCategoriesAction(
-  params: CatalogCategoryListParams = {},
-): Promise<CatalogPagedResult<CatalogCategoryDetail>> {
+export async function listCatalogCategoriesAction(): Promise<
+  CatalogPagedResult<CatalogCategoryDetail>
+> {
   const response = await serverApiJson<
     CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
   >(
-    API_ENDPOINTS.backend.catalog.categories.list(params),
+    API_ENDPOINTS.backend.catalog.categories.list(),
     "Không thể tải danh sách danh mục.",
   );
 
-  return mapCatalogCategoryPagedResult(response, params);
+  return mapCatalogCategoryPagedResult(response);
 }
 
 export async function getAdminCatalogCategoriesAction(
   params: DataTableFetchParams<AdminCatalogCategoryFilterParams>,
 ): Promise<DataTableFetchResult<CatalogCategoryDetail>> {
-  const response = await listCatalogCategoriesAction({
+  const queryParams: CatalogCategoryListParams = {
     isActive: params.filters?.isActive,
     keyword: params.keyword,
     page: params.page,
     pageSize: params.pageSize,
     sort: params.filters?.sort,
-  });
+  };
+  const response = await serverApiJson<CatalogCategoryListResponse>(
+    API_ENDPOINTS.backend.catalog.categories.adminList(queryParams),
+    "Không thể tải danh sách danh mục.",
+  );
+  const result = mapCatalogCategoryPagedResult(response, queryParams);
 
   return {
-    data: response.data,
-    totalItems: response.totalItems,
+    data: result.data,
+    totalItems: result.totalItems,
   };
+}
+
+export async function getAdminCatalogCategoryAction(
+  id: string,
+): Promise<CatalogCategoryDetail> {
+  assertUuid(id, "ID danh mục không hợp lệ.");
+
+  const response = await serverApiJson<CatalogCategoryDetailResponse>(
+    API_ENDPOINTS.backend.catalog.categories.adminDetail(id),
+    "Không thể tải chi tiết danh mục.",
+  );
+
+  return normalizeCatalogCategoryDetail(response);
 }
 
 export async function getCatalogCategoryAction(
@@ -234,11 +253,7 @@ export async function getCatalogCategoryAction(
 export async function listActiveCatalogCategoriesAction(): Promise<
   CatalogCategoryDetail[]
 > {
-  const response = await listCatalogCategoriesAction({
-    isActive: true,
-    page: 1,
-    pageSize: 200,
-  });
+  const response = await listCatalogCategoriesAction();
 
   return response.data;
 }
@@ -296,19 +311,37 @@ export async function listCatalogEquipmentTypesAction(
 export async function getAdminCatalogEquipmentTypesAction(
   params: DataTableFetchParams<AdminCatalogEquipmentTypeFilterParams>,
 ): Promise<DataTableFetchResult<CatalogEquipmentTypeListItem>> {
-  const response = await listCatalogEquipmentTypesAction({
+  const queryParams: AdminCatalogEquipmentTypeListParams = {
     categoryId: params.filters?.categoryId,
     keyword: params.keyword,
     page: params.page,
     pageSize: params.pageSize,
     sort: params.filters?.sort,
     status: params.filters?.status,
-  });
+  };
+
+  const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
+    API_ENDPOINTS.backend.catalog.equipmentTypes.adminList(queryParams),
+    "Không thể tải danh sách loại thiết bị.",
+  );
 
   return {
-    data: response.data,
-    totalItems: response.totalItems,
+    data: (response.items ?? []).map(normalizeCatalogEquipmentTypeListItem),
+    totalItems: response.totalCount ?? 0,
   };
+}
+
+export async function getAdminCatalogEquipmentTypeAction(
+  id: string,
+): Promise<CatalogEquipmentTypeDetail> {
+  assertUuid(id, "ID loại thiết bị không hợp lệ.");
+
+  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
+    API_ENDPOINTS.backend.catalog.equipmentTypes.adminDetail(id),
+    "Không thể tải chi tiết loại thiết bị.",
+  );
+
+  return normalizeCatalogEquipmentTypeDetail(response);
 }
 
 export async function getCatalogEquipmentTypeAction(
