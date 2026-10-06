@@ -5,6 +5,7 @@ import { serverApiJson } from "@/services/server-api";
 import type {
   AdminCatalogBrandListParams,
   AdminCatalogBrandFilterParams,
+  AdminCatalogCategoryFilterParams,
   CatalogBrand,
   CatalogBrandDto,
   CatalogBrandListParams,
@@ -12,6 +13,8 @@ import type {
   CatalogBrandSort,
   CatalogCategoryDetail,
   CatalogCategoryDetailResponse,
+  CatalogCategoryListParams,
+  CatalogCategoryListResponse,
   CatalogEquipmentTypeDetail,
   CatalogEquipmentTypeDetailDto,
   CatalogEquipmentTypeListItem,
@@ -184,15 +187,34 @@ export async function enableCatalogBrandAction(
   return normalizeCatalogBrand(response);
 }
 
-export async function listCatalogCategoriesAction(): Promise<
-  CatalogCategoryDetail[]
-> {
-  const response = await serverApiJson<CatalogCategoryDetailResponse[]>(
-    API_ENDPOINTS.backend.catalog.categories.list,
+export async function listCatalogCategoriesAction(
+  params: CatalogCategoryListParams = {},
+): Promise<CatalogPagedResult<CatalogCategoryDetail>> {
+  const response = await serverApiJson<
+    CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
+  >(
+    API_ENDPOINTS.backend.catalog.categories.list(params),
     "Không thể tải danh sách danh mục.",
   );
 
-  return (response ?? []).map(normalizeCatalogCategoryDetail);
+  return mapCatalogCategoryPagedResult(response, params);
+}
+
+export async function getAdminCatalogCategoriesAction(
+  params: DataTableFetchParams<AdminCatalogCategoryFilterParams>,
+): Promise<DataTableFetchResult<CatalogCategoryDetail>> {
+  const response = await listCatalogCategoriesAction({
+    isActive: params.filters?.isActive,
+    keyword: params.keyword,
+    page: params.page,
+    pageSize: params.pageSize,
+    sort: params.filters?.sort,
+  });
+
+  return {
+    data: response.data,
+    totalItems: response.totalItems,
+  };
 }
 
 export async function getCatalogCategoryAction(
@@ -486,6 +508,29 @@ function mapCatalogBrandPagedResult(
 ): CatalogPagedResult<CatalogBrand> {
   return {
     data: (response.items ?? []).map(normalizeCatalogBrand),
+    page: response.page ?? params.page ?? 1,
+    pageSize: response.pageSize ?? params.pageSize ?? 0,
+    totalItems: response.totalCount ?? 0,
+    totalPages: response.totalPages ?? 0,
+  };
+}
+
+function mapCatalogCategoryPagedResult(
+  response: CatalogCategoryDetailResponse[] | CatalogCategoryListResponse,
+  params: CatalogCategoryListParams = {},
+): CatalogPagedResult<CatalogCategoryDetail> {
+  if (Array.isArray(response)) {
+    return {
+      data: response.map(normalizeCatalogCategoryDetail),
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? response.length,
+      totalItems: response.length,
+      totalPages: 1,
+    };
+  }
+
+  return {
+    data: (response.items ?? []).map(normalizeCatalogCategoryDetail),
     page: response.page ?? params.page ?? 1,
     pageSize: response.pageSize ?? params.pageSize ?? 0,
     totalItems: response.totalCount ?? 0,
