@@ -72,16 +72,16 @@ Ghi chú contract:
 
 ## Bước 4 - Admin Equipment Type Management
 
-- [ ] Thêm Equipment Type vào admin Catalog navigation/tab.
-- [ ] Admin xem/search equipment type theo endpoint hiện có.
-- [ ] Tạo equipment type trạng thái Draft qua `POST /api/v1/catalog/equipment-types`.
-- [ ] Cập nhật qua `PATCH /api/v1/catalog/equipment-types/{id}` với `code`, `name`, `description`, `categoryIds`, `media`.
-- [ ] Media support `mediaId`, `displayOrder`, `isThumbnail`.
-- [ ] Publish qua `POST /api/v1/catalog/equipment-types/{id}/publish`.
-- [ ] Disable qua `POST /api/v1/catalog/equipment-types/{id}/disable`.
-- [ ] Publish/disable có confirm action.
-- [ ] Hiển thị status Draft/Published/Disabled.
-- [ ] Handle loading, empty, validation error, `401`, `403`, `404`, `409`.
+- [x] Thêm Equipment Type vào admin Catalog navigation/tab.
+- [x] Admin xem/search equipment type theo endpoint hiện có.
+- [x] Tạo equipment type trạng thái Draft qua `POST /api/v1/catalog/equipment-types`.
+- [x] Cập nhật qua `PATCH /api/v1/catalog/equipment-types/{id}` với `code`, `name`, `description`, `categoryIds`, `media`.
+- [x] Media support `mediaId`, `displayOrder`, `isThumbnail`.
+- [x] Publish qua `POST /api/v1/catalog/equipment-types/{id}/publish`.
+- [x] Disable qua `POST /api/v1/catalog/equipment-types/{id}/disable`.
+- [x] Publish/disable có confirm action.
+- [x] Hiển thị status Draft/Published/Disabled.
+- [x] Handle loading, empty, validation error, `401`, `403`, `404`, `409`.
 
 ## Bước 5 - Admin Spec Schema Version Management
 
@@ -199,7 +199,7 @@ Ghi chú contract:
 - [x] Bước 1: cập nhật API layer theo Swagger mới, vì hiện tại FE đã có Catalog layer cũ nhưng thiếu Brand.
 - [x] Bước 2: admin Brand, vì Brand là canonical data mới.
 - [x] Bước 3: admin Category.
-- [ ] Bước 4: admin Equipment Type và media.
+- [x] Bước 4: admin Equipment Type và media.
 - [ ] Bước 5: admin Spec Schema version.
 - [ ] Bước 6: dynamic specification validation.
 - [ ] Bước 7-9: public Brand/Catalog/Schema sau khi admin đã có đường nhập và publish dữ liệu.

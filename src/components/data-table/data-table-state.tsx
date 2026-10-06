@@ -1,7 +1,6 @@
-import { CircleAlert, FolderSearch, Inbox, RefreshCw } from "lucide-react";
+import { FolderSearch } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 
 type DataTableStateProps = {
@@ -14,7 +13,6 @@ type DataTableStateProps = {
 export function DataTableState({
   filtered = false,
   message,
-  onRetry,
   variant = "empty",
 }: DataTableStateProps) {
   const isError = variant === "error";
@@ -22,16 +20,8 @@ export function DataTableState({
     typeof message === "string" &&
     /^(?:404[\s:-]*)?not\s*found[.!]?$/i.test(message.trim());
   const shouldShowAsError = isError && !isNotFound;
-  const Icon = shouldShowAsError
-    ? CircleAlert
-    : filtered
-      ? FolderSearch
-      : Inbox;
-  const title = shouldShowAsError
-    ? "Không thể tải dữ liệu"
-    : filtered
-      ? "Không tìm thấy kết quả"
-      : "Chưa có dữ liệu";
+  const Icon = FolderSearch;
+  const title = "Không tìm thấy kết quả";
   const description = isNotFound
     ? filtered
       ? "Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại."
@@ -64,12 +54,6 @@ export function DataTableState({
           {description}
         </div>
       </div>
-      {shouldShowAsError && onRetry ? (
-        <Button onClick={onRetry} type="button">
-          <RefreshCw aria-hidden="true" className="size-4" />
-          Thử lại
-        </Button>
-      ) : null}
     </div>
   );
 }
