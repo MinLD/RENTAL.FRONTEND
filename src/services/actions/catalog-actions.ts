@@ -6,6 +6,7 @@ import type {
   AdminCatalogBrandListParams,
   AdminCatalogBrandFilterParams,
   AdminCatalogCategoryFilterParams,
+  AdminCatalogEquipmentTypeFilterParams,
   CatalogBrand,
   CatalogBrandDto,
   CatalogBrandListParams,
@@ -230,6 +231,18 @@ export async function getCatalogCategoryAction(
   return normalizeCatalogCategoryDetail(response);
 }
 
+export async function listActiveCatalogCategoriesAction(): Promise<
+  CatalogCategoryDetail[]
+> {
+  const response = await listCatalogCategoriesAction({
+    isActive: true,
+    page: 1,
+    pageSize: 200,
+  });
+
+  return response.data;
+}
+
 export async function createCatalogCategoryAction(
   request: CreateCatalogCategoryRequest,
 ): Promise<CatalogCategoryDetail> {
@@ -277,6 +290,24 @@ export async function listCatalogEquipmentTypesAction(
     pageSize: response.pageSize ?? params.pageSize ?? 0,
     totalItems: response.totalCount ?? 0,
     totalPages: response.totalPages ?? 0,
+  };
+}
+
+export async function getAdminCatalogEquipmentTypesAction(
+  params: DataTableFetchParams<AdminCatalogEquipmentTypeFilterParams>,
+): Promise<DataTableFetchResult<CatalogEquipmentTypeListItem>> {
+  const response = await listCatalogEquipmentTypesAction({
+    categoryId: params.filters?.categoryId,
+    keyword: params.keyword,
+    page: params.page,
+    pageSize: params.pageSize,
+    sort: params.filters?.sort,
+    status: params.filters?.status,
+  });
+
+  return {
+    data: response.data,
+    totalItems: response.totalItems,
   };
 }
 

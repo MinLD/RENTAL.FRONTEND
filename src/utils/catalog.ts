@@ -108,11 +108,20 @@ export function normalizeCatalogEquipmentTypeListItem(
       normalizeText(equipmentType.name) ??
       normalizeText(equipmentType.code) ??
       "Chưa đặt tên",
+    ...(normalizeText(equipmentType.publishedAt)
+      ? { publishedAt: normalizeText(equipmentType.publishedAt) }
+      : {}),
+    ...(isCatalogEquipmentTypeStatus(equipmentType.status)
+      ? { status: equipmentType.status }
+      : {}),
     ...(normalizeText(equipmentType.thumbnailMediaId)
       ? { thumbnailMediaId: normalizeText(equipmentType.thumbnailMediaId) }
       : {}),
     ...(normalizeText(equipmentType.thumbnailUrl)
       ? { thumbnailUrl: normalizeText(equipmentType.thumbnailUrl) }
+      : {}),
+    ...(normalizeText(equipmentType.updatedAt)
+      ? { updatedAt: normalizeText(equipmentType.updatedAt) }
       : {}),
   };
 }
