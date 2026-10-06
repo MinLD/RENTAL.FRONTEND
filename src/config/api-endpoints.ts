@@ -11,6 +11,25 @@ type ListAdminOrganizationsParams = {
   status?: 0 | 1 | 2 | 3;
 };
 
+type ListCatalogEquipmentTypesParams = {
+  categoryId?: string;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+};
+
+type ListCatalogBrandsParams = {
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+};
+
+type ListAdminCatalogBrandsParams = ListCatalogBrandsParams & {
+  isActive?: boolean;
+};
+
 type ListAdminOrganizationHistoryParams = {
   page: number;
   pageSize: number;
@@ -99,6 +118,92 @@ export const API_ENDPOINTS = {
       logout: "/api/v1/auth/logout",
       refresh: "/api/v1/auth/refresh",
       register: "/api/v1/auth/register",
+    },
+    catalog: {
+      brands: {
+        adminDetail: (brandId: string) =>
+          `/api/v1/catalog/admin/brands/${encodeURIComponent(brandId)}`,
+        adminList: ({
+          isActive,
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListAdminCatalogBrandsParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/admin/brands", {
+            IsActive: isActive === undefined ? undefined : String(isActive),
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
+        create: "/api/v1/catalog/brands",
+        detail: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}`,
+        disable: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}/disable`,
+        enable: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}/enable`,
+        list: ({
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListCatalogBrandsParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/brands", {
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
+        update: (brandId: string) =>
+          `/api/v1/catalog/brands/${encodeURIComponent(brandId)}`,
+      },
+      categories: {
+        create: "/api/v1/catalog/categories",
+        detail: (id: string) =>
+          `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
+        list: "/api/v1/catalog/categories",
+        update: (id: string) =>
+          `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
+      },
+      equipmentTypes: {
+        create: "/api/v1/catalog/equipment-types",
+        currentSchema: (equipmentTypeId: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(equipmentTypeId)}/schema`,
+        detail: (id: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}`,
+        disable: (id: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/disable`,
+        list: ({
+          categoryId,
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListCatalogEquipmentTypesParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/equipment-types", {
+            CategoryId: categoryId,
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
+        publish: (id: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/publish`,
+        publishedSchemaVersion: (equipmentTypeId: string, version: number) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(equipmentTypeId)}/schemas/${encodeURIComponent(String(version))}`,
+        specSchema: (id: string, version: number) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/spec-schemas/${encodeURIComponent(String(version))}`,
+        specSchemaPublish: (id: string, version: number) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/spec-schemas/${encodeURIComponent(String(version))}/publish`,
+        specSchemas: (id: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/spec-schemas`,
+        update: (id: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}`,
+        validateSpecifications: (equipmentTypeId: string) =>
+          `/api/v1/catalog/equipment-types/${encodeURIComponent(equipmentTypeId)}/specifications/validate`,
+      },
     },
     currentUser: {
       citizenId: "/api/v1/auth/users/me/citizen-id",

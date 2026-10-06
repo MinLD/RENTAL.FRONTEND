@@ -1,4 +1,5 @@
 import { API_ENDPOINT_PREFIXES } from "@/config/api-endpoints";
+import { getApiErrorMessage, readResponseJson } from "@/services/api-error";
 
 type ApiClientInit = Omit<RequestInit, "body"> & {
   body?: BodyInit | null;
@@ -57,53 +58,10 @@ export class ApiClientError extends Error {
 }
 
 function getApiClientErrorMessage(response: Response, responseBody?: unknown) {
-  const validationErrorMessage = getValidationErrorMessage(responseBody);
-
-  if (validationErrorMessage) {
-    return validationErrorMessage;
-  }
-
-  if (
-    responseBody &&
-    typeof responseBody === "object" &&
-    "detail" in responseBody &&
-    typeof responseBody.detail === "string"
-  ) {
-    return responseBody.detail;
-  }
-
-  if (
-    responseBody &&
-    typeof responseBody === "object" &&
-    "title" in responseBody &&
-    typeof responseBody.title === "string"
-  ) {
-    return responseBody.title;
-  }
-
-  return `API request failed: ${response.status} ${response.statusText}`;
-}
-
-function getValidationErrorMessage(responseBody?: unknown) {
-  if (
-    !responseBody ||
-    typeof responseBody !== "object" ||
-    !("errors" in responseBody) ||
-    !responseBody.errors ||
-    typeof responseBody.errors !== "object"
-  ) {
-    return null;
-  }
-
-  const messages = Object.values(responseBody.errors).flatMap((value) => {
-    if (Array.isArray(value)) {
-      return value.filter((message): message is string => typeof message === "string");
-    }
-
-    return typeof value === "string" ? [value] : [];
-  });
-
-  return messages.length ? messages.join("\n") : null;
+  return (
+    getApiErrorMessage(responseBody) ??
+    `API request failed: ${response.status} ${response.statusText}`
+  );
 }
 
 export async function apiClient(
@@ -150,15 +108,7 @@ async function request(
   });
 
   if (!response.ok) {
-    let responseBody: unknown;
-
-    try {
-      responseBody = await response.clone().json();
-    } catch {
-      responseBody = undefined;
-    }
-
-    throw new ApiClientError(response, responseBody);
+    throw new ApiClientError(response, await readResponseJson(response));
   }
 
   return response;

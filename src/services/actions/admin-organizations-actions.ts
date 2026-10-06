@@ -11,8 +11,7 @@ import {
   adminOrganizationsQuerySchema,
   adminOrganizationReasonSchema,
 } from "@/lib/validations/admin-organizations";
-import { getActionResponseErrorMessage } from "@/services/actions/action-utils";
-import { serverApi } from "@/services/server-api";
+import { serverApiJson } from "@/services/server-api";
 import type {
   AdminOrganizationDetail,
   AdminOrganizationHistoryResult,
@@ -35,7 +34,7 @@ export async function getAdminOrganizationsAction(
     throw new Error(query.error.issues[0]?.message ?? "Bộ lọc không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.list(query.data),
     "Không thể tải danh sách tổ chức.",
   );
@@ -55,7 +54,7 @@ export async function getAdminOrganizationDetailAction(
     throw new Error("ID tổ chức không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.detail(id),
     "Không thể tải chi tiết tổ chức.",
   );
@@ -90,7 +89,7 @@ export async function getAdminOrganizationHistoryAction(
     throw new Error(query.error.issues[0]?.message ?? "Bộ lọc lịch sử không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.history(id, query.data),
     "Không thể tải lịch sử tổ chức.",
   );
@@ -110,7 +109,7 @@ export async function approveAdminOrganizationAction(
     throw new Error("ID tổ chức không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.approve(id),
     "Không thể duyệt hồ sơ tổ chức.",
     { method: "PATCH" },
@@ -132,7 +131,7 @@ export async function rejectAdminOrganizationAction(
     throw new Error(parsedRequest.error.issues[0]?.message ?? "Lý do từ chối không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.reject(id),
     "Không thể từ chối hồ sơ tổ chức.",
     {
@@ -158,7 +157,7 @@ export async function suspendAdminOrganizationAction(
     throw new Error(parsedRequest.error.issues[0]?.message ?? "Lý do tạm khóa không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.suspend(id),
     "Không thể tạm khóa tổ chức.",
     {
@@ -177,30 +176,12 @@ export async function activateAdminOrganizationAction(
     throw new Error("ID tổ chức không hợp lệ.");
   }
 
-  const data = await fetchOrganizationJson(
+  const data = await serverApiJson<unknown>(
     API_ENDPOINTS.backend.adminOrganizations.activate(id),
     "Không thể mở khóa tổ chức.",
     { method: "POST" },
   );
   return parseOrganizationMutationDetail(id, data, "Dữ liệu tổ chức sau khi mở khóa không hợp lệ.");
-}
-
-async function fetchOrganizationJson(
-  endpoint: string,
-  fallbackMessage: string,
-  init: RequestInit = { method: "GET", cache: "no-store" },
-) {
-  const response = await serverApi(endpoint, init);
-
-  if (!response.ok) {
-    throw new Error(await getActionResponseErrorMessage(response, fallbackMessage));
-  }
-
-  if (response.status === 204) {
-    return undefined;
-  }
-
-  return response.json() as Promise<unknown>;
 }
 
 async function parseOrganizationMutationDetail(
