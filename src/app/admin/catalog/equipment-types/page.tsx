@@ -1,10 +1,24 @@
-import { CatalogPlaceholder } from "@/components/admin/catalog/catalog-placeholder";
+import { EquipmentTypeManagementTable } from "@/components/admin/catalog/equipment-types/equipment-type-management-table";
+import {
+  createCatalogEquipmentTypeAction,
+  disableCatalogEquipmentTypeAction,
+  getAdminCatalogEquipmentTypesAction,
+  getCatalogEquipmentTypeAction,
+  listActiveCatalogCategoriesAction,
+  publishCatalogEquipmentTypeAction,
+  updateCatalogEquipmentTypeAction,
+} from "@/services/actions/catalog-actions";
 
 export default function AdminCatalogEquipmentTypesPage() {
   return (
-    <CatalogPlaceholder
-      description="Quản lý loại thiết bị, media, publish và schema thông số"
-      title="Danh sách loại thiết bị"
+    <EquipmentTypeManagementTable
+      createEquipmentType={createCatalogEquipmentTypeAction}
+      disableEquipmentType={disableCatalogEquipmentTypeAction}
+      fetchCategories={listActiveCatalogCategoriesAction}
+      fetchEquipmentTypeDetail={getCatalogEquipmentTypeAction}
+      fetchEquipmentTypes={getAdminCatalogEquipmentTypesAction}
+      publishEquipmentType={publishCatalogEquipmentTypeAction}
+      updateEquipmentType={updateCatalogEquipmentTypeAction}
     />
   );
 }

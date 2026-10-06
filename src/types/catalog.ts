@@ -141,8 +141,11 @@ export type CatalogEquipmentTypeListItemDto = {
   description?: string | null;
   id?: string;
   name?: string | null;
+  publishedAt?: string | null;
+  status?: CatalogEquipmentTypeStatus;
   thumbnailMediaId?: string | null;
   thumbnailUrl?: string | null;
+  updatedAt?: string | null;
 };
 
 export type CatalogEquipmentTypeListResponse = {
@@ -211,7 +214,13 @@ export type CatalogEquipmentTypeListParams = {
   page?: number;
   pageSize?: number;
   sort?: string;
+  status?: CatalogEquipmentTypeStatus;
 };
+
+export type AdminCatalogEquipmentTypeFilterParams = Pick<
+  CatalogEquipmentTypeListParams,
+  "categoryId" | "sort" | "status"
+>;
 
 export type CatalogBrandSort = "name_asc" | "name_desc" | "newest";
 
@@ -286,8 +295,11 @@ export type CatalogEquipmentTypeListItem = {
   description?: string;
   id: string;
   name: string;
+  publishedAt?: string;
+  status?: CatalogEquipmentTypeStatus;
   thumbnailMediaId?: string;
   thumbnailUrl?: string;
+  updatedAt?: string;
 };
 
 export type CatalogEquipmentTypeDetail = CatalogEquipmentTypeListItem & {

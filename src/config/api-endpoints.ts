@@ -17,6 +17,7 @@ type ListCatalogEquipmentTypesParams = {
   page?: number;
   pageSize?: number;
   sort?: string;
+  status?: number;
 };
 
 type ListCatalogBrandsParams = {
@@ -203,6 +204,7 @@ export const API_ENDPOINTS = {
           page,
           pageSize,
           sort,
+          status,
         }: ListCatalogEquipmentTypesParams = {}) =>
           buildQueryEndpoint("/api/v1/catalog/equipment-types", {
             CategoryId: categoryId,
@@ -210,6 +212,7 @@ export const API_ENDPOINTS = {
             Page: page,
             PageSize: pageSize,
             Sort: sort?.trim(),
+            Status: status,
           }),
         publish: (id: string) =>
           `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/publish`,
