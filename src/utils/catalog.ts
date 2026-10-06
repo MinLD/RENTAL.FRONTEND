@@ -23,9 +23,9 @@ import {
 } from "@/types/catalog";
 
 const EQUIPMENT_TYPE_STATUS_LABELS: Record<CatalogEquipmentTypeStatus, string> = {
-  [CATALOG_EQUIPMENT_TYPE_STATUS.Draft]: "Draft",
-  [CATALOG_EQUIPMENT_TYPE_STATUS.Published]: "Published",
-  [CATALOG_EQUIPMENT_TYPE_STATUS.Disabled]: "Disabled",
+  [CATALOG_EQUIPMENT_TYPE_STATUS.Draft]: "Nháp",
+  [CATALOG_EQUIPMENT_TYPE_STATUS.Published]: "Đang hoạt động",
+  [CATALOG_EQUIPMENT_TYPE_STATUS.Disabled]: "Ngừng hoạt động",
 };
 
 export function normalizeCatalogBrand(brand: CatalogBrandDto): CatalogBrand {

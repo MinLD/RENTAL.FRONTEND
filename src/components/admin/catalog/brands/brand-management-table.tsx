@@ -105,7 +105,7 @@ export function BrandManagementTable({
           { header: "Ngày cập nhật", value: (brand) => brand.updatedAt ?? "" },
         ]}
         csvFilename="danh-sach-thuong-hieu.csv"
-        description="Quản lý thương hiệu thiết bị trong catalog"
+        description="Quản lý thương hiệu thiết bị"
         emptyState="Không có thương hiệu phù hợp."
         fetchData={fetchBrands}
         getRowId={(brand) => brand.id}

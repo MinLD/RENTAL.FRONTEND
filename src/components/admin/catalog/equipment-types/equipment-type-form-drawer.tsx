@@ -6,7 +6,7 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Send,
+  UnlockKeyhole,
   Star,
   Trash2,
 } from "lucide-react";
@@ -20,6 +20,7 @@ import { TextField } from "@/components/forms/text-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   catalogEquipmentTypeFormSchema,
@@ -34,11 +35,11 @@ import {
   type CreateCatalogEquipmentTypeRequest,
   type UpdateCatalogEquipmentTypeRequest,
 } from "@/types/catalog";
-import type {
-  MediaUploadResponse,
-} from "@/types/media";
+import type { MediaUploadResponse } from "@/types/media";
 
 import { EquipmentTypeStatusBadge } from "./equipment-type-table-columns";
+import type { CatalogSpecSchemaActions } from "./equipment-type-management-types";
+import { SpecSchemaPanel } from "./spec-schema-panel";
 
 const CREATE_EQUIPMENT_TYPE_FORM_ID = "admin-create-equipment-type-form";
 const UPDATE_EQUIPMENT_TYPE_FORM_ID = "admin-update-equipment-type-form";
@@ -89,7 +90,9 @@ export function EquipmentTypeCreateDrawer({
         categories={categories}
         formId={CREATE_EQUIPMENT_TYPE_FORM_ID}
         isSubmitting={isBusy}
-        key={open ? "equipment-type-create-open" : "equipment-type-create-closed"}
+        key={
+          open ? "equipment-type-create-open" : "equipment-type-create-closed"
+        }
         onMediaUploadingChange={setIsUploadingMedia}
         onSubmit={async (values) => {
           await onSubmit(toCreateEquipmentTypeRequest(values));
@@ -100,6 +103,8 @@ export function EquipmentTypeCreateDrawer({
 }
 
 type EquipmentTypeDetailDrawerProps = {
+  schemaActions: CatalogSpecSchemaActions;
+  onSchemaPublished: () => void;
   categories: CatalogCategoryDetail[];
   equipmentType: CatalogEquipmentTypeDetail | null;
   error?: string | null;
@@ -108,12 +113,17 @@ type EquipmentTypeDetailDrawerProps = {
   onOpenChange: (open: boolean) => void;
   onPublish?: (equipmentType: CatalogEquipmentTypeDetail) => void;
   onRefresh: () => void;
-  onSubmit: (id: string, request: UpdateCatalogEquipmentTypeRequest) => Promise<void>;
+  onSubmit: (
+    id: string,
+    request: UpdateCatalogEquipmentTypeRequest,
+  ) => Promise<void>;
   open: boolean;
   selectedName?: string | null;
 };
 
 export function EquipmentTypeDetailDrawer({
+  schemaActions,
+  onSchemaPublished,
   categories,
   equipmentType,
   error,
@@ -127,82 +137,153 @@ export function EquipmentTypeDetailDrawer({
   selectedName,
 }: EquipmentTypeDetailDrawerProps) {
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [activeTab, setActiveTab] = useState("detail");
+  const [hasOpenedSchema, setHasOpenedSchema] = useState(false);
+  const [schemaState, setSchemaState] = useState({ busy: false, dirty: false });
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const isBusy = isSubmitting || isUploadingMedia || isLoading;
 
+  function closeDrawer() {
+    setActiveTab("detail");
+    setHasOpenedSchema(false);
+    setSchemaState({ busy: false, dirty: false });
+    setIsDiscardConfirmOpen(false);
+    onOpenChange(false);
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (schemaState.busy || isSubmitting || isUploadingMedia) return;
+    if (!nextOpen && schemaState.dirty) {
+      setIsDiscardConfirmOpen(true);
+    } else if (!nextOpen) {
+      closeDrawer();
+    } else {
+      onOpenChange(nextOpen);
+    }
+  }
+
   return (
-    <FormDrawer
-      className="sm:max-w-2xl"
-      description={equipmentType?.code ?? selectedName ?? "Thông tin loại thiết bị"}
-      footer={
-        <div className="flex w-full flex-wrap items-center justify-end gap-2">
-          <Button
-            disabled={isLoading}
-            onClick={onRefresh}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <RefreshCw
-              className={isLoading ? "size-4 animate-spin" : "size-4"}
-            />
-            Tải lại
-          </Button>
-          {equipmentType ? (
+    <>
+      <FormDrawer
+        activeTab={activeTab}
+        className="sm:max-w-2xl"
+        description={
+          equipmentType?.code ?? selectedName ?? "Thông tin loại thiết bị"
+        }
+        footer={
+          <div className="flex w-full flex-wrap items-center justify-end gap-2">
+            {activeTab === "detail" ? (
+              <Button
+                disabled={isLoading || schemaState.busy || schemaState.dirty}
+                onClick={onRefresh}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <RefreshCw
+                  className={isLoading ? "size-4 animate-spin" : "size-4"}
+                />
+                Tải lại
+              </Button>
+            ) : null}
+            {equipmentType && activeTab === "detail" ? (
+              <Button
+                disabled={isBusy}
+                form={UPDATE_EQUIPMENT_TYPE_FORM_ID}
+                size="sm"
+                type="submit"
+              >
+                {isSubmitting ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+              </Button>
+            ) : null}
             <Button
-              disabled={isBusy}
-              form={UPDATE_EQUIPMENT_TYPE_FORM_ID}
+              disabled={schemaState.busy || isSubmitting || isUploadingMedia}
+              onClick={() => handleOpenChange(false)}
               size="sm"
-              type="submit"
+              type="button"
+              variant="secondary"
             >
-              {isSubmitting ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+              Đóng
             </Button>
-          ) : null}
-          <Button
-            onClick={() => onOpenChange(false)}
-            size="sm"
-            type="button"
-            variant="secondary"
+          </div>
+        }
+        onOpenChange={handleOpenChange}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === "schema") setHasOpenedSchema(true);
+        }}
+        open={open}
+        tabs={[
+          { label: "Thông tin", value: "detail" },
+          { label: "Thông số kỹ thuật", value: "schema" },
+        ]}
+        title="Chi tiết loại thiết bị"
+      >
+        {isLoading ? (
+          <EquipmentTypeDetailSkeleton />
+        ) : error ? (
+          <div
+            className="space-y-4 rounded border border-error/20 bg-error/5 p-4"
+            role="alert"
           >
-            Đóng
-          </Button>
-        </div>
-      }
-      onOpenChange={onOpenChange}
-      open={open}
-      title="Chi tiết loại thiết bị"
-    >
-      {isLoading ? (
-        <EquipmentTypeDetailSkeleton />
-      ) : error ? (
-        <div
-          className="space-y-4 rounded border border-error/20 bg-error/5 p-4"
-          role="alert"
-        >
-          <p className="text-sm text-error">{error}</p>
-          <Button onClick={onRefresh} size="sm" type="button" variant="secondary">
-            Thử lại
-          </Button>
-        </div>
-      ) : equipmentType ? (
-        <EquipmentTypeForm
-          categories={categories}
-          equipmentType={equipmentType}
-          formId={UPDATE_EQUIPMENT_TYPE_FORM_ID}
-          isSubmitting={isBusy}
-          key={equipmentType.id}
-          onMediaUploadingChange={setIsUploadingMedia}
-          onPublish={onPublish}
-          onSubmit={async (values) => {
-            await onSubmit(equipmentType.id, toUpdateEquipmentTypeRequest(values));
-          }}
-        />
-      ) : null}
-    </FormDrawer>
+            <p className="text-sm text-error">{error}</p>
+            <Button
+              onClick={onRefresh}
+              size="sm"
+              type="button"
+              variant="secondary"
+            >
+              Thử lại
+            </Button>
+          </div>
+        ) : equipmentType ? (
+          <>
+            <div hidden={activeTab !== "detail"}>
+              <EquipmentTypeForm
+                categories={categories}
+                equipmentType={equipmentType}
+                formId={UPDATE_EQUIPMENT_TYPE_FORM_ID}
+                isSubmitting={isBusy}
+                key={equipmentType.id}
+                onMediaUploadingChange={setIsUploadingMedia}
+                onPublish={onPublish}
+                onSubmit={async (values) => {
+                  await onSubmit(
+                    equipmentType.id,
+                    toUpdateEquipmentTypeRequest(values),
+                  );
+                }}
+              />
+            </div>
+            {hasOpenedSchema ? (
+              <div hidden={activeTab !== "schema"}>
+                <SpecSchemaPanel
+                  actions={schemaActions}
+                  equipmentTypeId={equipmentType.id}
+                  key={equipmentType.id}
+                  onPublished={onSchemaPublished}
+                  onStateChange={setSchemaState}
+                />
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </FormDrawer>
+      <ConfirmDialog
+        confirmLabel="Bỏ thay đổi"
+        description="Các thay đổi thông số kỹ thuật chưa lưu sẽ bị bỏ khi đóng. Bạn có muốn tiếp tục?"
+        onConfirm={closeDrawer}
+        onOpenChange={setIsDiscardConfirmOpen}
+        open={isDiscardConfirmOpen}
+        title="Bỏ thay đổi chưa lưu?"
+        variant="danger"
+      />
+    </>
   );
 }
 
@@ -246,7 +327,6 @@ function EquipmentTypeForm({
     formState: { errors },
     handleSubmit,
     register,
-    reset,
   } = useForm<CatalogEquipmentTypeFormValues>({
     defaultValues: getDefaultValues(equipmentType),
     resolver: zodResolver(catalogEquipmentTypeFormSchema),
@@ -255,10 +335,6 @@ function EquipmentTypeForm({
 
   async function submitForm(values: CatalogEquipmentTypeFormValues) {
     await onSubmit(values);
-
-    if (!equipmentType) {
-      reset(getDefaultValues());
-    }
   }
 
   return (
@@ -279,15 +355,16 @@ function EquipmentTypeForm({
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <EquipmentTypeStatusBadge status={equipmentType.status} />
-            {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ? (
+            {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ||
+            equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Disabled ? (
               <Button
                 disabled={isSubmitting}
                 onClick={() => onPublish?.(equipmentType)}
                 size="sm"
                 type="button"
               >
-                <Send className="size-4" />
-                Publish
+                <UnlockKeyhole className="size-4" />
+                Mở khóa
               </Button>
             ) : null}
           </div>
@@ -428,10 +505,12 @@ function EquipmentTypeMediaField({
   value: CatalogEquipmentTypeFormMedia[];
 }) {
   function setThumbnail(mediaId: string) {
-    onChange(value.map((item) => ({
-      ...item,
-      isThumbnail: item.mediaId === mediaId,
-    })));
+    onChange(
+      value.map((item) => ({
+        ...item,
+        isThumbnail: item.mediaId === mediaId,
+      })),
+    );
   }
 
   function removeMedia(mediaId: string) {
@@ -451,9 +530,7 @@ function EquipmentTypeMediaField({
   return (
     <div className="space-y-3">
       <div className="rounded border border-border bg-muted/40 p-4">
-        <p className="text-xs font-semibold uppercase text-foreground">
-          Media
-        </p>
+        <p className="text-xs font-semibold uppercase text-foreground">Media</p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <MediaAvatarUpload
             accept={IMAGE_CONTENT_TYPES.join(",")}
@@ -464,7 +541,9 @@ function EquipmentTypeMediaField({
               const uploads = Array.isArray(upload) ? upload : [upload];
               const nextItems = [
                 ...value,
-                ...uploads.map((item, index) => toMediaFormItem(item, value.length + index)),
+                ...uploads.map((item, index) =>
+                  toMediaFormItem(item, value.length + index),
+                ),
               ];
 
               onChange(ensureMediaThumbnail(nextItems));
@@ -475,7 +554,8 @@ function EquipmentTypeMediaField({
             uploadFiles={uploadEquipmentTypeImages}
           />
           <p className="max-w-sm text-xs leading-5 text-muted-foreground">
-            Upload nhiều ảnh, chọn một ảnh làm thumbnail và sắp xếp bằng display order.
+            Upload nhiều ảnh, chọn một ảnh làm thumbnail và sắp xếp bằng display
+            order.
           </p>
         </div>
       </div>
@@ -483,7 +563,10 @@ function EquipmentTypeMediaField({
       {value.length ? (
         <div className="grid gap-3">
           {[...value]
-            .sort((leftItem, rightItem) => leftItem.displayOrder - rightItem.displayOrder)
+            .sort(
+              (leftItem, rightItem) =>
+                leftItem.displayOrder - rightItem.displayOrder,
+            )
             .map((item, index) => (
               <div
                 className={
@@ -631,7 +714,9 @@ function normalizeMediaRequest(media: CatalogEquipmentTypeFormMedia[]) {
       isThumbnail: item.isThumbnail,
       mediaId: item.mediaId,
     }))
-    .sort((leftItem, rightItem) => leftItem.displayOrder - rightItem.displayOrder);
+    .sort(
+      (leftItem, rightItem) => leftItem.displayOrder - rightItem.displayOrder,
+    );
 }
 
 function ensureMediaThumbnail(media: CatalogEquipmentTypeFormMedia[]) {
@@ -680,7 +765,9 @@ async function uploadEquipmentTypeImages(files: File[]) {
 
   for (const upload of uploads) {
     if (upload.status.toLowerCase() !== "ready") {
-      throw new Error("Ảnh thiết bị chưa sẵn sàng sử dụng. Vui lòng thử lại sau.");
+      throw new Error(
+        "Ảnh thiết bị chưa sẵn sàng sử dụng. Vui lòng thử lại sau.",
+      );
     }
   }
 
