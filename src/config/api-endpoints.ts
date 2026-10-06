@@ -30,6 +30,14 @@ type ListAdminCatalogBrandsParams = ListCatalogBrandsParams & {
   isActive?: boolean;
 };
 
+type ListCatalogCategoriesParams = {
+  isActive?: boolean;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+};
+
 type ListAdminOrganizationHistoryParams = {
   page: number;
   pageSize: number;
@@ -163,7 +171,21 @@ export const API_ENDPOINTS = {
         create: "/api/v1/catalog/categories",
         detail: (id: string) =>
           `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
-        list: "/api/v1/catalog/categories",
+        list: ({
+          isActive,
+          keyword,
+          page,
+          pageSize,
+          sort,
+        }: ListCatalogCategoriesParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/categories", {
+            IsActive:
+              typeof isActive === "boolean" ? String(isActive) : undefined,
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+          }),
         update: (id: string) =>
           `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
       },
