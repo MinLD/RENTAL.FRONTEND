@@ -221,7 +221,6 @@ function CategoryForm({
     formState: { errors },
     handleSubmit,
     register,
-    reset,
   } = useForm<CatalogCategoryFormValues>({
     defaultValues: getDefaultValues(category),
     resolver: zodResolver(catalogCategoryFormSchema),
@@ -230,11 +229,6 @@ function CategoryForm({
 
   async function submitForm(values: CatalogCategoryFormValues) {
     await onSubmit(values);
-
-    if (!category) {
-      reset(getDefaultValues());
-      setImagePreviewUrl("");
-    }
   }
 
   return (

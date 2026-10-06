@@ -17,8 +17,13 @@ type ListCatalogEquipmentTypesParams = {
   page?: number;
   pageSize?: number;
   sort?: string;
-  status?: number;
 };
+
+type ListAdminCatalogEquipmentTypesParams = ListCatalogEquipmentTypesParams & {
+  status?: 0 | 1 | 2 | Array<0 | 1 | 2>;
+};
+
+const EQUIPMENT_TYPE_STATUS_NAMES = ["Draft", "Published", "Disabled"] as const;
 
 type ListCatalogBrandsParams = {
   keyword?: string;
@@ -31,7 +36,7 @@ type ListAdminCatalogBrandsParams = ListCatalogBrandsParams & {
   isActive?: boolean;
 };
 
-type ListCatalogCategoriesParams = {
+type ListAdminCatalogCategoriesParams = {
   isActive?: boolean;
   keyword?: string;
   page?: number;
@@ -47,7 +52,7 @@ type ListAdminOrganizationHistoryParams = {
 
 function buildQueryEndpoint(
   pathname: string,
-  params: Record<string, string | number | undefined>,
+  params: Record<string, string | number | Array<string | number> | undefined>,
 ) {
   const searchParams = new URLSearchParams();
 
@@ -56,7 +61,13 @@ function buildQueryEndpoint(
       continue;
     }
 
-    searchParams.set(key, String(value));
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== "") searchParams.append(key, String(item));
+      }
+    } else {
+      searchParams.set(key, String(value));
+    }
   }
 
   const queryString = searchParams.toString();
@@ -169,17 +180,16 @@ export const API_ENDPOINTS = {
           `/api/v1/catalog/brands/${encodeURIComponent(brandId)}`,
       },
       categories: {
-        create: "/api/v1/catalog/categories",
-        detail: (id: string) =>
-          `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
-        list: ({
+        adminDetail: (id: string) =>
+          `/api/v1/catalog/admin/categories/${encodeURIComponent(id)}`,
+        adminList: ({
           isActive,
           keyword,
           page,
           pageSize,
           sort,
-        }: ListCatalogCategoriesParams = {}) =>
-          buildQueryEndpoint("/api/v1/catalog/categories", {
+        }: ListAdminCatalogCategoriesParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/admin/categories", {
             IsActive:
               typeof isActive === "boolean" ? String(isActive) : undefined,
             Keyword: keyword?.trim(),
@@ -187,10 +197,36 @@ export const API_ENDPOINTS = {
             PageSize: pageSize,
             Sort: sort?.trim(),
           }),
+        create: "/api/v1/catalog/categories",
+        detail: (id: string) =>
+          `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
+        list: () => "/api/v1/catalog/categories",
         update: (id: string) =>
           `/api/v1/catalog/categories/${encodeURIComponent(id)}`,
       },
       equipmentTypes: {
+        adminDetail: (id: string) =>
+          `/api/v1/catalog/admin/equipment-types/${encodeURIComponent(id)}`,
+        adminList: ({
+          categoryId,
+          keyword,
+          page,
+          pageSize,
+          sort,
+          status,
+        }: ListAdminCatalogEquipmentTypesParams = {}) =>
+          buildQueryEndpoint("/api/v1/catalog/admin/equipment-types", {
+            CategoryId: categoryId,
+            Keyword: keyword?.trim(),
+            Page: page,
+            PageSize: pageSize,
+            Sort: sort?.trim(),
+            Status: status === undefined
+              ? undefined
+              : (Array.isArray(status) ? status : [status]).map(
+                  (value) => EQUIPMENT_TYPE_STATUS_NAMES[value],
+                ),
+          }),
         create: "/api/v1/catalog/equipment-types",
         currentSchema: (equipmentTypeId: string) =>
           `/api/v1/catalog/equipment-types/${encodeURIComponent(equipmentTypeId)}/schema`,
@@ -204,7 +240,6 @@ export const API_ENDPOINTS = {
           page,
           pageSize,
           sort,
-          status,
         }: ListCatalogEquipmentTypesParams = {}) =>
           buildQueryEndpoint("/api/v1/catalog/equipment-types", {
             CategoryId: categoryId,
@@ -212,7 +247,6 @@ export const API_ENDPOINTS = {
             Page: page,
             PageSize: pageSize,
             Sort: sort?.trim(),
-            Status: status,
           }),
         publish: (id: string) =>
           `/api/v1/catalog/equipment-types/${encodeURIComponent(id)}/publish`,

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Eye, LockKeyhole, Plus, Send } from "lucide-react";
+import { Eye, LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAdminEquipmentTypesController } from "@/hooks/use-admin-equipment-types-controller";
+import { getCatalogEquipmentTypeStatusLabel } from "@/utils/catalog";
 import {
   CATALOG_EQUIPMENT_TYPE_STATUS,
   type AdminCatalogEquipmentTypeFilterParams,
@@ -30,6 +31,7 @@ const EQUIPMENT_TYPE_SORT_OPTIONS = [
 ] as const;
 
 export function EquipmentTypeManagementTable({
+  schemaActions,
   createEquipmentType,
   disableEquipmentType,
   fetchCategories,
@@ -118,7 +120,9 @@ export function EquipmentTypeManagementTable({
       refreshEquipmentTypeDetail();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Không thể thực hiện thao tác.",
+        error instanceof Error
+          ? error.message
+          : "Không thể thực hiện thao tác.",
       );
     } finally {
       setIsSubmittingAction(false);
@@ -127,7 +131,10 @@ export function EquipmentTypeManagementTable({
 
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
-      <DataTable<CatalogEquipmentTypeListItem, AdminCatalogEquipmentTypeFilterParams>
+      <DataTable<
+        CatalogEquipmentTypeListItem,
+        AdminCatalogEquipmentTypeFilterParams
+      >
         bodyClassName="min-h-[260px]"
         className="h-full"
         columns={equipmentTypeColumns}
@@ -138,7 +145,9 @@ export function EquipmentTypeManagementTable({
           {
             header: "Danh mục",
             value: (equipmentType) =>
-              equipmentType.categories.map((category) => category.name).join(", "),
+              equipmentType.categories
+                .map((category) => category.name)
+                .join(", "),
           },
           {
             header: "Schema version",
@@ -146,7 +155,7 @@ export function EquipmentTypeManagementTable({
           },
         ]}
         csvFilename="danh-sach-loai-thiet-bi.csv"
-        description="Quản lý canonical equipment type, category mapping và media"
+        description="Quản lý canonical equipment type"
         emptyState="Không có loại thiết bị phù hợp."
         fetchData={fetchEquipmentTypes}
         fetchDependencies={[categories.length]}
@@ -179,17 +188,23 @@ export function EquipmentTypeManagementTable({
                         ) as AdminCatalogEquipmentTypeFilterParams["status"]),
                 });
               }}
-              value={
-                filters.status === undefined ? "" : String(filters.status)
-              }
+              value={filters.status === undefined ? "" : String(filters.status)}
             >
               <option value="">Tất cả trạng thái</option>
-              <option value={CATALOG_EQUIPMENT_TYPE_STATUS.Draft}>Draft</option>
+              <option value={CATALOG_EQUIPMENT_TYPE_STATUS.Draft}>
+                {getCatalogEquipmentTypeStatusLabel(
+                  CATALOG_EQUIPMENT_TYPE_STATUS.Draft,
+                )}
+              </option>
               <option value={CATALOG_EQUIPMENT_TYPE_STATUS.Published}>
-                Hoạt động
+                {getCatalogEquipmentTypeStatusLabel(
+                  CATALOG_EQUIPMENT_TYPE_STATUS.Published,
+                )}
               </option>
               <option value={CATALOG_EQUIPMENT_TYPE_STATUS.Disabled}>
-                Không hoạt động
+                {getCatalogEquipmentTypeStatusLabel(
+                  CATALOG_EQUIPMENT_TYPE_STATUS.Disabled,
+                )}
               </option>
             </select>
             <select
@@ -245,9 +260,10 @@ export function EquipmentTypeManagementTable({
             >
               <Eye className="size-4" />
             </Button>
-            {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ? (
+            {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ||
+            equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Disabled ? (
               <Button
-                aria-label="Publish loại thiết bị"
+                aria-label="Mở khóa loại thiết bị"
                 onClick={() =>
                   setPendingAction({
                     action: "publish",
@@ -256,16 +272,17 @@ export function EquipmentTypeManagementTable({
                   })
                 }
                 size="icon"
-                title="Publish loại thiết bị"
+                title="Mở khóa loại thiết bị"
                 type="button"
                 variant="default"
               >
-                <Send className="size-4" />
+                <UnlockKeyhole className="size-4" />
               </Button>
             ) : null}
-            {equipmentType.status !== CATALOG_EQUIPMENT_TYPE_STATUS.Disabled ? (
+            {equipmentType.status ===
+            CATALOG_EQUIPMENT_TYPE_STATUS.Published ? (
               <Button
-                aria-label="Disable loại thiết bị"
+                aria-label="Khóa loại thiết bị"
                 onClick={() =>
                   setPendingAction({
                     action: "disable",
@@ -274,7 +291,7 @@ export function EquipmentTypeManagementTable({
                   })
                 }
                 size="icon"
-                title="Disable loại thiết bị"
+                title="Khóa loại thiết bị"
                 type="button"
                 variant="default"
               >
@@ -307,6 +324,10 @@ export function EquipmentTypeManagementTable({
         open={isCreateDrawerOpen}
       />
       <EquipmentTypeDetailDrawer
+        schemaActions={schemaActions}
+        onSchemaPublished={() => {
+          listRefreshRef.current?.();
+        }}
         categories={categories}
         equipmentType={equipmentTypeDetail}
         error={detailError}
@@ -326,15 +347,15 @@ export function EquipmentTypeManagementTable({
         selectedName={selectedEquipmentType?.name}
       />
       <ConfirmDialog
-        confirmLabel={isPublishAction ? "Publish" : "Disable"}
+        confirmLabel={isPublishAction ? "Mở khóa" : "Khóa"}
         description={
           isPublishAction
-            ? `Loại thiết bị "${pendingAction?.equipmentType.name || "này"}" sẽ được publish.`
-            : `Loại thiết bị "${pendingAction?.equipmentType.name || "này"}" sẽ bị disable.`
+            ? `Loại thiết bị "${pendingAction?.equipmentType.name || "này"}" sẽ được mở khóa và công khai trong catalog.`
+            : `Loại thiết bị "${pendingAction?.equipmentType.name || "này"}" sẽ bị khóa và ngừng hiển thị trong catalog công khai.`
         }
         icon={
           isPublishAction ? (
-            <Send className="size-5 text-green-600" />
+            <UnlockKeyhole className="size-5 text-green-600" />
           ) : (
             <LockKeyhole className="size-5" />
           )
@@ -349,9 +370,7 @@ export function EquipmentTypeManagementTable({
         open={Boolean(pendingAction)}
         submittingLabel="Đang xử lý..."
         title={
-          isPublishAction
-            ? "Publish loại thiết bị?"
-            : "Disable loại thiết bị?"
+          isPublishAction ? "Mở khóa loại thiết bị?" : "Khóa loại thiết bị?"
         }
         variant={isPublishAction ? "primary" : "danger"}
       />

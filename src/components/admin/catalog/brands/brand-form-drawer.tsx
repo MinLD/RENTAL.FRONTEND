@@ -226,11 +226,6 @@ function BrandForm({
 
   async function submitForm(values: CatalogBrandFormValues) {
     await onSubmit(values);
-
-    if (!brand) {
-      reset(getDefaultValues());
-      setLogoPreviewUrl("");
-    }
   }
 
   return (
