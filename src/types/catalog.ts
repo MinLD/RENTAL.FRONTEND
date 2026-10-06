@@ -56,6 +56,14 @@ export type CatalogCategoryDetailResponse = CatalogCategoryDto & {
   slug?: string | null;
 };
 
+export type CatalogCategoryListResponse = {
+  items?: CatalogCategoryDetailResponse[] | null;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+};
+
 export type CreateCatalogCategoryRequest = {
   description?: string | null;
   imageMediaId?: string | null;
@@ -222,6 +230,21 @@ export type AdminCatalogBrandFilterParams = {
   isActive?: boolean;
   sort?: CatalogBrandSort;
 };
+
+export type CatalogCategorySort = "name_asc" | "name_desc";
+
+export type CatalogCategoryListParams = {
+  isActive?: boolean;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: CatalogCategorySort;
+};
+
+export type AdminCatalogCategoryFilterParams = Pick<
+  CatalogCategoryListParams,
+  "isActive" | "sort"
+>;
 
 export type CatalogPagedResult<TItem> = {
   data: TItem[];

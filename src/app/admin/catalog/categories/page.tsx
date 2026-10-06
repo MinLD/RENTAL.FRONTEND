@@ -1,10 +1,18 @@
-import { CatalogPlaceholder } from "@/components/admin/catalog/catalog-placeholder";
+import { CategoryManagementTable } from "@/components/admin/catalog/categories/category-management-table";
+import {
+  createCatalogCategoryAction,
+  getAdminCatalogCategoriesAction,
+  getCatalogCategoryAction,
+  updateCatalogCategoryAction,
+} from "@/services/actions/catalog-actions";
 
 export default function AdminCatalogCategoriesPage() {
   return (
-    <CatalogPlaceholder
-      description="Quản lý danh mục thiết bị trong catalog"
-      title="Danh sách danh mục"
+    <CategoryManagementTable
+      createCategory={createCatalogCategoryAction}
+      fetchCategories={getAdminCatalogCategoriesAction}
+      fetchCategoryDetail={getCatalogCategoryAction}
+      updateCategory={updateCatalogCategoryAction}
     />
   );
 }

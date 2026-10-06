@@ -62,13 +62,13 @@ Ghi chú contract:
 
 ## Bước 3 - Admin Category Management
 
-- [ ] Thêm Category vào admin Catalog navigation/tab.
-- [ ] Admin xem danh sách category từ `GET /api/v1/catalog/categories`.
-- [ ] Tạo category qua `POST /api/v1/catalog/categories` với `name`, `description`, `imageMediaId`.
-- [ ] Cập nhật category qua `PATCH /api/v1/catalog/categories/{id}` với `name`, `description`, `isActive`, `imageMediaId`.
-- [ ] Refresh list sau create/update thành công.
-- [ ] Hiển thị active/inactive rõ ràng.
-- [ ] Handle loading, empty, validation error, `401`, `403`, `404`.
+- [x] Thêm Category vào admin Catalog navigation/tab.
+- [x] Admin xem danh sách category từ `GET /api/v1/catalog/categories`.
+- [x] Tạo category qua `POST /api/v1/catalog/categories` với `name`, `description`, `imageMediaId`.
+- [x] Cập nhật category qua `PATCH /api/v1/catalog/categories/{id}` với `name`, `description`, `isActive`, `imageMediaId`.
+- [x] Refresh list sau create/update thành công.
+- [x] Hiển thị active/inactive rõ ràng.
+- [x] Handle loading, empty, validation error, `401`, `403`, `404`.
 
 ## Bước 4 - Admin Equipment Type Management
 
@@ -198,7 +198,7 @@ Ghi chú contract:
 
 - [x] Bước 1: cập nhật API layer theo Swagger mới, vì hiện tại FE đã có Catalog layer cũ nhưng thiếu Brand.
 - [x] Bước 2: admin Brand, vì Brand là canonical data mới.
-- [ ] Bước 3: admin Category.
+- [x] Bước 3: admin Category.
 - [ ] Bước 4: admin Equipment Type và media.
 - [ ] Bước 5: admin Spec Schema version.
 - [ ] Bước 6: dynamic specification validation.

@@ -15,6 +15,7 @@ type MediaAvatarUploadProps = {
   accept?: string;
   className?: string;
   disabled?: boolean;
+  emptyLabel?: string;
   fallbackText?: string;
   fieldName?: string;
   mode?: MediaUploadMode;
@@ -23,8 +24,11 @@ type MediaAvatarUploadProps = {
     upload: MediaUploadResponse | MediaUploadResponse[],
   ) => void;
   onUploadingChange?: (isUploading: boolean) => void;
+  previewAlt?: string;
   previewUrl?: string | string[] | null;
+  replaceLabel?: string;
   size?: "md" | "lg" | "xl";
+  uploadLabel?: string;
   uploadFile?: (file: File) => Promise<MediaUploadResponse>;
   uploadFiles?: (files: File[]) => Promise<MediaUploadResponse[]>;
   variant?: "avatar" | "logo";
@@ -46,13 +50,17 @@ export function MediaAvatarUpload({
   accept = "image/*",
   className,
   disabled = false,
+  emptyLabel,
   fallbackText = "DP",
   fieldName,
   mode = "single",
   onChange,
   onUploadingChange,
+  previewAlt,
   previewUrl,
+  replaceLabel,
   size = "lg",
+  uploadLabel,
   uploadFile,
   uploadFiles,
   variant = "avatar",
@@ -62,6 +70,10 @@ export function MediaAvatarUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [localPreviewUrls, setLocalPreviewUrls] = useState<string[]>([]);
   const isMultiple = mode === "multiple";
+  const logoEmptyLabel = emptyLabel ?? "Tải logo";
+  const logoPreviewAlt = previewAlt ?? "Logo doanh nghiệp";
+  const logoUploadLabel = uploadLabel ?? "Tải logo doanh nghiệp";
+  const logoReplaceLabel = replaceLabel ?? "Thay logo doanh nghiệp";
   const previewUrls = normalizeArray(previewUrl);
   const visiblePreviewUrls =
     previewUrl !== undefined
@@ -120,9 +132,7 @@ export function MediaAvatarUpload({
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
       <input
         accept={accept}
-        aria-label={
-          variant === "logo" ? "Chọn logo doanh nghiệp" : "Chọn ảnh đại diện"
-        }
+        aria-label={variant === "logo" ? logoUploadLabel : "Chọn ảnh đại diện"}
         className="sr-only"
         disabled={disabled || isUploading}
         id={inputId}
@@ -136,11 +146,7 @@ export function MediaAvatarUpload({
 
       {variant === "logo" ? (
         <button
-          aria-label={
-            visiblePreviewUrls[0]
-              ? "Thay logo doanh nghiệp"
-              : "Tải logo doanh nghiệp"
-          }
+          aria-label={visiblePreviewUrls[0] ? logoReplaceLabel : logoUploadLabel}
           className={cn(
             "relative flex shrink-0 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-primary/40 bg-primary/5 text-xs font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
             sizeClassName[size],
@@ -151,7 +157,7 @@ export function MediaAvatarUpload({
         >
           {visiblePreviewUrls[0] ? (
             <AvatarWithSkeleton
-              alt="Logo doanh nghiệp"
+              alt={logoPreviewAlt}
               className="size-full rounded-none bg-transparent"
               fallback="Logo"
               fallbackClassName="rounded-none bg-primary/5 text-primary"
@@ -161,7 +167,7 @@ export function MediaAvatarUpload({
           ) : (
             <>
               <Upload className="size-5" />
-              <span>Tải logo</span>
+              <span>{logoEmptyLabel}</span>
             </>
           )}
           {isUploading ? (
