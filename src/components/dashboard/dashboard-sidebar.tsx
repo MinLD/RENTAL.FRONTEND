@@ -22,6 +22,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { logout } from "@/services/auth-service";
 import type { DashboardNavigationItem } from "@/types/dashboard-navigation";
@@ -107,29 +108,67 @@ function DashboardSidebarItem({
 }) {
   const isActive = isItemActive(pathname, item.href);
   const hasChildren = Boolean(item.children?.length);
+  const [isOpenOverride, setIsOpenOverride] = useState<boolean | null>(null);
+  const isOpen = isOpenOverride ?? isActive;
+  const { state: sidebarState, setOpen: setSidebarOpen } = useSidebar();
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        className={cn(
-          "h-10 rounded-lg text-[13px] font-bold uppercase tracking-[0.01em] text-muted-foreground",
-          "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
-          "hover:bg-primary/10 hover:text-primary",
-          isActive && "bg-primary/10 text-primary",
-        )}
-        isActive={isActive}
-        tooltip={item.label}
-      >
-        <Link href={item.href}>
+      {hasChildren ? (
+        <SidebarMenuButton
+          aria-expanded={isOpen}
+          className={cn(
+            "h-10 rounded-lg text-[13px] font-bold uppercase tracking-[0.01em] text-muted-foreground",
+            "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
+            "hover:bg-primary/10 hover:text-primary",
+            isActive && "bg-primary/10 text-primary",
+          )}
+          isActive={isActive}
+          onClick={() => {
+            if (sidebarState === "collapsed") {
+              setSidebarOpen(true);
+              setIsOpenOverride(true);
+              return;
+            }
+
+            setIsOpenOverride(!isOpen);
+          }}
+          tooltip={item.label}
+          type="button"
+        >
           <DashboardIcon className="size-4.5" name={item.icon} />
           <span className="whitespace-nowrap opacity-100 transition-opacity delay-150 duration-150 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:delay-0">
             {item.label}
           </span>
-        </Link>
-      </SidebarMenuButton>
+          <ChevronDown
+            className={cn(
+              "ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden",
+              isOpen && "rotate-180",
+            )}
+          />
+        </SidebarMenuButton>
+      ) : (
+        <SidebarMenuButton
+          asChild
+          className={cn(
+            "h-10 rounded-lg text-[13px] font-bold uppercase tracking-[0.01em] text-muted-foreground",
+            "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
+            "hover:bg-primary/10 hover:text-primary",
+            isActive && "bg-primary/10 text-primary",
+          )}
+          isActive={isActive}
+          tooltip={item.label}
+        >
+          <Link href={item.href}>
+            <DashboardIcon className="size-4.5" name={item.icon} />
+            <span className="whitespace-nowrap opacity-100 transition-opacity delay-150 duration-150 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:delay-0">
+              {item.label}
+            </span>
+          </Link>
+        </SidebarMenuButton>
+      )}
 
-      {hasChildren ? (
+      {hasChildren && isOpen ? (
         <SidebarMenuSub>
           {item.children?.map((child) => (
             <SidebarMenuSubItem key={child.href}>

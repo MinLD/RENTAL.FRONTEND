@@ -16,6 +16,25 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
     icon: "building",
     label: "Quản lý tổ chức",
   },
+  {
+    href: "/admin/catalog",
+    icon: "package",
+    label: "Quản lý catalog",
+    children: [
+      {
+        href: "/admin/catalog/brands",
+        label: "Thương hiệu",
+      },
+      {
+        href: "/admin/catalog/categories",
+        label: "Danh mục",
+      },
+      {
+        href: "/admin/catalog/equipment-types",
+        label: "Loại thiết bị",
+      },
+    ],
+  },
   // {
   //   href: "/admin/orders",
   //   icon: "file-text",
