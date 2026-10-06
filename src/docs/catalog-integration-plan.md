@@ -48,17 +48,17 @@ Ghi chú contract:
 
 ## Bước 2 - Admin Brand Management
 
-- [ ] Thêm Brand vào admin Catalog navigation/tab.
-- [ ] Tạo màn admin Brand list dùng `GET /api/v1/catalog/admin/brands`.
-- [ ] List hỗ trợ `keyword`, `page`, `pageSize`, `sort`, `isActive`.
-- [ ] Hiển thị `code`, `name`, `slug`, `logoUrl`, `isActive`, `createdAt`, `updatedAt`.
-- [ ] Tạo Brand qua `POST /api/v1/catalog/brands` với `code`, `name`, `slug`, `logoMediaId`.
-- [ ] Cập nhật Brand qua `PATCH /api/v1/catalog/brands/{brandId}`.
-- [ ] Disable Brand qua `POST /api/v1/catalog/brands/{brandId}/disable`.
-- [ ] Enable Brand qua `POST /api/v1/catalog/brands/{brandId}/enable`.
-- [ ] Disable/enable phải có confirm action và xử lý idempotent response.
-- [ ] Hiển thị active/inactive rõ ràng.
-- [ ] Handle loading, empty, validation error, `401`, `403`, `404`, `409`.
+- [x] Thêm Brand vào admin Catalog navigation/tab.
+- [x] Tạo màn admin Brand list dùng `GET /api/v1/catalog/admin/brands`.
+- [x] List hỗ trợ `keyword`, `page`, `pageSize`, `sort`, `isActive`.
+- [x] Hiển thị `code`, `name`, `slug`, `logoUrl`, `isActive`, `createdAt`, `updatedAt`.
+- [x] Tạo Brand qua `POST /api/v1/catalog/brands` với `code`, `name`, `slug`, `logoMediaId`.
+- [x] Cập nhật Brand qua `PATCH /api/v1/catalog/brands/{brandId}`.
+- [x] Disable Brand qua `POST /api/v1/catalog/brands/{brandId}/disable`.
+- [x] Enable Brand qua `POST /api/v1/catalog/brands/{brandId}/enable`.
+- [x] Disable/enable phải có confirm action và xử lý idempotent response.
+- [x] Hiển thị active/inactive rõ ràng.
+- [x] Handle loading, empty, validation error, `401`, `403`, `404`, `409`.
 
 ## Bước 3 - Admin Category Management
 
@@ -197,7 +197,7 @@ Ghi chú contract:
 ## Thứ Tự Triển Khai Đề Xuất
 
 - [x] Bước 1: cập nhật API layer theo Swagger mới, vì hiện tại FE đã có Catalog layer cũ nhưng thiếu Brand.
-- [ ] Bước 2: admin Brand, vì Brand là canonical data mới.
+- [x] Bước 2: admin Brand, vì Brand là canonical data mới.
 - [ ] Bước 3: admin Category.
 - [ ] Bước 4: admin Equipment Type và media.
 - [ ] Bước 5: admin Spec Schema version.

@@ -4,10 +4,12 @@ import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { serverApiJson } from "@/services/server-api";
 import type {
   AdminCatalogBrandListParams,
+  AdminCatalogBrandFilterParams,
   CatalogBrand,
   CatalogBrandDto,
   CatalogBrandListParams,
   CatalogBrandListResponse,
+  CatalogBrandSort,
   CatalogCategoryDetail,
   CatalogCategoryDetailResponse,
   CatalogEquipmentTypeDetail,
@@ -28,6 +30,10 @@ import type {
   UpdateCatalogEquipmentTypeRequest,
   ValidateCatalogSpecificationRequest,
 } from "@/types/catalog";
+import type {
+  DataTableFetchParams,
+  DataTableFetchResult,
+} from "@/types/data-table";
 import {
   normalizeCatalogBrand,
   normalizeCatalogCategoryDetail,
@@ -40,16 +46,22 @@ import {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CATALOG_BRAND_SORT_VALUES = new Set<CatalogBrandSort>([
+  "name_asc",
+  "name_desc",
+  "newest",
+]);
 
 export async function listCatalogBrandsAction(
   params: CatalogBrandListParams = {},
 ): Promise<CatalogPagedResult<CatalogBrand>> {
+  const normalizedParams = normalizeCatalogBrandListParams(params);
   const response = await serverApiJson<CatalogBrandListResponse>(
-    API_ENDPOINTS.backend.catalog.brands.list(params),
+    API_ENDPOINTS.backend.catalog.brands.list(normalizedParams),
     "Không thể tải danh sách thương hiệu.",
   );
 
-  return mapCatalogBrandPagedResult(response, params);
+  return mapCatalogBrandPagedResult(response, normalizedParams);
 }
 
 export async function getCatalogBrandAction(
@@ -68,12 +80,30 @@ export async function getCatalogBrandAction(
 export async function listAdminCatalogBrandsAction(
   params: AdminCatalogBrandListParams = {},
 ): Promise<CatalogPagedResult<CatalogBrand>> {
+  const normalizedParams = normalizeCatalogBrandListParams(params);
   const response = await serverApiJson<CatalogBrandListResponse>(
-    API_ENDPOINTS.backend.catalog.brands.adminList(params),
+    API_ENDPOINTS.backend.catalog.brands.adminList(normalizedParams),
     "Không thể tải danh sách thương hiệu.",
   );
 
-  return mapCatalogBrandPagedResult(response, params);
+  return mapCatalogBrandPagedResult(response, normalizedParams);
+}
+
+export async function getAdminCatalogBrandsAction(
+  params: DataTableFetchParams<AdminCatalogBrandFilterParams>,
+): Promise<DataTableFetchResult<CatalogBrand>> {
+  const response = await listAdminCatalogBrandsAction({
+    isActive: params.filters?.isActive,
+    keyword: params.keyword,
+    page: params.page,
+    pageSize: params.pageSize,
+    sort: params.filters?.sort,
+  });
+
+  return {
+    data: response.data,
+    totalItems: response.totalItems,
+  };
 }
 
 export async function getAdminCatalogBrandAction(
@@ -467,6 +497,33 @@ function assertUuid(value: string, message: string) {
   if (!UUID_PATTERN.test(value)) {
     throw new Error(message);
   }
+}
+
+function normalizeCatalogBrandListParams<TParams extends CatalogBrandListParams>(
+  params: TParams,
+): TParams {
+  const normalizedSort = normalizeCatalogBrandSort(params.sort);
+
+  if (normalizedSort === params.sort) {
+    return params;
+  }
+
+  return {
+    ...params,
+    sort: normalizedSort,
+  };
+}
+
+function normalizeCatalogBrandSort(
+  sort?: string,
+): CatalogBrandSort | undefined {
+  if (!sort) {
+    return undefined;
+  }
+
+  return CATALOG_BRAND_SORT_VALUES.has(sort as CatalogBrandSort)
+    ? (sort as CatalogBrandSort)
+    : undefined;
 }
 
 function assertSchemaVersion(version: number) {

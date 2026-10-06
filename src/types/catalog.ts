@@ -205,15 +205,22 @@ export type CatalogEquipmentTypeListParams = {
   sort?: string;
 };
 
+export type CatalogBrandSort = "name_asc" | "name_desc" | "newest";
+
 export type CatalogBrandListParams = {
   keyword?: string;
   page?: number;
   pageSize?: number;
-  sort?: string;
+  sort?: CatalogBrandSort;
 };
 
 export type AdminCatalogBrandListParams = CatalogBrandListParams & {
   isActive?: boolean;
+};
+
+export type AdminCatalogBrandFilterParams = {
+  isActive?: boolean;
+  sort?: CatalogBrandSort;
 };
 
 export type CatalogPagedResult<TItem> = {
