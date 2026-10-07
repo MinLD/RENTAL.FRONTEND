@@ -9,7 +9,11 @@ const uuidSchema = z
   );
 
 export const catalogEquipmentTypeMediaFormSchema = z.object({
-  displayOrder: z.number().int().min(0),
+  displayOrder: z
+    .number()
+    .int("Thứ tự ảnh phải là số nguyên.")
+    .min(0, "Thứ tự ảnh phải từ 0 trở lên.")
+    .max(2147483647, "Thứ tự ảnh không được vượt quá 2147483647."),
   isThumbnail: z.boolean(),
   mediaId: uuidSchema,
   url: z.string().optional(),
@@ -18,7 +22,11 @@ export const catalogEquipmentTypeMediaFormSchema = z.object({
 export const catalogEquipmentTypeFormSchema = z.object({
   categoryIds: z.array(uuidSchema).min(1, "Vui lòng chọn ít nhất một danh mục."),
   code: z.string().trim().min(1, "Vui lòng nhập code loại thiết bị."),
-  description: z.string().trim().optional(),
+  description: z
+    .string()
+    .trim()
+    .max(2000, "Mô tả loại thiết bị không được quá 2000 ký tự.")
+    .optional(),
   media: z.array(catalogEquipmentTypeMediaFormSchema),
   name: z.string().trim().min(1, "Vui lòng nhập tên loại thiết bị."),
 });

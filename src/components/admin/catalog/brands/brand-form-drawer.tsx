@@ -232,6 +232,7 @@ function BrandForm({
     <form
       className="grid gap-5"
       id={formId}
+      noValidate
       onSubmit={handleSubmit(submitForm)}
     >
       <Controller
@@ -292,23 +293,20 @@ function BrandForm({
         <TextField
           disabled={isSubmitting}
           error={errors.code?.message}
+          id={`${formId}-code`}
           label="Mã thương hiệu"
           placeholder="VD: CAT"
+          required
           {...register("code")}
         />
         <TextField
           disabled={isSubmitting}
           error={errors.name?.message}
+          id={`${formId}-name`}
           label="Tên thương hiệu"
           placeholder="VD: Caterpillar"
+          required
           {...register("name")}
-        />
-        <TextField
-          disabled={isSubmitting}
-          error={errors.slug?.message}
-          label="Slug"
-          placeholder="VD: caterpillar"
-          {...register("slug")}
         />
       </div>
     </form>
@@ -353,7 +351,6 @@ function getDefaultValues(brand?: CatalogBrand): CatalogBrandFormValues {
     code: brand?.code ?? "",
     logoMediaId: brand?.logoMediaId ?? "",
     name: brand?.name ?? "",
-    slug: brand?.slug ?? "",
   };
 }
 
@@ -364,7 +361,6 @@ function toBrandRequest(
     code: values.code.trim(),
     logoMediaId: normalizeNullableText(values.logoMediaId),
     name: values.name.trim(),
-    slug: normalizeNullableText(values.slug),
   };
 }
 

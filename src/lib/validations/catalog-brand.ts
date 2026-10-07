@@ -19,7 +19,6 @@ export const catalogBrandFormSchema = z.object({
   code: z.string().trim().min(1, "Vui lòng nhập mã thương hiệu."),
   logoMediaId: optionalUuidSchema,
   name: z.string().trim().min(1, "Vui lòng nhập tên thương hiệu."),
-  slug: z.string().trim().optional(),
 });
 
 export type CatalogBrandFormValues = z.infer<typeof catalogBrandFormSchema>;
