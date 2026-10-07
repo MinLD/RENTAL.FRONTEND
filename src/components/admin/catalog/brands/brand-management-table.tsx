@@ -8,6 +8,8 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAdminBrandsController } from "@/hooks/use-admin-brands-controller";
+import { useActionResult } from "@/hooks/use-action-result";
+import type { ServerActionProps } from "@/types/action-result";
 import type {
   AdminCatalogBrandFilterParams,
   CatalogBrand,
@@ -27,7 +29,29 @@ const BRAND_SORT_OPTIONS = [
   { label: "Tên Z-A", value: "name_desc" },
 ] as const;
 
-export function BrandManagementTable({
+export function BrandManagementTable(
+  props: ServerActionProps<BrandManagementTableProps>,
+) {
+  const createBrand = useActionResult(props.createBrand);
+  const disableBrand = useActionResult(props.disableBrand);
+  const enableBrand = useActionResult(props.enableBrand);
+  const fetchBrandDetail = useActionResult(props.fetchBrandDetail);
+  const fetchBrands = useActionResult(props.fetchBrands);
+  const updateBrand = useActionResult(props.updateBrand);
+
+  return (
+    <BrandManagementTableContent
+      createBrand={createBrand}
+      disableBrand={disableBrand}
+      enableBrand={enableBrand}
+      fetchBrandDetail={fetchBrandDetail}
+      fetchBrands={fetchBrands}
+      updateBrand={updateBrand}
+    />
+  );
+}
+
+function BrandManagementTableContent({
   createBrand,
   disableBrand,
   enableBrand,

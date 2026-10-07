@@ -14,6 +14,8 @@ import { DataTable } from "@/components/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { useAdminOrganizationsController } from "@/hooks/use-admin-organizations-controller";
+import { useActionResult } from "@/hooks/use-action-result";
+import type { ServerActionProps } from "@/types/action-result";
 import type {
   AdminOrganizationDetail,
   AdminOrganizationHistoryResult,
@@ -52,7 +54,31 @@ type OrganizationsManagementTableProps = {
   ) => Promise<AdminOrganizationDetail>;
 };
 
-export function OrganizationsManagementTable({
+export function OrganizationsManagementTable(
+  props: ServerActionProps<OrganizationsManagementTableProps>,
+) {
+  const activateOrganization = useActionResult(props.activateOrganization);
+  const approveOrganization = useActionResult(props.approveOrganization);
+  const fetchOrganizations = useActionResult(props.fetchOrganizations);
+  const fetchOrganizationDetail = useActionResult(props.fetchOrganizationDetail);
+  const fetchOrganizationHistory = useActionResult(props.fetchOrganizationHistory);
+  const rejectOrganization = useActionResult(props.rejectOrganization);
+  const suspendOrganization = useActionResult(props.suspendOrganization);
+
+  return (
+    <OrganizationsManagementTableContent
+      activateOrganization={activateOrganization}
+      approveOrganization={approveOrganization}
+      fetchOrganizations={fetchOrganizations}
+      fetchOrganizationDetail={fetchOrganizationDetail}
+      fetchOrganizationHistory={fetchOrganizationHistory}
+      rejectOrganization={rejectOrganization}
+      suspendOrganization={suspendOrganization}
+    />
+  );
+}
+
+function OrganizationsManagementTableContent({
   activateOrganization,
   approveOrganization,
   fetchOrganizations,

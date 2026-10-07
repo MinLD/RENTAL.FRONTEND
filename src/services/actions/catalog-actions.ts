@@ -1,642 +1,198 @@
 "use server";
 
-import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { serverApiJson } from "@/services/server-api";
-import type {
-  AdminCatalogBrandListParams,
-  AdminCatalogBrandFilterParams,
-  AdminCatalogCategoryFilterParams,
-  AdminCatalogEquipmentTypeFilterParams,
-  AdminCatalogEquipmentTypeListParams,
-  CatalogBrand,
-  CatalogBrandDto,
-  CatalogBrandListParams,
-  CatalogBrandListResponse,
-  CatalogBrandSort,
-  CatalogCategoryDetail,
-  CatalogCategoryDetailResponse,
-  CatalogCategoryListParams,
-  CatalogCategoryListResponse,
-  CatalogEquipmentTypeDetail,
-  CatalogEquipmentTypeDetailDto,
-  CatalogEquipmentTypeListItem,
-  CatalogEquipmentTypeListParams,
-  CatalogEquipmentTypeListResponse,
-  CatalogPagedResult,
-  CatalogPublishedSpecSchema,
-  CatalogSpecDefinition,
-  CatalogSpecSchema,
-  CatalogSpecificationValidationResult,
-  CreateCatalogBrandRequest,
-  CreateCatalogCategoryRequest,
-  CreateCatalogEquipmentTypeRequest,
-  UpdateCatalogBrandRequest,
-  UpdateCatalogCategoryRequest,
-  UpdateCatalogEquipmentTypeRequest,
-  ValidateCatalogSpecificationRequest,
-} from "@/types/catalog";
-import type {
-  DataTableFetchParams,
-  DataTableFetchResult,
-} from "@/types/data-table";
-import {
-  normalizeCatalogBrand,
-  normalizeCatalogCategoryDetail,
-  normalizeCatalogEquipmentTypeDetail,
-  normalizeCatalogEquipmentTypeListItem,
-  normalizeCatalogPublishedSpecSchema,
-  normalizeCatalogSpecSchema,
-  normalizeCatalogValidationResult,
-} from "@/utils/catalog";
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const CATALOG_BRAND_SORT_VALUES = new Set<CatalogBrandSort>([
-  "name_asc",
-  "name_desc",
-  "newest",
-]);
+import * as service from "@/services/catalog-server-service";
+import { runServerAction } from "@/services/server-action";
 
 export async function listCatalogBrandsAction(
-  params: CatalogBrandListParams = {},
-): Promise<CatalogPagedResult<CatalogBrand>> {
-  const normalizedParams = normalizeCatalogBrandListParams(params);
-  const response = await serverApiJson<CatalogBrandListResponse>(
-    API_ENDPOINTS.backend.catalog.brands.list(normalizedParams),
-    "Không thể tải danh sách thương hiệu.",
-  );
-
-  return mapCatalogBrandPagedResult(response, normalizedParams);
+  ...args: Parameters<typeof service.listCatalogBrands>
+) {
+  return runServerAction(() => service.listCatalogBrands(...args));
 }
 
 export async function getCatalogBrandAction(
-  brandId: string,
-): Promise<CatalogBrand> {
-  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.detail(brandId),
-    "Không thể tải chi tiết thương hiệu.",
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.getCatalogBrand>
+) {
+  return runServerAction(() => service.getCatalogBrand(...args));
 }
 
 export async function listAdminCatalogBrandsAction(
-  params: AdminCatalogBrandListParams = {},
-): Promise<CatalogPagedResult<CatalogBrand>> {
-  const normalizedParams = normalizeCatalogBrandListParams(params);
-  const response = await serverApiJson<CatalogBrandListResponse>(
-    API_ENDPOINTS.backend.catalog.brands.adminList(normalizedParams),
-    "Không thể tải danh sách thương hiệu.",
-  );
-
-  return mapCatalogBrandPagedResult(response, normalizedParams);
+  ...args: Parameters<typeof service.listAdminCatalogBrands>
+) {
+  return runServerAction(() => service.listAdminCatalogBrands(...args));
 }
 
 export async function getAdminCatalogBrandsAction(
-  params: DataTableFetchParams<AdminCatalogBrandFilterParams>,
-): Promise<DataTableFetchResult<CatalogBrand>> {
-  const response = await listAdminCatalogBrandsAction({
-    isActive: params.filters?.isActive,
-    keyword: params.keyword,
-    page: params.page,
-    pageSize: params.pageSize,
-    sort: params.filters?.sort,
-  });
-
-  return {
-    data: response.data,
-    totalItems: response.totalItems,
-  };
+  ...args: Parameters<typeof service.getAdminCatalogBrands>
+) {
+  return runServerAction(() => service.getAdminCatalogBrands(...args));
 }
 
 export async function getAdminCatalogBrandAction(
-  brandId: string,
-): Promise<CatalogBrand> {
-  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.adminDetail(brandId),
-    "Không thể tải chi tiết thương hiệu.",
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.getAdminCatalogBrand>
+) {
+  return runServerAction(() => service.getAdminCatalogBrand(...args));
 }
 
 export async function createCatalogBrandAction(
-  request: CreateCatalogBrandRequest,
-): Promise<CatalogBrand> {
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.create,
-    "Không thể tạo thương hiệu.",
-    {
-      json: request,
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.createCatalogBrand>
+) {
+  return runServerAction(() => service.createCatalogBrand(...args));
 }
 
 export async function updateCatalogBrandAction(
-  brandId: string,
-  request: UpdateCatalogBrandRequest,
-): Promise<CatalogBrand> {
-  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.update(brandId),
-    "Không thể cập nhật thương hiệu.",
-    {
-      json: request,
-      method: "PATCH",
-    },
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.updateCatalogBrand>
+) {
+  return runServerAction(() => service.updateCatalogBrand(...args));
 }
 
 export async function disableCatalogBrandAction(
-  brandId: string,
-): Promise<CatalogBrand> {
-  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.disable(brandId),
-    "Không thể vô hiệu hóa thương hiệu.",
-    {
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.disableCatalogBrand>
+) {
+  return runServerAction(() => service.disableCatalogBrand(...args));
 }
 
 export async function enableCatalogBrandAction(
-  brandId: string,
-): Promise<CatalogBrand> {
-  assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-  const response = await serverApiJson<CatalogBrandDto>(
-    API_ENDPOINTS.backend.catalog.brands.enable(brandId),
-    "Không thể kích hoạt thương hiệu.",
-    {
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogBrand(response);
+  ...args: Parameters<typeof service.enableCatalogBrand>
+) {
+  return runServerAction(() => service.enableCatalogBrand(...args));
 }
 
-export async function listCatalogCategoriesAction(): Promise<
-  CatalogPagedResult<CatalogCategoryDetail>
-> {
-  const response = await serverApiJson<
-    CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
-  >(
-    API_ENDPOINTS.backend.catalog.categories.list(),
-    "Không thể tải danh sách danh mục.",
-  );
-
-  return mapCatalogCategoryPagedResult(response);
+export async function listCatalogCategoriesAction(
+  ...args: Parameters<typeof service.listCatalogCategories>
+) {
+  return runServerAction(() => service.listCatalogCategories(...args));
 }
 
 export async function getAdminCatalogCategoriesAction(
-  params: DataTableFetchParams<AdminCatalogCategoryFilterParams>,
-): Promise<DataTableFetchResult<CatalogCategoryDetail>> {
-  const queryParams: CatalogCategoryListParams = {
-    isActive: params.filters?.isActive,
-    keyword: params.keyword,
-    page: params.page,
-    pageSize: params.pageSize,
-    sort: params.filters?.sort,
-  };
-  const response = await serverApiJson<CatalogCategoryListResponse>(
-    API_ENDPOINTS.backend.catalog.categories.adminList(queryParams),
-    "Không thể tải danh sách danh mục.",
-  );
-  const result = mapCatalogCategoryPagedResult(response, queryParams);
-
-  return {
-    data: result.data,
-    totalItems: result.totalItems,
-  };
+  ...args: Parameters<typeof service.getAdminCatalogCategories>
+) {
+  return runServerAction(() => service.getAdminCatalogCategories(...args));
 }
 
 export async function getAdminCatalogCategoryAction(
-  id: string,
-): Promise<CatalogCategoryDetail> {
-  assertUuid(id, "ID danh mục không hợp lệ.");
-
-  const response = await serverApiJson<CatalogCategoryDetailResponse>(
-    API_ENDPOINTS.backend.catalog.categories.adminDetail(id),
-    "Không thể tải chi tiết danh mục.",
-  );
-
-  return normalizeCatalogCategoryDetail(response);
+  ...args: Parameters<typeof service.getAdminCatalogCategory>
+) {
+  return runServerAction(() => service.getAdminCatalogCategory(...args));
 }
 
 export async function getCatalogCategoryAction(
-  id: string,
-): Promise<CatalogCategoryDetail> {
-  assertUuid(id, "ID danh mục không hợp lệ.");
-
-  const response = await serverApiJson<CatalogCategoryDetailResponse>(
-    API_ENDPOINTS.backend.catalog.categories.detail(id),
-    "Không thể tải chi tiết danh mục.",
-  );
-
-  return normalizeCatalogCategoryDetail(response);
+  ...args: Parameters<typeof service.getCatalogCategory>
+) {
+  return runServerAction(() => service.getCatalogCategory(...args));
 }
 
-export async function listActiveCatalogCategoriesAction(): Promise<
-  CatalogCategoryDetail[]
-> {
-  const response = await listCatalogCategoriesAction();
-
-  return response.data;
+export async function listActiveCatalogCategoriesAction(
+  ...args: Parameters<typeof service.listActiveCatalogCategories>
+) {
+  return runServerAction(() => service.listActiveCatalogCategories(...args));
 }
 
 export async function createCatalogCategoryAction(
-  request: CreateCatalogCategoryRequest,
-): Promise<CatalogCategoryDetail> {
-  const response = await serverApiJson<CatalogCategoryDetailResponse>(
-    API_ENDPOINTS.backend.catalog.categories.create,
-    "Không thể tạo danh mục.",
-    {
-      json: request,
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogCategoryDetail(response);
+  ...args: Parameters<typeof service.createCatalogCategory>
+) {
+  return runServerAction(() => service.createCatalogCategory(...args));
 }
 
 export async function updateCatalogCategoryAction(
-  id: string,
-  request: UpdateCatalogCategoryRequest,
-): Promise<CatalogCategoryDetail> {
-  assertUuid(id, "ID danh mục không hợp lệ.");
-
-  const response = await serverApiJson<CatalogCategoryDetailResponse>(
-    API_ENDPOINTS.backend.catalog.categories.update(id),
-    "Không thể cập nhật danh mục.",
-    {
-      json: request,
-      method: "PATCH",
-    },
-  );
-
-  return normalizeCatalogCategoryDetail(response);
+  ...args: Parameters<typeof service.updateCatalogCategory>
+) {
+  return runServerAction(() => service.updateCatalogCategory(...args));
 }
 
 export async function listCatalogEquipmentTypesAction(
-  params: CatalogEquipmentTypeListParams = {},
-): Promise<CatalogPagedResult<CatalogEquipmentTypeListItem>> {
-  const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.list(params),
-    "Không thể tải danh sách loại thiết bị.",
-  );
-
-  return {
-    data: (response.items ?? []).map(normalizeCatalogEquipmentTypeListItem),
-    page: response.page ?? params.page ?? 1,
-    pageSize: response.pageSize ?? params.pageSize ?? 0,
-    totalItems: response.totalCount ?? 0,
-    totalPages: response.totalPages ?? 0,
-  };
+  ...args: Parameters<typeof service.listCatalogEquipmentTypes>
+) {
+  return runServerAction(() => service.listCatalogEquipmentTypes(...args));
 }
 
 export async function getAdminCatalogEquipmentTypesAction(
-  params: DataTableFetchParams<AdminCatalogEquipmentTypeFilterParams>,
-): Promise<DataTableFetchResult<CatalogEquipmentTypeListItem>> {
-  const queryParams: AdminCatalogEquipmentTypeListParams = {
-    categoryId: params.filters?.categoryId,
-    keyword: params.keyword,
-    page: params.page,
-    pageSize: params.pageSize,
-    sort: params.filters?.sort,
-    status: params.filters?.status,
-  };
-
-  const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.adminList(queryParams),
-    "Không thể tải danh sách loại thiết bị.",
-  );
-
-  return {
-    data: (response.items ?? []).map(normalizeCatalogEquipmentTypeListItem),
-    totalItems: response.totalCount ?? 0,
-  };
+  ...args: Parameters<typeof service.getAdminCatalogEquipmentTypes>
+) {
+  return runServerAction(() => service.getAdminCatalogEquipmentTypes(...args));
 }
 
 export async function getAdminCatalogEquipmentTypeAction(
-  id: string,
-): Promise<CatalogEquipmentTypeDetail> {
-  assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.adminDetail(id),
-    "Không thể tải chi tiết loại thiết bị.",
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.getAdminCatalogEquipmentType>
+) {
+  return runServerAction(() => service.getAdminCatalogEquipmentType(...args));
 }
 
 export async function getCatalogEquipmentTypeAction(
-  id: string,
-): Promise<CatalogEquipmentTypeDetail> {
-  assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.detail(id),
-    "Không thể tải chi tiết loại thiết bị.",
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.getCatalogEquipmentType>
+) {
+  return runServerAction(() => service.getCatalogEquipmentType(...args));
 }
 
 export async function getCatalogEquipmentTypeSchemaAction(
-  equipmentTypeId: string,
-): Promise<CatalogPublishedSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogPublishedSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.currentSchema(equipmentTypeId),
-    "Không thể tải schema hiện tại của loại thiết bị.",
-  );
-
-  return normalizeCatalogPublishedSpecSchema(response);
+  ...args: Parameters<typeof service.getCatalogEquipmentTypeSchema>
+) {
+  return runServerAction(() => service.getCatalogEquipmentTypeSchema(...args));
 }
 
 export async function getCatalogEquipmentTypeSchemaVersionAction(
-  equipmentTypeId: string,
-  version: number,
-): Promise<CatalogPublishedSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-  assertSchemaVersion(version);
-
-  const response = await serverApiJson<CatalogPublishedSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
-      equipmentTypeId,
-      version,
-    ),
-    "Không thể tải schema version của loại thiết bị.",
+  ...args: Parameters<typeof service.getCatalogEquipmentTypeSchemaVersion>
+) {
+  return runServerAction(() =>
+    service.getCatalogEquipmentTypeSchemaVersion(...args),
   );
-
-  return normalizeCatalogPublishedSpecSchema(response);
 }
 
 export async function validateCatalogSpecificationsAction(
-  equipmentTypeId: string,
-  request: ValidateCatalogSpecificationRequest,
-): Promise<CatalogSpecificationValidationResult> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogSpecificationValidationResult>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.validateSpecifications(
-      equipmentTypeId,
-    ),
-    "Không thể validate thông số thiết bị.",
-    {
-      json: request,
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogValidationResult(response);
+  ...args: Parameters<typeof service.validateCatalogSpecifications>
+) {
+  return runServerAction(() => service.validateCatalogSpecifications(...args));
 }
 
 export async function createCatalogEquipmentTypeAction(
-  request: CreateCatalogEquipmentTypeRequest,
-): Promise<CatalogEquipmentTypeDetail> {
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.create,
-    "Không thể tạo loại thiết bị.",
-    {
-      json: request,
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.createCatalogEquipmentType>
+) {
+  return runServerAction(() => service.createCatalogEquipmentType(...args));
 }
 
 export async function updateCatalogEquipmentTypeAction(
-  id: string,
-  request: UpdateCatalogEquipmentTypeRequest,
-): Promise<CatalogEquipmentTypeDetail> {
-  assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.update(id),
-    "Không thể cập nhật loại thiết bị.",
-    {
-      json: request,
-      method: "PATCH",
-    },
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.updateCatalogEquipmentType>
+) {
+  return runServerAction(() => service.updateCatalogEquipmentType(...args));
 }
 
 export async function publishCatalogEquipmentTypeAction(
-  id: string,
-): Promise<CatalogEquipmentTypeDetail> {
-  assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.publish(id),
-    "Không thể publish loại thiết bị.",
-    {
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.publishCatalogEquipmentType>
+) {
+  return runServerAction(() => service.publishCatalogEquipmentType(...args));
 }
 
 export async function disableCatalogEquipmentTypeAction(
-  id: string,
-): Promise<CatalogEquipmentTypeDetail> {
-  assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.disable(id),
-    "Không thể disable loại thiết bị.",
-    {
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogEquipmentTypeDetail(response);
+  ...args: Parameters<typeof service.disableCatalogEquipmentType>
+) {
+  return runServerAction(() => service.disableCatalogEquipmentType(...args));
 }
 
 export async function listCatalogSpecSchemasAction(
-  equipmentTypeId: string,
-): Promise<CatalogSpecSchema[]> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogSpecSchema[]>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.specSchemas(equipmentTypeId),
-    "Không thể tải danh sách version schema.",
-  );
-
-  return (response ?? []).map(normalizeCatalogSpecSchema);
+  ...args: Parameters<typeof service.listCatalogSpecSchemas>
+) {
+  return runServerAction(() => service.listCatalogSpecSchemas(...args));
 }
 
 export async function createCatalogSpecSchemaDraftAction(
-  equipmentTypeId: string,
-  definition: CatalogSpecDefinition,
-): Promise<CatalogSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-
-  const response = await serverApiJson<CatalogSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.specSchemas(equipmentTypeId),
-    "Không thể tạo draft schema.",
-    {
-      json: definition,
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogSpecSchema(response);
+  ...args: Parameters<typeof service.createCatalogSpecSchemaDraft>
+) {
+  return runServerAction(() => service.createCatalogSpecSchemaDraft(...args));
 }
 
 export async function getCatalogSpecSchemaAction(
-  equipmentTypeId: string,
-  version: number,
-): Promise<CatalogSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-  assertSchemaVersion(version);
-
-  const response = await serverApiJson<CatalogSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.specSchema(
-      equipmentTypeId,
-      version,
-    ),
-    "Không thể tải schema version.",
-  );
-
-  return normalizeCatalogSpecSchema(response);
+  ...args: Parameters<typeof service.getCatalogSpecSchema>
+) {
+  return runServerAction(() => service.getCatalogSpecSchema(...args));
 }
 
 export async function replaceCatalogSpecSchemaDraftAction(
-  equipmentTypeId: string,
-  version: number,
-  definition: CatalogSpecDefinition,
-): Promise<CatalogSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-  assertSchemaVersion(version);
-
-  const response = await serverApiJson<CatalogSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.specSchema(
-      equipmentTypeId,
-      version,
-    ),
-    "Không thể cập nhật draft schema.",
-    {
-      json: definition,
-      method: "PUT",
-    },
-  );
-
-  return normalizeCatalogSpecSchema(response);
+  ...args: Parameters<typeof service.replaceCatalogSpecSchemaDraft>
+) {
+  return runServerAction(() => service.replaceCatalogSpecSchemaDraft(...args));
 }
 
 export async function publishCatalogSpecSchemaDraftAction(
-  equipmentTypeId: string,
-  version: number,
-): Promise<CatalogSpecSchema> {
-  assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-  assertSchemaVersion(version);
-
-  const response = await serverApiJson<CatalogSpecSchema>(
-    API_ENDPOINTS.backend.catalog.equipmentTypes.specSchemaPublish(
-      equipmentTypeId,
-      version,
-    ),
-    "Không thể publish draft schema.",
-    {
-      method: "POST",
-    },
-  );
-
-  return normalizeCatalogSpecSchema(response);
-}
-
-function mapCatalogBrandPagedResult(
-  response: CatalogBrandListResponse,
-  params: CatalogBrandListParams = {},
-): CatalogPagedResult<CatalogBrand> {
-  return {
-    data: (response.items ?? []).map(normalizeCatalogBrand),
-    page: response.page ?? params.page ?? 1,
-    pageSize: response.pageSize ?? params.pageSize ?? 0,
-    totalItems: response.totalCount ?? 0,
-    totalPages: response.totalPages ?? 0,
-  };
-}
-
-function mapCatalogCategoryPagedResult(
-  response: CatalogCategoryDetailResponse[] | CatalogCategoryListResponse,
-  params: CatalogCategoryListParams = {},
-): CatalogPagedResult<CatalogCategoryDetail> {
-  if (Array.isArray(response)) {
-    return {
-      data: response.map(normalizeCatalogCategoryDetail),
-      page: params.page ?? 1,
-      pageSize: params.pageSize ?? response.length,
-      totalItems: response.length,
-      totalPages: 1,
-    };
-  }
-
-  return {
-    data: (response.items ?? []).map(normalizeCatalogCategoryDetail),
-    page: response.page ?? params.page ?? 1,
-    pageSize: response.pageSize ?? params.pageSize ?? 0,
-    totalItems: response.totalCount ?? 0,
-    totalPages: response.totalPages ?? 0,
-  };
-}
-
-function assertUuid(value: string, message: string) {
-  if (!UUID_PATTERN.test(value)) {
-    throw new Error(message);
-  }
-}
-
-function normalizeCatalogBrandListParams<TParams extends CatalogBrandListParams>(
-  params: TParams,
-): TParams {
-  const normalizedSort = normalizeCatalogBrandSort(params.sort);
-
-  if (normalizedSort === params.sort) {
-    return params;
-  }
-
-  return {
-    ...params,
-    sort: normalizedSort,
-  };
-}
-
-function normalizeCatalogBrandSort(
-  sort?: string,
-): CatalogBrandSort | undefined {
-  if (!sort) {
-    return undefined;
-  }
-
-  return CATALOG_BRAND_SORT_VALUES.has(sort as CatalogBrandSort)
-    ? (sort as CatalogBrandSort)
-    : undefined;
-}
-
-function assertSchemaVersion(version: number) {
-  if (!Number.isInteger(version) || version <= 0) {
-    throw new Error("Version schema không hợp lệ.");
-  }
+  ...args: Parameters<typeof service.publishCatalogSpecSchemaDraft>
+) {
+  return runServerAction(() => service.publishCatalogSpecSchemaDraft(...args));
 }

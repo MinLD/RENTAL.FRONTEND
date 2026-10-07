@@ -7,11 +7,15 @@ import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
 import { getResponseErrorMessage } from "@/services/api-error";
 import { serverApi } from "@/services/server-api";
+import { runServerAction } from "@/services/server-action";
 import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
 export type UpdateProfileActionState = {
   fieldErrors?: Partial<
-    Record<"dateOfBirth" | "fullName" | "identityNumber" | "phoneNumber", string>
+    Record<
+      "dateOfBirth" | "fullName" | "identityNumber" | "phoneNumber",
+      string
+    >
   >;
   message?: string;
   success: boolean;
@@ -26,6 +30,19 @@ export type ChangePasswordActionState = {
 };
 
 export async function updateProfileAction(
+  previousState: UpdateProfileActionState,
+  formData: FormData,
+): Promise<UpdateProfileActionState> {
+  const result = await runServerAction(() =>
+    updateProfile(previousState, formData),
+  );
+
+  return result.success
+    ? result.data
+    : { success: false, message: result.error.message };
+}
+
+async function updateProfile(
   _previousState: UpdateProfileActionState,
   formData: FormData,
 ): Promise<UpdateProfileActionState> {
@@ -33,7 +50,9 @@ export async function updateProfileAction(
     dateOfBirth: formData.get("dateOfBirth"),
     email: formData.get("email"),
     fullName: formData.get("fullName"),
-    identityNumber: normalizeMaskedIdentityNumber(formData.get("identityNumber")),
+    identityNumber: normalizeMaskedIdentityNumber(
+      formData.get("identityNumber"),
+    ),
     phoneNumber: formData.get("phoneNumber"),
   });
 
@@ -84,6 +103,19 @@ export async function updateProfileAction(
 }
 
 export async function changePasswordAction(
+  previousState: ChangePasswordActionState,
+  formData: FormData,
+): Promise<ChangePasswordActionState> {
+  const result = await runServerAction(() =>
+    changePassword(previousState, formData),
+  );
+
+  return result.success
+    ? result.data
+    : { success: false, message: result.error.message };
+}
+
+async function changePassword(
   _previousState: ChangePasswordActionState,
   formData: FormData,
 ): Promise<ChangePasswordActionState> {

@@ -5,6 +5,8 @@ import { Eye, LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { useAdminUsersController } from "@/hooks/use-admin-users-controller";
+import { useActionResult } from "@/hooks/use-action-result";
+import type { ServerActionProps } from "@/types/action-result";
 
 import { UserActionDialog } from "./user-action-dialog";
 import { UserCreateDrawer } from "./user-create-drawer";
@@ -12,7 +14,31 @@ import { UserDetailDrawer } from "./user-detail";
 import type { UsersManagementTableProps } from "./users-management-types";
 import { userColumns } from "./users-table-columns";
 
-export function UsersManagementTable({
+export function UsersManagementTable(
+  props: ServerActionProps<UsersManagementTableProps>,
+) {
+  const createUser = useActionResult(props.createUser);
+  const fetchRoles = useActionResult(props.fetchRoles);
+  const fetchUsers = useActionResult(props.fetchUsers);
+  const fetchUserDetail = useActionResult(props.fetchUserDetail);
+  const lockUser = useActionResult(props.lockUser);
+  const unlockUser = useActionResult(props.unlockUser);
+  const updateUser = useActionResult(props.updateUser);
+
+  return (
+    <UsersManagementTableContent
+      createUser={createUser}
+      fetchRoles={fetchRoles}
+      fetchUsers={fetchUsers}
+      fetchUserDetail={fetchUserDetail}
+      lockUser={lockUser}
+      unlockUser={unlockUser}
+      updateUser={updateUser}
+    />
+  );
+}
+
+function UsersManagementTableContent({
   createUser,
   fetchRoles,
   fetchUsers,

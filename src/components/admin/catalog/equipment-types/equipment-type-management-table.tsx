@@ -8,6 +8,8 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAdminEquipmentTypesController } from "@/hooks/use-admin-equipment-types-controller";
+import { useActionResult } from "@/hooks/use-action-result";
+import type { ServerActionProps } from "@/types/action-result";
 import { getCatalogEquipmentTypeStatusLabel } from "@/utils/catalog";
 import {
   CATALOG_EQUIPMENT_TYPE_STATUS,
@@ -30,7 +32,43 @@ const EQUIPMENT_TYPE_SORT_OPTIONS = [
   { label: "Tên Z-A", value: "name_desc" },
 ] as const;
 
-export function EquipmentTypeManagementTable({
+export function EquipmentTypeManagementTable(
+  props: ServerActionProps<EquipmentTypeManagementTableProps>,
+) {
+  const createEquipmentType = useActionResult(props.createEquipmentType);
+  const disableEquipmentType = useActionResult(props.disableEquipmentType);
+  const fetchCategories = useActionResult(props.fetchCategories);
+  const fetchEquipmentTypeDetail = useActionResult(props.fetchEquipmentTypeDetail);
+  const fetchEquipmentTypes = useActionResult(props.fetchEquipmentTypes);
+  const publishEquipmentType = useActionResult(props.publishEquipmentType);
+  const updateEquipmentType = useActionResult(props.updateEquipmentType);
+  const createDraft = useActionResult(props.schemaActions.createDraft);
+  const fetchVersion = useActionResult(props.schemaActions.fetchVersion);
+  const fetchVersions = useActionResult(props.schemaActions.fetchVersions);
+  const publishDraft = useActionResult(props.schemaActions.publishDraft);
+  const replaceDraft = useActionResult(props.schemaActions.replaceDraft);
+
+  return (
+    <EquipmentTypeManagementTableContent
+      createEquipmentType={createEquipmentType}
+      disableEquipmentType={disableEquipmentType}
+      fetchCategories={fetchCategories}
+      fetchEquipmentTypeDetail={fetchEquipmentTypeDetail}
+      fetchEquipmentTypes={fetchEquipmentTypes}
+      publishEquipmentType={publishEquipmentType}
+      updateEquipmentType={updateEquipmentType}
+      schemaActions={{
+        createDraft,
+        fetchVersion,
+        fetchVersions,
+        publishDraft,
+        replaceDraft,
+      }}
+    />
+  );
+}
+
+function EquipmentTypeManagementTableContent({
   schemaActions,
   createEquipmentType,
   disableEquipmentType,

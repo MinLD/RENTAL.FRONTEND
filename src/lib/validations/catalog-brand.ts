@@ -19,7 +19,14 @@ export const catalogBrandFormSchema = z.object({
   code: z.string().trim().min(1, "Vui lòng nhập mã thương hiệu."),
   logoMediaId: optionalUuidSchema,
   name: z.string().trim().min(1, "Vui lòng nhập tên thương hiệu."),
-  slug: z.string().trim().optional(),
+  slug: z
+    .string()
+    .trim()
+    .max(150, "Slug thương hiệu không được quá 150 ký tự.")
+    .refine((value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), {
+      message: "Slug chỉ nhận chữ thường, số và dấu gạch ngang giữa các từ.",
+    })
+    .optional(),
 });
 
 export type CatalogBrandFormValues = z.infer<typeof catalogBrandFormSchema>;

@@ -5,6 +5,8 @@ import { Eye, Plus } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { useAdminCategoriesController } from "@/hooks/use-admin-categories-controller";
+import { useActionResult } from "@/hooks/use-action-result";
+import type { ServerActionProps } from "@/types/action-result";
 import type {
   AdminCatalogCategoryFilterParams,
   CatalogCategoryDetail,
@@ -23,7 +25,25 @@ const CATEGORY_SORT_OPTIONS = [
   { label: "Tên Z-A", value: "name_desc" },
 ] as const;
 
-export function CategoryManagementTable({
+export function CategoryManagementTable(
+  props: ServerActionProps<CategoryManagementTableProps>,
+) {
+  const createCategory = useActionResult(props.createCategory);
+  const fetchCategories = useActionResult(props.fetchCategories);
+  const fetchCategoryDetail = useActionResult(props.fetchCategoryDetail);
+  const updateCategory = useActionResult(props.updateCategory);
+
+  return (
+    <CategoryManagementTableContent
+      createCategory={createCategory}
+      fetchCategories={fetchCategories}
+      fetchCategoryDetail={fetchCategoryDetail}
+      updateCategory={updateCategory}
+    />
+  );
+}
+
+function CategoryManagementTableContent({
   createCategory,
   fetchCategories,
   fetchCategoryDetail,

@@ -9,6 +9,42 @@ export type BackendProblemDetails = {
   [key: string]: unknown;
 };
 
+export class ApiInputError extends Error {
+  constructor(
+    message: string,
+    readonly fieldErrors: Record<string, string[]> = {},
+  ) {
+    super(message);
+    this.name = "ApiInputError";
+  }
+}
+
+export function getApiFieldErrors(
+  responseBody: unknown,
+): Record<string, string[]> {
+  if (
+    !responseBody ||
+    typeof responseBody !== "object" ||
+    !("errors" in responseBody)
+  ) {
+    return {};
+  }
+
+  const errors = responseBody.errors;
+
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(errors)
+      .map(
+        ([field, value]) => [field, collectValidationMessages(value)] as const,
+      )
+      .filter(([, messages]) => messages.length > 0),
+  );
+}
+
 export async function readResponseJson(response: Response) {
   try {
     return (await response.clone().json()) as unknown;
