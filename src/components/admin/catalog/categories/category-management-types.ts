@@ -1,3 +1,4 @@
+import type { ApiResult } from "@/services/api-error";
 import type {
   AdminCatalogCategoryFilterParams,
   CatalogCategoryDetail,
@@ -14,13 +15,15 @@ export type CategoryRefreshHandler = () => void;
 export type CategoryManagementTableProps = {
   createCategory: (
     request: CreateCatalogCategoryRequest,
-  ) => Promise<CatalogCategoryDetail>;
+  ) => Promise<ApiResult<CatalogCategoryDetail>>;
   fetchCategories: (
     params: DataTableFetchParams<AdminCatalogCategoryFilterParams>,
-  ) => Promise<DataTableFetchResult<CatalogCategoryDetail>>;
-  fetchCategoryDetail: (id: string) => Promise<CatalogCategoryDetail>;
+  ) => Promise<ApiResult<DataTableFetchResult<CatalogCategoryDetail>>>;
+  fetchCategoryDetail: (
+    id: string,
+  ) => Promise<ApiResult<CatalogCategoryDetail>>;
   updateCategory: (
     id: string,
     request: UpdateCatalogCategoryRequest,
-  ) => Promise<CatalogCategoryDetail>;
+  ) => Promise<ApiResult<CatalogCategoryDetail>>;
 };

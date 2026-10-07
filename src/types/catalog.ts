@@ -38,7 +38,6 @@ export type CreateCatalogBrandRequest = {
   code?: string | null;
   logoMediaId?: string | null;
   name?: string | null;
-  slug?: string | null;
 };
 
 export type UpdateCatalogBrandRequest = CreateCatalogBrandRequest;

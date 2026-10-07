@@ -78,7 +78,11 @@ export function EquipmentTypeManagementTable({
         const nextCategories = await fetchCategories();
 
         if (isMounted) {
-          setCategories(nextCategories);
+          if (!nextCategories.success) {
+            toast.error(nextCategories.error.message);
+            return;
+          }
+          setCategories(nextCategories.data);
         }
       } catch (error) {
         toast.error(
@@ -108,10 +112,12 @@ export function EquipmentTypeManagementTable({
     setIsSubmittingAction(true);
 
     try {
-      if (pendingAction.action === "publish") {
-        await publishEquipmentType(pendingAction.equipmentType.id);
-      } else {
-        await disableEquipmentType(pendingAction.equipmentType.id);
+      const result = pendingAction.action === "publish"
+        ? await publishEquipmentType(pendingAction.equipmentType.id)
+        : await disableEquipmentType(pendingAction.equipmentType.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
       }
 
       toast.success("Thao tác thành công.");

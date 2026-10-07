@@ -16,7 +16,11 @@ const optionalUuidSchema = z
   );
 
 export const catalogCategoryFormSchema = z.object({
-  description: z.string().trim().optional(),
+  description: z
+    .string()
+    .trim()
+    .max(2000, "Mô tả danh mục không được quá 2000 ký tự.")
+    .optional(),
   imageMediaId: optionalUuidSchema,
   isActive: z.boolean().optional(),
   name: z.string().trim().min(1, "Vui lòng nhập tên danh mục."),

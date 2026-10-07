@@ -2,10 +2,13 @@
 
 import { useRef, useState } from "react";
 
+import type { ApiResult } from "@/services/api-error";
 import type { AdminOrganizationDetail, AdminOrganizationSummary } from "@/types/admin-organizations";
 
 export function useAdminOrganizationsController(
-  fetchOrganizationDetail: (id: string) => Promise<AdminOrganizationDetail>,
+  fetchOrganizationDetail: (
+    id: string,
+  ) => Promise<ApiResult<AdminOrganizationDetail>>,
 ) {
   const [selectedOrganization, setSelectedOrganization] = useState<AdminOrganizationSummary | null>(null);
   const [detailOrganization, setDetailOrganization] = useState<AdminOrganizationDetail | null>(null);
@@ -24,7 +27,11 @@ export function useAdminOrganizationsController(
       const detail = await fetchOrganizationDetail(organization.id);
 
       if (requestId === detailRequestId.current) {
-        setDetailOrganization(detail);
+        if (!detail.success) {
+          setDetailError(detail.error.message);
+          return;
+        }
+        setDetailOrganization(detail.data);
       }
     } catch (error) {
       if (requestId === detailRequestId.current) {

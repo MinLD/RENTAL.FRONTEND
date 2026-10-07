@@ -6,6 +6,7 @@ import type { SelectHTMLAttributes } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type { ApiResult } from "@/services/api-error";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { PasswordField } from "@/components/forms/password-field";
@@ -24,7 +25,7 @@ import { cn } from "@/utils/cn";
 const CREATE_USER_FORM_ID = "admin-create-user-form";
 
 type UserCreateDrawerProps = {
-  fetchRoles: () => Promise<AdminRoleOption[]>;
+  fetchRoles: () => Promise<ApiResult<AdminRoleOption[]>>;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (request: CreateAdminUserRequest) => Promise<void>;
@@ -84,7 +85,7 @@ function CreateUserForm({
   onSubmit,
   open,
 }: {
-  fetchRoles: () => Promise<AdminRoleOption[]>;
+  fetchRoles: () => Promise<ApiResult<AdminRoleOption[]>>;
   isSubmitting: boolean;
   onSubmit: (request: CreateAdminUserRequest) => Promise<void>;
   open: boolean;
@@ -129,7 +130,11 @@ function CreateUserForm({
         const nextRoles = await fetchRoles();
 
         if (isMounted) {
-          setRoles(nextRoles);
+          if (!nextRoles.success) {
+            toast.error(nextRoles.error.message);
+            return;
+          }
+          setRoles(nextRoles.data);
         }
       } catch (error) {
         toast.error(

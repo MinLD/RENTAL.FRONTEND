@@ -93,17 +93,28 @@ export function SpecSchemaPanel({
       setIsLoading(true);
       setLoadError(null);
       try {
-        const result = sortVersions(await fetchVersions(equipmentTypeId));
+        const response = await fetchVersions(equipmentTypeId);
         if (requestId !== requestIdRef.current) return;
+        if (!response.success) {
+          setLoadError(response.error.message);
+          return;
+        }
+        const result = sortVersions(response.data);
         setVersions(result);
         const version =
           result.find((schema) => schema.version === preferredVersion)
             ?.version ?? result[0]?.version;
-        const schema =
-          version === undefined
-            ? null
-            : await fetchVersion(equipmentTypeId, version);
-        if (requestId === requestIdRef.current) selectSchema(schema);
+        if (version === undefined) {
+          selectSchema(null);
+          return;
+        }
+        const schema = await fetchVersion(equipmentTypeId, version);
+        if (requestId !== requestIdRef.current) return;
+        if (!schema.success) {
+          setLoadError(schema.error.message);
+          return;
+        }
+        selectSchema(schema.data);
       } catch (error) {
         if (requestId === requestIdRef.current)
           setLoadError(getErrorMessage(error));
@@ -134,7 +145,12 @@ export function SpecSchemaPanel({
     setLoadError(null);
     try {
       const schema = await fetchVersion(equipmentTypeId, version);
-      if (requestId === requestIdRef.current) selectSchema(schema);
+      if (requestId !== requestIdRef.current) return;
+      if (!schema.success) {
+        setLoadError(schema.error.message);
+        return;
+      }
+      selectSchema(schema.data);
     } catch (error) {
       if (requestId === requestIdRef.current)
         setLoadError(getErrorMessage(error));
@@ -183,7 +199,12 @@ export function SpecSchemaPanel({
             definition,
           );
       if (requestId !== requestIdRef.current) return;
-      acceptSchema(result);
+      if (!result.success) {
+        setMutationError(result.error.message);
+        toast.error(result.error.message);
+        return;
+      }
+      acceptSchema(result.data);
       toast.success("Đã lưu bản nháp thông số kỹ thuật.");
     } catch (error) {
       if (requestId === requestIdRef.current) {
@@ -213,7 +234,13 @@ export function SpecSchemaPanel({
         selectedSchema.version,
       );
       if (requestId !== requestIdRef.current) return;
-      acceptSchema(result);
+      if (!result.success) {
+        setMutationError(result.error.message);
+        setIsPublishConfirmOpen(false);
+        toast.error(result.error.message);
+        return;
+      }
+      acceptSchema(result.data);
       setIsPublishConfirmOpen(false);
       toast.success("Đã xuất bản thông số kỹ thuật.");
       onPublished();

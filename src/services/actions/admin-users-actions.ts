@@ -2,8 +2,14 @@
 
 import { z } from "zod";
 
+import { ApiInputError, getApiFieldErrors } from "@/services/api-error";
+import type { ApiResult } from "@/services/api-error";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { serverApiJson, serverApiOk } from "@/services/server-api";
+import {
+  serverApiJson,
+  serverApiOk,
+  serverApiResult,
+} from "@/services/server-api";
 import type {
   AdminRoleOption,
   AdminUserRow,
@@ -15,10 +21,7 @@ import type {
   DataTableFetchParams,
   DataTableFetchResult,
 } from "@/types/data-table";
-import {
-  type ApiValueResult,
-  unwrapApiValue,
-} from "@/utils/api-result";
+import { type ApiValueResult, unwrapApiValue } from "@/utils/api-result";
 
 type AdminUserListItemDto = {
   createdAtUtc?: string;
@@ -50,12 +53,10 @@ type AdminUserListApiResponse = {
 };
 
 type AdminUserDetailApiResponse =
-  | AdminUserDetailDto
-  | ApiValueResult<AdminUserDetailDto>;
+  AdminUserDetailDto | ApiValueResult<AdminUserDetailDto>;
 
 type AdminRolesApiResponse =
-  | AdminRoleOption[]
-  | ApiValueResult<AdminRoleOption[]>;
+  AdminRoleOption[] | ApiValueResult<AdminRoleOption[]>;
 
 type RawAdminRoleOption = Partial<AdminRoleOption> & {
   Description?: string | null;
@@ -104,23 +105,29 @@ const updateAdminUserRequestSchema = z.object({
 
 export async function getUsersAction(
   params: DataTableFetchParams<AdminUsersFilterParams>,
-): Promise<DataTableFetchResult<AdminUserRow>> {
-  const response = await serverApiJson<AdminUserListApiResponse>(
-    API_ENDPOINTS.backend.adminUsers.list({
-      keyword: params.keyword,
-      page: params.page,
-      pageSize: params.pageSize,
-    }),
-    "Không thể tải danh sách user.",
-  );
+): Promise<ApiResult<DataTableFetchResult<AdminUserRow>>> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<AdminUserListApiResponse>(
+      API_ENDPOINTS.backend.adminUsers.list({
+        keyword: params.keyword,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+      "Không thể tải danh sách user.",
+    );
 
-  return {
-    data: (response.items ?? []).map(mapAdminUserListItem),
-    totalItems: response.totalCount ?? 0,
-  };
+    return {
+      data: (response.items ?? []).map(mapAdminUserListItem),
+      totalItems: response.totalCount ?? 0,
+    };
+  });
 }
 
 export async function getUserDetailAction(id: string) {
+  return serverApiResult(() => getUserDetail(id));
+}
+
+async function getUserDetail(id: string) {
   const response = await serverApiJson<AdminUserDetailApiResponse>(
     API_ENDPOINTS.backend.adminUsers.detail(id),
     "Không thể tải chi tiết user.",
@@ -130,79 +137,99 @@ export async function getUserDetailAction(id: string) {
 }
 
 export async function createUserAction(request: CreateAdminUserRequest) {
-  const parsedRequest = createAdminUserRequestSchema.safeParse(
-    sanitizeCreateUserRequest(request),
-  );
+  return serverApiResult(async () => {
+    const parsedRequest = createAdminUserRequestSchema.safeParse(
+      sanitizeCreateUserRequest(request),
+    );
 
-  if (!parsedRequest.success) {
-    throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
-  }
+    if (!parsedRequest.success) {
+      throw new ApiInputError(
+        getValidationErrorMessage(parsedRequest.error.flatten()),
+        getApiFieldErrors({
+          errors: parsedRequest.error.flatten().fieldErrors,
+        }),
+      );
+    }
 
-  const response = await serverApiOk(
-    API_ENDPOINTS.backend.adminUsers.create,
-    "Không thể tạo user.",
-    {
-      json: parsedRequest.data,
-      method: "POST",
-    },
-  );
+    const response = await serverApiOk(
+      API_ENDPOINTS.backend.adminUsers.create,
+      "Không thể tạo user.",
+      {
+        json: parsedRequest.data,
+        method: "POST",
+      },
+    );
 
-  return response.json() as Promise<string>;
+    return response.json() as Promise<string>;
+  });
 }
 
 export async function updateUserAction(
   id: string,
   request: UpdateAdminUserRequest,
 ) {
-  const parsedRequest = updateAdminUserRequestSchema.safeParse(
-    sanitizeUpdateUserRequest(request),
-  );
+  return serverApiResult(async () => {
+    const parsedRequest = updateAdminUserRequestSchema.safeParse(
+      sanitizeUpdateUserRequest(request),
+    );
 
-  if (!parsedRequest.success) {
-    throw new Error(getValidationErrorMessage(parsedRequest.error.flatten()));
-  }
+    if (!parsedRequest.success) {
+      throw new ApiInputError(
+        getValidationErrorMessage(parsedRequest.error.flatten()),
+        getApiFieldErrors({
+          errors: parsedRequest.error.flatten().fieldErrors,
+        }),
+      );
+    }
 
-  await serverApiOk(
-    API_ENDPOINTS.backend.adminUsers.update(id),
-    "Không thể cập nhật user.",
-    {
-      json: parsedRequest.data,
-      method: "PUT",
-    },
-  );
+    await serverApiOk(
+      API_ENDPOINTS.backend.adminUsers.update(id),
+      "Không thể cập nhật user.",
+      {
+        json: parsedRequest.data,
+        method: "PUT",
+      },
+    );
 
-  return getUserDetailAction(id);
+    return getUserDetail(id);
+  });
 }
 
 export async function lockUserAction(id: string) {
-  await serverApiOk(
-    API_ENDPOINTS.backend.adminUsers.suspend(id),
-    "Không thể tạm khóa user.",
-    {
-      method: "POST",
-    },
-  );
+  return serverApiResult(async () => {
+    await serverApiOk(
+      API_ENDPOINTS.backend.adminUsers.suspend(id),
+      "Không thể tạm khóa user.",
+      {
+        method: "POST",
+      },
+    );
+  });
 }
 
 export async function unlockUserAction(id: string) {
-  await serverApiOk(
-    API_ENDPOINTS.backend.adminUsers.activate(id),
-    "Không thể mở khóa user.",
-    {
-      method: "POST",
-    },
-  );
+  return serverApiResult(async () => {
+    await serverApiOk(
+      API_ENDPOINTS.backend.adminUsers.activate(id),
+      "Không thể mở khóa user.",
+      {
+        method: "POST",
+      },
+    );
+  });
 }
 
 export async function getAdminRolesAction() {
-  const response = await serverApiJson<AdminRolesApiResponse>(
-    API_ENDPOINTS.backend.adminUsers.roles,
-    "Không thể tải danh sách vai trò.",
-  );
+  return serverApiResult(async () => {
+    const response = await serverApiJson<AdminRolesApiResponse>(
+      API_ENDPOINTS.backend.adminUsers.roles,
+      "Không thể tải danh sách vai trò.",
+    );
 
-  return unwrapApiValue<RawAdminRoleOption[]>(response)
-    .map(normalizeRoleOption)
-    .filter((role): role is AdminRoleOption => Boolean(role));
+    return unwrapApiValue<RawAdminRoleOption[]>(response)
+      .map(normalizeRoleOption)
+      .filter((role): role is AdminRoleOption => Boolean(role));
+  });
 }
 
 function mapAdminUserListItem(user: AdminUserListItemDto): AdminUserRow {
@@ -222,7 +249,10 @@ function mapAdminUserListItem(user: AdminUserListItemDto): AdminUserRow {
 function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
   const globalRoles = user.globalRoles?.filter(Boolean) ?? [];
   const avatarUrl =
-    user.avatarUrl ?? user.avatarURL ?? user.avatarPreviewUrl ?? user.previewUrl;
+    user.avatarUrl ??
+    user.avatarURL ??
+    user.avatarPreviewUrl ??
+    user.previewUrl;
 
   return {
     avatarMediaId: isUuid(user.avatarMediaId) ? user.avatarMediaId : undefined,
@@ -254,9 +284,7 @@ function sanitizeUpdateUserRequest(
 ): UpdateAdminUserRequest {
   return {
     ...request,
-    avatarMediaId: isUuid(request.avatarMediaId)
-      ? request.avatarMediaId
-      : null,
+    avatarMediaId: isUuid(request.avatarMediaId) ? request.avatarMediaId : null,
     roleIds: normalizeRoleIds(request.roleIds),
   };
 }
@@ -267,9 +295,7 @@ function normalizeRoleIds(roleIds?: string[] | null) {
   return validRoleIds.length ? validRoleIds : undefined;
 }
 
-function normalizeRoleOption(
-  role: RawAdminRoleOption,
-): AdminRoleOption | null {
+function normalizeRoleOption(role: RawAdminRoleOption): AdminRoleOption | null {
   const id = role.id ?? role.roleId ?? role.Id ?? null;
   const name = role.name ?? role.roleName ?? role.Name ?? null;
 
@@ -287,9 +313,9 @@ function normalizeRoleOption(
 function isUuid(value?: string | null): value is string {
   return Boolean(
     value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        value,
-      ),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    ),
   );
 }
 

@@ -6,6 +6,7 @@ import type { SelectHTMLAttributes } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type { ApiResult } from "@/services/api-error";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextField } from "@/components/forms/text-field";
@@ -36,7 +37,7 @@ const STATUS_OPTIONS: Array<{
 ];
 
 type UserDetailDrawerProps = {
-  fetchRoles: () => Promise<AdminRoleOption[]>;
+  fetchRoles: () => Promise<ApiResult<AdminRoleOption[]>>;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: string, request: UpdateAdminUserRequest) => Promise<void>;
@@ -106,7 +107,7 @@ function UserUpdateForm({
   onSubmit,
   user,
 }: {
-  fetchRoles: () => Promise<AdminRoleOption[]>;
+  fetchRoles: () => Promise<ApiResult<AdminRoleOption[]>>;
   isAvatarUploading: boolean;
   isSubmitting: boolean;
   onAvatarUploadingChange: (isUploading: boolean) => void;
@@ -164,9 +165,13 @@ function UserUpdateForm({
           return;
         }
 
-        setRoles(nextRoles);
+        if (!nextRoles.success) {
+          toast.error(nextRoles.error.message);
+          return;
+        }
+        setRoles(nextRoles.data);
         setSelectedRoleId(
-          getMatchedRoleId(user, nextRoles) || nextRoles[0]?.id || "",
+          getMatchedRoleId(user, nextRoles.data) || nextRoles.data[0]?.id || "",
         );
       } catch (error) {
         toast.error(

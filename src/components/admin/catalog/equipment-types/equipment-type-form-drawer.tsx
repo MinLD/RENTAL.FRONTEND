@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextareaField } from "@/components/forms/textarea-field";
@@ -341,6 +341,7 @@ function EquipmentTypeForm({
     <form
       className="grid gap-5"
       id={formId}
+      noValidate
       onSubmit={handleSubmit(submitForm)}
     >
       {equipmentType?.status !== undefined ? (
@@ -375,15 +376,19 @@ function EquipmentTypeForm({
         <TextField
           disabled={isSubmitting}
           error={errors.code?.message}
+          id={`${formId}-code`}
           label="Code"
           placeholder="VD: EXCAVATOR"
+          required
           {...register("code")}
         />
         <TextField
           disabled={isSubmitting}
           error={errors.name?.message}
+          id={`${formId}-name`}
           label="Tên loại thiết bị"
           placeholder="VD: Máy xúc"
+          required
           {...register("name")}
         />
       </div>
@@ -418,7 +423,12 @@ function EquipmentTypeForm({
         render={({ field, fieldState }) => (
           <EquipmentTypeMediaField
             disabled={isSubmitting}
-            error={fieldState.error?.message}
+            error={
+              fieldState.error?.message ??
+              errors.media?.root?.message ??
+              (errors.media ? "Vui lòng kiểm tra thông tin ảnh." : undefined)
+            }
+            itemErrors={errors.media}
             onChange={field.onChange}
             onUploadingChange={onMediaUploadingChange}
             value={field.value}
@@ -494,12 +504,14 @@ function CategoryMultiSelect({
 function EquipmentTypeMediaField({
   disabled,
   error,
+  itemErrors,
   onChange,
   onUploadingChange,
   value,
 }: {
   disabled?: boolean;
   error?: string;
+  itemErrors?: FieldErrors<CatalogEquipmentTypeFormValues>["media"];
   onChange: (value: CatalogEquipmentTypeFormMedia[]) => void;
   onUploadingChange: (isUploading: boolean) => void;
   value: CatalogEquipmentTypeFormMedia[];
@@ -562,12 +574,13 @@ function EquipmentTypeMediaField({
 
       {value.length ? (
         <div className="grid gap-3">
-          {[...value]
+          {value
+            .map((item, sourceIndex) => ({ item, sourceIndex }))
             .sort(
-              (leftItem, rightItem) =>
-                leftItem.displayOrder - rightItem.displayOrder,
+              (left, right) =>
+                left.item.displayOrder - right.item.displayOrder,
             )
-            .map((item, index) => (
+            .map(({ item, sourceIndex }, index) => (
               <div
                 className={
                   item.isThumbnail
@@ -586,7 +599,10 @@ function EquipmentTypeMediaField({
                 </div>
                 <TextField
                   disabled={disabled}
+                  error={itemErrors?.[sourceIndex]?.displayOrder?.message}
+                  id={`equipment-media-${item.mediaId}-order`}
                   label="Thứ tự"
+                  max={2147483647}
                   min={0}
                   onChange={(event) =>
                     updateDisplayOrder(

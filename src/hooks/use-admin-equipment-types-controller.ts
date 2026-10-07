@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { ApiResult } from "@/services/api-error";
 import type {
   EquipmentTypePendingAction,
   EquipmentTypeRefreshHandler,
@@ -17,12 +18,14 @@ import type {
 type UseAdminEquipmentTypesControllerParams = {
   createEquipmentType: (
     request: CreateCatalogEquipmentTypeRequest,
-  ) => Promise<CatalogEquipmentTypeDetail>;
-  fetchEquipmentTypeDetail: (id: string) => Promise<CatalogEquipmentTypeDetail>;
+  ) => Promise<ApiResult<CatalogEquipmentTypeDetail>>;
+  fetchEquipmentTypeDetail: (
+    id: string,
+  ) => Promise<ApiResult<CatalogEquipmentTypeDetail>>;
   updateEquipmentType: (
     id: string,
     request: UpdateCatalogEquipmentTypeRequest,
-  ) => Promise<CatalogEquipmentTypeDetail>;
+  ) => Promise<ApiResult<CatalogEquipmentTypeDetail>>;
 };
 
 export function useAdminEquipmentTypesController({
@@ -58,7 +61,11 @@ export function useAdminEquipmentTypesController({
     setIsCreatingEquipmentType(true);
 
     try {
-      await createEquipmentType(request);
+      const result = await createEquipmentType(request);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
       toast.success("Đã tạo loại thiết bị.");
       setIsCreateDrawerOpen(false);
       createRefresh?.();
@@ -91,7 +98,11 @@ export function useAdminEquipmentTypesController({
       );
 
       if (requestId === detailRequestId.current) {
-        setEquipmentTypeDetail(nextEquipmentTypeDetail);
+        if (!nextEquipmentTypeDetail.success) {
+          setDetailError(nextEquipmentTypeDetail.error.message);
+          return;
+        }
+        setEquipmentTypeDetail(nextEquipmentTypeDetail.data);
       }
     } catch (error) {
       if (requestId === detailRequestId.current) {
@@ -117,8 +128,13 @@ export function useAdminEquipmentTypesController({
     try {
       const updatedEquipmentType = await updateEquipmentType(id, request);
 
-      setEquipmentTypeDetail(updatedEquipmentType);
-      setSelectedEquipmentType(updatedEquipmentType);
+      if (!updatedEquipmentType.success) {
+        toast.error(updatedEquipmentType.error.message);
+        return;
+      }
+
+      setEquipmentTypeDetail(updatedEquipmentType.data);
+      setSelectedEquipmentType(updatedEquipmentType.data);
       toast.success("Đã cập nhật loại thiết bị.");
       detailRefresh?.();
     } catch (error) {
