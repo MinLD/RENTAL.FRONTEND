@@ -35,6 +35,7 @@ import type {
   DataTableFetchResult,
 } from "@/types/data-table";
 import { cn } from "@/utils/cn";
+import type { ApiResult } from "@/services/api-error";
 
 export type DataTableColumn<TData> = {
   cell?: (row: TData) => ReactNode;
@@ -99,7 +100,7 @@ export type DataTableProps<TData, TFilters = Record<string, unknown>> = {
   errorState?: (error: Error, retry: () => void) => ReactNode;
   fetchData?: (
     params: DataTableFetchParams<TFilters>,
-  ) => Promise<DataTableFetchResult<TData>>;
+  ) => Promise<DataTableFetchResult<TData> | ApiResult<DataTableFetchResult<TData>>>;
   fetchDependencies?: unknown[];
   filterParams?: TFilters;
   filters?: DataTableFilter[];
@@ -260,8 +261,14 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
           return;
         }
 
-        setRemoteData(result.data);
-        setRemoteTotalItems(result.totalItems);
+        if ("success" in result && !result.success) {
+          setFetchError(new Error(result.error.message));
+          return;
+        }
+
+        const data = "success" in result ? result.data : result;
+        setRemoteData(data.data);
+        setRemoteTotalItems(data.totalItems);
       } catch (error) {
         if (fetchRequestIdRef.current !== requestId) {
           return;

@@ -5,19 +5,24 @@ import { refresh } from "next/cache";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { changePasswordSchema } from "@/lib/validations/auth";
 import { profileSchema } from "@/lib/validations/profile";
-import { getResponseErrorMessage } from "@/services/api-error";
-import { serverApi } from "@/services/server-api";
+import type { ApiErrorDetails } from "@/services/api-error";
+import { serverApiOk, serverApiResult } from "@/services/server-api";
 import type { ChangePasswordRequest, UpdateProfileRequest } from "@/types/auth";
 
 export type UpdateProfileActionState = {
+  error?: ApiErrorDetails;
   fieldErrors?: Partial<
-    Record<"dateOfBirth" | "fullName" | "identityNumber" | "phoneNumber", string>
+    Record<
+      "dateOfBirth" | "fullName" | "identityNumber" | "phoneNumber",
+      string
+    >
   >;
   message?: string;
   success: boolean;
 };
 
 export type ChangePasswordActionState = {
+  error?: ApiErrorDetails;
   fieldErrors?: Partial<
     Record<"confirmPassword" | "currentPassword" | "newPassword", string>
   >;
@@ -26,6 +31,19 @@ export type ChangePasswordActionState = {
 };
 
 export async function updateProfileAction(
+  previousState: UpdateProfileActionState,
+  formData: FormData,
+): Promise<UpdateProfileActionState> {
+  const result = await serverApiResult(() =>
+    updateProfile(previousState, formData),
+  );
+
+  return result.success
+    ? result.data
+    : { success: false, error: result.error, message: result.error.message };
+}
+
+async function updateProfile(
   _previousState: UpdateProfileActionState,
   formData: FormData,
 ): Promise<UpdateProfileActionState> {
@@ -33,7 +51,9 @@ export async function updateProfileAction(
     dateOfBirth: formData.get("dateOfBirth"),
     email: formData.get("email"),
     fullName: formData.get("fullName"),
-    identityNumber: normalizeMaskedIdentityNumber(formData.get("identityNumber")),
+    identityNumber: normalizeMaskedIdentityNumber(
+      formData.get("identityNumber"),
+    ),
     phoneNumber: formData.get("phoneNumber"),
   });
 
@@ -61,20 +81,11 @@ export async function updateProfileAction(
     removeAvatar: false,
   };
 
-  const response = await serverApi(API_ENDPOINTS.backend.currentUser.profile, {
-    json: request,
-    method: "PUT",
-  });
-
-  if (!response.ok) {
-    return {
-      message: await getResponseErrorMessage(
-        response,
-        "Không thể cập nhật thông tin cá nhân.",
-      ),
-      success: false,
-    };
-  }
+  await serverApiOk(
+    API_ENDPOINTS.backend.currentUser.profile,
+    "Không thể cập nhật thông tin cá nhân.",
+    { json: request, method: "PUT" },
+  );
 
   refresh();
   return {
@@ -84,6 +95,19 @@ export async function updateProfileAction(
 }
 
 export async function changePasswordAction(
+  previousState: ChangePasswordActionState,
+  formData: FormData,
+): Promise<ChangePasswordActionState> {
+  const result = await serverApiResult(() =>
+    changePassword(previousState, formData),
+  );
+
+  return result.success
+    ? result.data
+    : { success: false, error: result.error, message: result.error.message };
+}
+
+async function changePassword(
   _previousState: ChangePasswordActionState,
   formData: FormData,
 ): Promise<ChangePasswordActionState> {
@@ -112,23 +136,14 @@ export async function changePasswordAction(
     oldPassword: parsedForm.data.currentPassword,
   };
 
-  const response = await serverApi(
+  await serverApiOk(
     API_ENDPOINTS.backend.currentUser.changePassword,
+    "Không thể đổi mật khẩu. Vui lòng thử lại.",
     {
       json: request,
       method: "POST",
     },
   );
-
-  if (!response.ok) {
-    return {
-      message: await getResponseErrorMessage(
-        response,
-        "Không thể đổi mật khẩu. Vui lòng thử lại.",
-      ),
-      success: false,
-    };
-  }
 
   return {
     message: "Đổi mật khẩu thành công.",

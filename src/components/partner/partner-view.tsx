@@ -8,7 +8,7 @@ import { useRef, useState } from "react";
 import { OrganizationStatusView } from "@/components/partner/organization-status-view";
 import { PartnerRegistrationView } from "@/components/partner/partner-registration-view";
 import { Button } from "@/components/ui/button";
-import { ApiClientError } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import {
   getMyOrganization,
   getOrganization,
@@ -72,14 +72,16 @@ export function PartnerView({
         window.scrollTo({ top: 0, behavior: "auto" });
       }
     } catch (error) {
-      if (error instanceof ApiClientError && error.status === 401) {
+      if (error instanceof ApiError && error.status === 401) {
         router.replace("/login");
         return;
       }
       setError(
-        edit
-          ? "Không thể tải hồ sơ để chỉnh sửa. Vui lòng thử lại."
-          : "Không thể kiểm tra trạng thái hồ sơ. Vui lòng thử lại.",
+        error instanceof ApiError
+          ? error.message
+          : edit
+            ? "Không thể tải hồ sơ để chỉnh sửa. Vui lòng thử lại."
+            : "Không thể kiểm tra trạng thái hồ sơ. Vui lòng thử lại.",
       );
     } finally {
       requestInProgress.current = false;

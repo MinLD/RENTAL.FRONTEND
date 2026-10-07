@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { ApiResult } from "@/services/api-error";
 import type {
   BrandPendingAction,
   BrandRefreshHandler,
@@ -14,12 +15,14 @@ import type {
 } from "@/types/catalog";
 
 type UseAdminBrandsControllerParams = {
-  createBrand: (request: CreateCatalogBrandRequest) => Promise<CatalogBrand>;
-  fetchBrandDetail: (id: string) => Promise<CatalogBrand>;
+  createBrand: (
+    request: CreateCatalogBrandRequest,
+  ) => Promise<ApiResult<CatalogBrand>>;
+  fetchBrandDetail: (id: string) => Promise<ApiResult<CatalogBrand>>;
   updateBrand: (
     id: string,
     request: UpdateCatalogBrandRequest,
-  ) => Promise<CatalogBrand>;
+  ) => Promise<ApiResult<CatalogBrand>>;
 };
 
 export function useAdminBrandsController({
@@ -50,7 +53,11 @@ export function useAdminBrandsController({
     setIsCreatingBrand(true);
 
     try {
-      await createBrand(request);
+      const result = await createBrand(request);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
       toast.success("Đã tạo thương hiệu.");
       setIsCreateDrawerOpen(false);
       createRefresh?.();
@@ -78,7 +85,11 @@ export function useAdminBrandsController({
       const nextBrandDetail = await fetchBrandDetail(brand.id);
 
       if (requestId === detailRequestId.current) {
-        setBrandDetail(nextBrandDetail);
+        if (!nextBrandDetail.success) {
+          setDetailError(nextBrandDetail.error.message);
+          return;
+        }
+        setBrandDetail(nextBrandDetail.data);
       }
     } catch (error) {
       if (requestId === detailRequestId.current) {
@@ -104,8 +115,13 @@ export function useAdminBrandsController({
     try {
       const updatedBrand = await updateBrand(id, request);
 
-      setBrandDetail(updatedBrand);
-      setSelectedBrand(updatedBrand);
+      if (!updatedBrand.success) {
+        toast.error(updatedBrand.error.message);
+        return;
+      }
+
+      setBrandDetail(updatedBrand.data);
+      setSelectedBrand(updatedBrand.data);
       toast.success("Đã cập nhật thương hiệu.");
       detailRefresh?.();
     } catch (error) {

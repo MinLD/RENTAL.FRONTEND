@@ -14,6 +14,7 @@ import { DataTable } from "@/components/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { useAdminOrganizationsController } from "@/hooks/use-admin-organizations-controller";
+import type { ApiResult } from "@/services/api-error";
 import type {
   AdminOrganizationDetail,
   AdminOrganizationHistoryResult,
@@ -32,24 +33,30 @@ import { OrganizationStatusActions } from "./organization-status-actions";
 import { organizationColumns } from "./organizations-table-columns";
 
 type OrganizationsManagementTableProps = {
-  activateOrganization: (id: string) => Promise<AdminOrganizationDetail>;
-  approveOrganization: (id: string) => Promise<AdminOrganizationDetail>;
+  activateOrganization: (
+    id: string,
+  ) => Promise<ApiResult<AdminOrganizationDetail>>;
+  approveOrganization: (
+    id: string,
+  ) => Promise<ApiResult<AdminOrganizationDetail>>;
   fetchOrganizations: (
     params: DataTableFetchParams<AdminOrganizationsFilters>,
-  ) => Promise<DataTableFetchResult<AdminOrganizationSummary>>;
-  fetchOrganizationDetail: (id: string) => Promise<AdminOrganizationDetail>;
+  ) => Promise<ApiResult<DataTableFetchResult<AdminOrganizationSummary>>>;
+  fetchOrganizationDetail: (
+    id: string,
+  ) => Promise<ApiResult<AdminOrganizationDetail>>;
   fetchOrganizationHistory: (
     id: string,
     params: { page?: number; pageSize?: number; search?: string },
-  ) => Promise<AdminOrganizationHistoryResult>;
+  ) => Promise<ApiResult<AdminOrganizationHistoryResult>>;
   rejectOrganization: (
     id: string,
     reason: string,
-  ) => Promise<AdminOrganizationDetail>;
+  ) => Promise<ApiResult<AdminOrganizationDetail>>;
   suspendOrganization: (
     id: string,
     reason: string,
-  ) => Promise<AdminOrganizationDetail>;
+  ) => Promise<ApiResult<AdminOrganizationDetail>>;
 };
 
 export function OrganizationsManagementTable({
@@ -90,8 +97,13 @@ export function OrganizationsManagementTable({
     try {
       const approvedOrganization = await approveOrganization(approveTarget.id);
 
+      if (!approvedOrganization.success) {
+        toast.error(approvedOrganization.error.message);
+        return;
+      }
+
       toast.success("Đã duyệt hồ sơ tổ chức.");
-      controller.handleOrganizationUpdated(approvedOrganization);
+      controller.handleOrganizationUpdated(approvedOrganization.data);
       listRefreshRef.current?.();
       setApproveTarget(null);
     } catch (error) {
@@ -118,8 +130,13 @@ export function OrganizationsManagementTable({
         reason,
       );
 
+      if (!rejectedOrganization.success) {
+        toast.error(rejectedOrganization.error.message);
+        return;
+      }
+
       toast.success("Đã từ chối hồ sơ tổ chức.");
-      controller.handleOrganizationUpdated(rejectedOrganization);
+      controller.handleOrganizationUpdated(rejectedOrganization.data);
       listRefreshRef.current?.();
       setRejectTarget(null);
     } catch (error) {
@@ -146,8 +163,13 @@ export function OrganizationsManagementTable({
         reason,
       );
 
+      if (!suspendedOrganization.success) {
+        toast.error(suspendedOrganization.error.message);
+        return;
+      }
+
       toast.success("Đã tạm khóa tổ chức.");
-      controller.handleOrganizationUpdated(suspendedOrganization);
+      controller.handleOrganizationUpdated(suspendedOrganization.data);
       listRefreshRef.current?.();
       setSuspendTarget(null);
     } catch (error) {
@@ -171,8 +193,13 @@ export function OrganizationsManagementTable({
         activateTarget.id,
       );
 
+      if (!activatedOrganization.success) {
+        toast.error(activatedOrganization.error.message);
+        return;
+      }
+
       toast.success("Đã mở khóa tổ chức.");
-      controller.handleOrganizationUpdated(activatedOrganization);
+      controller.handleOrganizationUpdated(activatedOrganization.data);
       listRefreshRef.current?.();
       setActivateTarget(null);
     } catch (error) {

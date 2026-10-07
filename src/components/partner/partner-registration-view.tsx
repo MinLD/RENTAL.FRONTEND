@@ -28,7 +28,7 @@ import {
   partnerRegistrationSchema,
   type PartnerRegistrationFormValues,
 } from "@/lib/validations/partner-registration";
-import { ApiClientError } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import { registerOrganization, updateOrganizationProfile } from "@/services/organization-service";
 import type { MediaDocumentReference } from "@/types/media";
 import type { OrganizationApplication, OrganizationResponse } from "@/types/organization";
@@ -260,7 +260,7 @@ export function PartnerRegistrationView({
       }
     } catch (error) {
       if (
-        error instanceof ApiClientError &&
+        error instanceof ApiError &&
         isProfileNotCompletedError(error)
       ) {
         toast.error(
@@ -271,7 +271,7 @@ export function PartnerRegistrationView({
       }
 
       setSubmissionError(
-        error instanceof ApiClientError
+        error instanceof ApiError
           ? error.message
           : "Không thể gửi hồ sơ. Vui lòng thử lại sau.",
       );
@@ -405,15 +405,6 @@ export function PartnerRegistrationView({
   );
 }
 
-function isProfileNotCompletedError(error: ApiClientError) {
-  const body = error.responseBody;
-
-  if (!body || typeof body !== "object") {
-    return false;
-  }
-
-  return (
-    ("title" in body && body.title === PROFILE_NOT_COMPLETED_ERROR_CODE) ||
-    ("code" in body && body.code === PROFILE_NOT_COMPLETED_ERROR_CODE)
-  );
+function isProfileNotCompletedError(error: ApiError) {
+  return error.code === PROFILE_NOT_COMPLETED_ERROR_CODE;
 }

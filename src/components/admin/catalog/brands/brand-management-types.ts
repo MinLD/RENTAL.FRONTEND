@@ -1,3 +1,4 @@
+import type { ApiResult } from "@/services/api-error";
 import type {
   AdminCatalogBrandFilterParams,
   CatalogBrand,
@@ -18,15 +19,17 @@ export type BrandPendingAction = {
 } | null;
 
 export type BrandManagementTableProps = {
-  createBrand: (request: CreateCatalogBrandRequest) => Promise<CatalogBrand>;
-  disableBrand: (id: string) => Promise<CatalogBrand>;
-  enableBrand: (id: string) => Promise<CatalogBrand>;
-  fetchBrandDetail: (id: string) => Promise<CatalogBrand>;
+  createBrand: (
+    request: CreateCatalogBrandRequest,
+  ) => Promise<ApiResult<CatalogBrand>>;
+  disableBrand: (id: string) => Promise<ApiResult<CatalogBrand>>;
+  enableBrand: (id: string) => Promise<ApiResult<CatalogBrand>>;
+  fetchBrandDetail: (id: string) => Promise<ApiResult<CatalogBrand>>;
   fetchBrands: (
     params: DataTableFetchParams<AdminCatalogBrandFilterParams>,
-  ) => Promise<DataTableFetchResult<CatalogBrand>>;
+  ) => Promise<ApiResult<DataTableFetchResult<CatalogBrand>>>;
   updateBrand: (
     id: string,
     request: UpdateCatalogBrandRequest,
-  ) => Promise<CatalogBrand>;
+  ) => Promise<ApiResult<CatalogBrand>>;
 };

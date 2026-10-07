@@ -1,3 +1,4 @@
+import type { ApiResult } from "@/services/api-error";
 import type {
   AdminRoleOption,
   AdminUserRow,
@@ -17,16 +18,16 @@ export type UserPendingAction = {
 } | null;
 
 export type UsersManagementTableProps = {
-  createUser: (request: CreateAdminUserRequest) => Promise<string>;
-  fetchRoles: () => Promise<AdminRoleOption[]>;
+  createUser: (request: CreateAdminUserRequest) => Promise<ApiResult<string>>;
+  fetchRoles: () => Promise<ApiResult<AdminRoleOption[]>>;
   fetchUsers: (
     params: DataTableFetchParams<AdminUsersFilterParams>,
-  ) => Promise<DataTableFetchResult<AdminUserRow>>;
-  fetchUserDetail: (id: string) => Promise<AdminUserRow>;
-  lockUser: (id: string) => Promise<void>;
-  unlockUser: (id: string) => Promise<void>;
+  ) => Promise<ApiResult<DataTableFetchResult<AdminUserRow>>>;
+  fetchUserDetail: (id: string) => Promise<ApiResult<AdminUserRow>>;
+  lockUser: (id: string) => Promise<ApiResult<void>>;
+  unlockUser: (id: string) => Promise<ApiResult<void>>;
   updateUser: (
     id: string,
     request: UpdateAdminUserRequest,
-  ) => Promise<AdminUserRow>;
+  ) => Promise<ApiResult<AdminUserRow>>;
 };

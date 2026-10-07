@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { ApiResult } from "@/services/api-error";
 import type { CategoryRefreshHandler } from "@/components/admin/catalog/categories/category-management-types";
 import type {
   CatalogCategoryDetail,
@@ -13,12 +14,12 @@ import type {
 type UseAdminCategoriesControllerParams = {
   createCategory: (
     request: CreateCatalogCategoryRequest,
-  ) => Promise<CatalogCategoryDetail>;
-  fetchCategoryDetail: (id: string) => Promise<CatalogCategoryDetail>;
+  ) => Promise<ApiResult<CatalogCategoryDetail>>;
+  fetchCategoryDetail: (id: string) => Promise<ApiResult<CatalogCategoryDetail>>;
   updateCategory: (
     id: string,
     request: UpdateCatalogCategoryRequest,
-  ) => Promise<CatalogCategoryDetail>;
+  ) => Promise<ApiResult<CatalogCategoryDetail>>;
 };
 
 export function useAdminCategoriesController({
@@ -50,7 +51,11 @@ export function useAdminCategoriesController({
     setIsCreatingCategory(true);
 
     try {
-      await createCategory(request);
+      const result = await createCategory(request);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
       toast.success("Đã tạo danh mục.");
       setIsCreateDrawerOpen(false);
       createRefresh?.();
@@ -79,7 +84,11 @@ export function useAdminCategoriesController({
       const nextCategoryDetail = await fetchCategoryDetail(category.id);
 
       if (requestId === detailRequestId.current) {
-        setCategoryDetail(nextCategoryDetail);
+        if (!nextCategoryDetail.success) {
+          setDetailError(nextCategoryDetail.error.message);
+          return;
+        }
+        setCategoryDetail(nextCategoryDetail.data);
       }
     } catch (error) {
       if (requestId === detailRequestId.current) {
@@ -105,8 +114,13 @@ export function useAdminCategoriesController({
     try {
       const updatedCategory = await updateCategory(id, request);
 
-      setCategoryDetail(updatedCategory);
-      setSelectedCategory(updatedCategory);
+      if (!updatedCategory.success) {
+        toast.error(updatedCategory.error.message);
+        return;
+      }
+
+      setCategoryDetail(updatedCategory.data);
+      setSelectedCategory(updatedCategory.data);
       toast.success("Đã cập nhật danh mục.");
       detailRefresh?.();
     } catch (error) {

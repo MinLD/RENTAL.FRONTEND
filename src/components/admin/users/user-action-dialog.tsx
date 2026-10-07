@@ -12,14 +12,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/utils/cn";
+import type { ApiResult } from "@/services/api-error";
 
 import type { UserPendingAction } from "./users-management-types";
 
 type UserActionDialogProps = {
   action: UserPendingAction;
-  lockUser: (id: string) => Promise<void>;
+  lockUser: (id: string) => Promise<ApiResult<void>>;
   onOpenChange: (open: boolean) => void;
-  unlockUser: (id: string) => Promise<void>;
+  unlockUser: (id: string) => Promise<ApiResult<void>>;
 };
 
 export function UserActionDialog({
@@ -47,12 +48,12 @@ export function UserActionDialog({
     setIsSubmitting(true);
 
     try {
-      if (action.action === "lock") {
-        await lockUser(action.user.id);
-      }
-
-      if (action.action === "unlock") {
-        await unlockUser(action.user.id);
+      const result = action.action === "lock"
+        ? await lockUser(action.user.id)
+        : await unlockUser(action.user.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
       }
 
       toast.success("Thao tác thành công.");

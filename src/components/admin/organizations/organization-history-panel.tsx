@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AdminOrganizationHistoryResult } from "@/types/admin-organizations";
+import type { ApiResult } from "@/services/api-error";
 import { formatOrganizationDate } from "@/utils/organization";
 
 export function OrganizationHistoryPanel({
@@ -17,7 +18,7 @@ export function OrganizationHistoryPanel({
   fetchHistory: (
     id: string,
     params: { page?: number; pageSize?: number; search?: string },
-  ) => Promise<AdminOrganizationHistoryResult>;
+  ) => Promise<ApiResult<AdminOrganizationHistoryResult>>;
   organizationId: string;
 }) {
   const [pageSize, setPageSize] = useState(10);
@@ -41,7 +42,11 @@ export function OrganizationHistoryPanel({
       });
 
       if (requestId === requestIdRef.current) {
-        setHistory(result);
+        if (!result.success) {
+          setHistoryError(result.error.message);
+          return;
+        }
+        setHistory(result.data);
       }
     } catch (error) {
       if (requestId === requestIdRef.current) {

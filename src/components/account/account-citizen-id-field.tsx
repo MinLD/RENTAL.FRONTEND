@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserCitizenId } from "@/services/account-service";
-import { ApiClientError } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 
 type AccountCitizenIdFieldProps = {
   initialValue: string;
@@ -60,7 +60,7 @@ export function AccountCitizenIdField({
     } catch (error) {
       if (controller.signal.aborted) return;
       setRevealError(
-        error instanceof ApiClientError
+        error instanceof ApiError
           ? error.status === 401
             ? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
             : "Không thể xem CCCD/CMND. Vui lòng thử lại."

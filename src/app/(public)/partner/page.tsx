@@ -7,7 +7,7 @@ import {
 } from "@/components/partner/partner-view";
 import { getMyOrganizationOnServer } from "@/services/organization-server-service";
 import { getCurrentUser } from "@/services/session-service";
-import type { OrganizationResponse } from "@/types/organization";
+import { serverApiResult } from "@/services/server-api";
 
 export const metadata: Metadata = {
   title: "Đăng ký đối tác | DPRENTAL",
@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 export default async function PartnerPage() {
   const currentUser = await getCurrentUser();
   const profileCompletion = getPartnerProfileCompletion(currentUser);
-  const organization: OrganizationResponse | null = await getMyOrganizationOnServer();
+  const result = await serverApiResult(getMyOrganizationOnServer);
+  const organization = result.success ? result.data : null;
   return (
     <div className="flex flex-1 flex-col bg-background py-8 sm:py-10">
       <Container>
@@ -34,6 +35,7 @@ export default async function PartnerPage() {
         </nav>
 
         <PartnerView
+          initialError={result.success ? undefined : result.error.message}
           initialOrganization={organization}
           profileCompletion={profileCompletion}
           key={`${organization?.id ?? "new"}:${organization?.status ?? "new"}:${organization?.submittedAtUtc ?? ""}`}

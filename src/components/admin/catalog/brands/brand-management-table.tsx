@@ -68,10 +68,12 @@ export function BrandManagementTable({
     setIsTogglingBrand(true);
 
     try {
-      if (pendingAction.action === "disable") {
-        await disableBrand(pendingAction.brand.id);
-      } else {
-        await enableBrand(pendingAction.brand.id);
+      const result = pendingAction.action === "disable"
+        ? await disableBrand(pendingAction.brand.id)
+        : await enableBrand(pendingAction.brand.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
       }
 
       toast.success("Thao tác thành công.");

@@ -1,4 +1,5 @@
 import { headers as getRequestHeaders } from "next/headers";
+import { unstable_rethrow } from "next/navigation";
 
 import { mergeAuthCookiesIntoCookieHeader } from "@/services/auth-cookie";
 import {
@@ -6,7 +7,12 @@ import {
   refreshBackendSession,
 } from "@/services/auth-refresh";
 import { buildBackendApiUrl } from "@/services/backend-api";
-import { getApiErrorMessage, readResponseJson } from "@/services/api-error";
+import {
+  ApiError,
+  ApiInputError,
+  readResponseJson,
+} from "@/services/api-error";
+import type { ApiResult } from "@/services/api-error";
 
 type ServerApiInit = Omit<RequestInit, "body" | "headers"> & {
   body?: BodyInit | null;
@@ -14,24 +20,6 @@ type ServerApiInit = Omit<RequestInit, "body" | "headers"> & {
   headers?: HeadersInit;
   json?: unknown;
 };
-
-export class ServerApiError extends Error {
-  readonly responseBody: unknown;
-  readonly status: number;
-  readonly statusText: string;
-
-  constructor(
-    response: Response,
-    responseBody: unknown,
-    fallbackMessage: string,
-  ) {
-    super(getApiErrorMessage(responseBody) ?? fallbackMessage);
-    this.name = "ServerApiError";
-    this.responseBody = responseBody;
-    this.status = response.status;
-    this.statusText = response.statusText;
-  }
-}
 
 export async function serverApi(endpoint: string, init?: ServerApiInit) {
   const {
@@ -57,7 +45,8 @@ export async function serverApi(endpoint: string, init?: ServerApiInit) {
     headers.set("Cookie", forwardedCookieHeader);
   }
 
-  const requestBody = json !== undefined ? JSON.stringify(json) : (body ?? null);
+  const requestBody =
+    json !== undefined ? JSON.stringify(json) : (body ?? null);
   const requestBackend = (cookieHeader?: string | null) => {
     const requestBackendHeaders = new Headers(headers);
 
@@ -101,7 +90,7 @@ export async function serverApiOk(
   const response = await serverApi(endpoint, init);
 
   if (!response.ok) {
-    throw new ServerApiError(
+    throw new ApiError(
       response,
       await readResponseJson(response),
       fallbackMessage,
@@ -123,4 +112,40 @@ export async function serverApiJson<TResponse>(
   }
 
   return response.json() as Promise<TResponse>;
+}
+
+// Return API failures as data across the Server Action/SSR boundary.
+export async function serverApiResult<T>(
+  request: () => Promise<T>,
+): Promise<ApiResult<T>> {
+  try {
+    return { success: true, data: await request() };
+  } catch (error) {
+    unstable_rethrow(error);
+
+    if (error instanceof ApiError) {
+      return { success: false, error: error.details };
+    }
+
+    if (error instanceof ApiInputError) {
+      return {
+        success: false,
+        error: {
+          message: error.message,
+          status: 400,
+          fieldErrors: error.fieldErrors,
+        },
+      };
+    }
+
+    console.error("Server API request failed:", error);
+    return {
+      success: false,
+      error: {
+        message: "Không thể xử lý yêu cầu lúc này. Vui lòng thử lại.",
+        status: 500,
+        fieldErrors: {},
+      },
+    };
+  }
 }

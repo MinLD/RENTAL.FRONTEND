@@ -37,7 +37,12 @@ export function useAdminUsersController({
     setIsLoadingDetail(true);
 
     try {
-      setDetailUser(await fetchUserDetail(user.id));
+      const result = await fetchUserDetail(user.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      setDetailUser(result.data);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -58,7 +63,11 @@ export function useAdminUsersController({
     setIsCreatingUser(true);
 
     try {
-      await createUser(request);
+      const result = await createUser(request);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
       toast.success("Đã tạo user.");
       setIsCreateDrawerOpen(false);
       createUserRefresh?.();
@@ -78,7 +87,12 @@ export function useAdminUsersController({
     try {
       const updatedUser = await updateUser(id, request);
 
-      setDetailUser(updatedUser);
+      if (!updatedUser.success) {
+        toast.error(updatedUser.error.message);
+        return;
+      }
+
+      setDetailUser(updatedUser.data);
       toast.success("Đã cập nhật user.");
       detailRefresh?.();
     } catch (error) {

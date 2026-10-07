@@ -2,6 +2,7 @@
 
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import type { ApiResult } from "@/services/api-error";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ type OrganizationDetailDrawerProps = {
   fetchHistory: (
     id: string,
     params: { page?: number; pageSize?: number; search?: string },
-  ) => Promise<AdminOrganizationHistoryResult>;
+  ) => Promise<ApiResult<AdminOrganizationHistoryResult>>;
   isActivating?: boolean;
   isApproving?: boolean;
   isLoading: boolean;

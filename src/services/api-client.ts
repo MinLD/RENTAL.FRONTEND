@@ -1,5 +1,5 @@
 import { API_ENDPOINT_PREFIXES } from "@/config/api-endpoints";
-import { getApiErrorMessage, readResponseJson } from "@/services/api-error";
+import { ApiError, readResponseJson } from "@/services/api-error";
 
 type ApiClientInit = Omit<RequestInit, "body"> & {
   body?: BodyInit | null;
@@ -42,27 +42,6 @@ const buildAuthenticatedApiUrl = (endpoint: string) => {
 
   return `/api/backend/${endpoint.replace(/^\/+/, "")}`;
 };
-
-export class ApiClientError extends Error {
-  readonly status: number;
-  readonly statusText: string;
-  readonly responseBody: unknown;
-
-  constructor(response: Response, responseBody?: unknown) {
-    super(getApiClientErrorMessage(response, responseBody));
-    this.name = "ApiClientError";
-    this.status = response.status;
-    this.statusText = response.statusText;
-    this.responseBody = responseBody;
-  }
-}
-
-function getApiClientErrorMessage(response: Response, responseBody?: unknown) {
-  return (
-    getApiErrorMessage(responseBody) ??
-    `API request failed: ${response.status} ${response.statusText}`
-  );
-}
 
 export async function apiClient(
   endpoint: string,
@@ -108,7 +87,7 @@ async function request(
   });
 
   if (!response.ok) {
-    throw new ApiClientError(response, await readResponseJson(response));
+    throw new ApiError(response, await readResponseJson(response));
   }
 
   return response;
@@ -126,7 +105,10 @@ export async function apiClientJson<TResponse>(
 
   const contentType = response.headers.get("Content-Type");
 
-  if (!contentType?.includes("application/json")) {
+  if (
+    !contentType?.includes("application/json") &&
+    !contentType?.includes("+json")
+  ) {
     return undefined as TResponse;
   }
 
@@ -145,7 +127,10 @@ export async function authApiClientJson<TResponse>(
 
   const contentType = response.headers.get("Content-Type");
 
-  if (!contentType?.includes("application/json")) {
+  if (
+    !contentType?.includes("application/json") &&
+    !contentType?.includes("+json")
+  ) {
     return undefined as TResponse;
   }
 
