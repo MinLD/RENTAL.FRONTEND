@@ -4,6 +4,11 @@ type ListAdminUsersParams = {
   pageSize: number;
 };
 
+type ListOwnEquipmentListingsParams = {
+  page: number;
+  pageSize: number;
+};
+
 type ListAdminOrganizationsParams = {
   page: number;
   pageSize: number;
@@ -279,6 +284,15 @@ export const API_ENDPOINTS = {
       session: (sessionId: string) =>
         `/api/v1/auth/users/sessions/${encodeURIComponent(sessionId)}`,
       sessions: "/api/v1/auth/users/sessions",
+    },
+    inventory: {
+      equipmentListings: {
+        list: ({ page, pageSize }: ListOwnEquipmentListingsParams) =>
+          buildQueryEndpoint("/api/v1/inventory/equipment-listings", {
+            page,
+            pageSize,
+          }),
+      },
     },
     media: {
       upload: "/api/v1/media/uploads",

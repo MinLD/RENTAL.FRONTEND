@@ -128,6 +128,7 @@ export type DataTableProps<TData, TFilters = Record<string, unknown>> = {
   searchPlaceholder?: string;
   searchTypes?: string[];
   showCsvExport?: boolean;
+  showSearch?: boolean;
   searchValue?: string;
   title: string;
   toolbarActions?: ReactNode;
@@ -170,6 +171,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   searchPlaceholder = "Tìm kiếm...",
   searchTypes,
   showCsvExport = true,
+  showSearch = true,
   skeletonRowCount,
   searchValue,
   title,
@@ -416,7 +418,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
-            {onSearchChange || fetchData ? (
+            {showSearch && (onSearchChange || fetchData) ? (
               <div className="relative w-full min-w-0 sm:w-[360px]">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
