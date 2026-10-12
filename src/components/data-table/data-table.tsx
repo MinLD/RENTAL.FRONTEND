@@ -100,7 +100,9 @@ export type DataTableProps<TData, TFilters = Record<string, unknown>> = {
   errorState?: (error: Error, retry: () => void) => ReactNode;
   fetchData?: (
     params: DataTableFetchParams<TFilters>,
-  ) => Promise<DataTableFetchResult<TData> | ApiResult<DataTableFetchResult<TData>>>;
+  ) => Promise<
+    DataTableFetchResult<TData> | ApiResult<DataTableFetchResult<TData>>
+  >;
   fetchDependencies?: unknown[];
   filterParams?: TFilters;
   filters?: DataTableFilter[];
@@ -177,7 +179,6 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
   title,
   toolbarActions,
 }: DataTableProps<TData, TFilters>) {
-  const actionColumnWidth = 132;
   const [selectedRow, setSelectedRow] = useState<TData | null>(null);
   const [internalKeyword, setInternalKeyword] = useState(initialKeyword);
   const [internalFilterParams, setInternalFilterParams] = useState<TFilters>(
@@ -228,8 +229,8 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
       return totalWidth + (column.minWidth ?? 160);
     }, 0);
 
-    return columnsWidth + (hasActions ? actionColumnWidth : 0);
-  }, [columns, hasActions]);
+    return columnsWidth;
+  }, [columns]);
   const dependencyKey = JSON.stringify(fetchDependencies);
   const filterKey = JSON.stringify(activeFilterParams);
   const searchTypesKey = searchTypes?.join("\u001F") ?? "";
@@ -479,7 +480,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
             className={showTableState ? "min-w-0 overflow-x-auto" : undefined}
           >
             <Table
-              className="min-w-full table-fixed"
+              className="min-w-full table-auto"
               style={{ minWidth: tableMinWidth }}
             >
               <colgroup>
@@ -491,9 +492,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     }}
                   />
                 ))}
-                {hasActions ? (
-                  <col style={{ width: actionColumnWidth }} />
-                ) : null}
+                {hasActions ? <col className="w-px" /> : null}
               </colgroup>
               <TableHeader>
                 <TableRow>
@@ -514,7 +513,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     </TableHead>
                   ))}
                   {hasActions ? (
-                    <TableHead className="sticky right-0 top-0 z-30 w-[132px] bg-[#f8fafc] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
+                    <TableHead className="sticky right-0 top-0 z-30 w-px whitespace-nowrap bg-[#f8fafc] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
                       {actionsHeader}
                     </TableHead>
                   ) : null}
@@ -558,13 +557,20 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                       }}
                     >
                       {columns.map((column) => (
-                        <TableCell className={column.className} key={column.id}>
+                        <TableCell
+                          className={cn("max-w-0", column.className)}
+                          key={column.id}
+                        >
                           {column.cell?.(row)}
                         </TableCell>
                       ))}
                       {hasActions ? (
-                        <TableCell className="sticky right-0 z-10 bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-muted/60">
-                          {renderRowActions?.(row, { refresh: triggerRefresh })}
+                        <TableCell className="sticky right-0 z-10 w-px whitespace-nowrap bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-muted/60">
+                          <div className="inline-flex w-max items-center justify-end gap-1">
+                            {renderRowActions?.(row, {
+                              refresh: triggerRefresh,
+                            })}
+                          </div>
                         </TableCell>
                       ) : null}
                     </TableRow>
@@ -759,6 +765,7 @@ export function DataTablePaginationBar({
           </PaginationItem>
           <PaginationItem>
             <PaginationPrevious
+              aria-label="Trang trước"
               disabled={page <= 1}
               onClick={() => onPageChange?.(page - 1)}
               type="button"
@@ -773,6 +780,7 @@ export function DataTablePaginationBar({
           </PaginationItem>
           <PaginationItem>
             <PaginationNext
+              aria-label="Trang sau"
               disabled={page >= totalPages}
               onClick={() => onPageChange?.(page + 1)}
               type="button"

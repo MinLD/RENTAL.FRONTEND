@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +9,7 @@ import { cn } from "@/utils/cn";
 type AvatarWithSkeletonProps = {
   alt: string;
   className?: string;
-  fallback: string;
+  fallback: ReactNode;
   fallbackClassName?: string;
   imageClassName?: string;
   loading?: "eager" | "lazy";

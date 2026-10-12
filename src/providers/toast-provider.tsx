@@ -10,7 +10,7 @@ export function ToastProvider() {
       richColors
       toastOptions={{
         classNames: {
-          toast: "font-sans",
+          toast: "font-sans pointer-events-auto",
         },
       }}
     />

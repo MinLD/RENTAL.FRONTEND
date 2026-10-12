@@ -11,6 +11,7 @@ import { FormDrawer } from "@/components/forms/form-drawer";
 import { MoneyField } from "@/components/forms/money-field";
 import { SearchableSelectField } from "@/components/forms/searchable-select-field";
 import { TextField } from "@/components/forms/text-field";
+import { TextareaField } from "@/components/forms/textarea-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,6 +75,8 @@ export function ProductCreateDrawer({
     defaultValues: {
       equipmentTypeId: "",
       brandId: "",
+      name: "",
+      description: "",
       model: "",
       serialNumber: "",
       dailyRate: "",
@@ -177,6 +180,8 @@ export function ProductCreateDrawer({
       const result = await onSubmit({
         equipmentTypeId: values.equipmentTypeId,
         brandId: values.brandId,
+        name: values.name,
+        description: values.description || null,
         model: values.model,
         serialNumber: values.serialNumber,
         schemaVersion: schema.schemaVersion,
@@ -212,6 +217,8 @@ export function ProductCreateDrawer({
               [
                 "equipmentTypeId",
                 "brandId",
+                "name",
+                "description",
                 "model",
                 "serialNumber",
                 "dailyRate",
@@ -295,6 +302,15 @@ export function ProductCreateDrawer({
           </p>
         ) : null}
         <div className="space-y-5" hidden={activeTab !== "detail"}>
+          <TextField
+            {...register("name")}
+            disabled={isBusy}
+            error={errors.name?.message}
+            id={`${FORM_ID}-name`}
+            label="Tên sản phẩm"
+            placeholder="VD: Bộ micro không dây cho sự kiện"
+            required
+          />
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Controller
@@ -390,61 +406,30 @@ export function ProductCreateDrawer({
               {...register("serialNumber")}
             />
           </div>
+          <TextareaField
+            {...register("description")}
+            className="min-h-24"
+            disabled={isBusy}
+            error={errors.description?.message}
+            id={`${FORM_ID}-description`}
+            label="Mô tả sản phẩm"
+            placeholder="Giới thiệu thiết bị, tình trạng và công dụng…"
+          />
           <Controller
             control={control}
             name="thumbnailMediaId"
             render={({ field, fieldState }) => (
-              <div className="space-y-3 rounded border border-border bg-muted/40 p-4">
-                <p className="text-xs font-semibold uppercase">Ảnh sản phẩm</p>
-                <div className="flex flex-wrap items-center gap-4">
-                  <MediaAvatarUpload
-                    accept={IMAGE_CONTENT_TYPES.join(",")}
-                    disabled={isBusy}
-                    emptyLabel="Tải ảnh"
-                    fallbackText="SP"
-                    onChange={(mediaId, upload) => {
-                      if (
-                        typeof mediaId === "string" &&
-                        !Array.isArray(upload)
-                      ) {
-                        field.onChange(mediaId);
-                        setImagePreviewUrl(upload.previewUrl);
-                      }
-                    }}
-                    onUploadingChange={setIsUploadingImage}
-                    previewAlt="Ảnh sản phẩm"
-                    previewUrl={imagePreviewUrl}
-                    replaceLabel="Thay ảnh sản phẩm"
-                    uploadFile={uploadProductImage}
-                    uploadLabel="Tải ảnh sản phẩm"
-                    variant="logo"
-                  />
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      JPG, PNG hoặc WEBP. Không bắt buộc.
-                    </p>
-                    {field.value ? (
-                      <Button
-                        disabled={isBusy}
-                        onClick={() => {
-                          field.onChange("");
-                          setImagePreviewUrl("");
-                        }}
-                        size="sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        Xóa ảnh
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-                {fieldState.error ? (
-                  <p className="text-xs text-error">
-                    {fieldState.error.message}
-                  </p>
-                ) : null}
-              </div>
+              <ProductImageField
+                disabled={isBusy}
+                error={fieldState.error?.message}
+                onChange={(mediaId, previewUrl) => {
+                  field.onChange(mediaId);
+                  setImagePreviewUrl(previewUrl);
+                }}
+                onUploadingChange={setIsUploadingImage}
+                previewUrl={imagePreviewUrl}
+                value={field.value}
+              />
             )}
           />
           <section className="space-y-4 pt-5">
@@ -536,7 +521,7 @@ export function ProductCreateDrawer({
   );
 }
 
-function CatalogOptionsState({
+export function CatalogOptionsState({
   error,
   isLoading,
   hasMore,
@@ -545,6 +530,7 @@ function CatalogOptionsState({
   label,
   loadMore,
   retry,
+  showLoadingMessage = true,
 }: {
   error: string | null;
   isLoading: boolean;
@@ -554,6 +540,7 @@ function CatalogOptionsState({
   label: string;
   loadMore: () => void;
   retry: () => void;
+  showLoadingMessage?: boolean;
 }) {
   if (error)
     return (
@@ -573,11 +560,11 @@ function CatalogOptionsState({
       </div>
     );
   if (isLoading)
-    return (
+    return showLoadingMessage ? (
       <p className="text-xs text-muted-foreground" role="status">
         Đang tải {label}...
       </p>
-    );
+    ) : null;
   if (!items.length)
     return (
       <p className="text-xs text-muted-foreground">Chưa có {label} để chọn.</p>
@@ -597,7 +584,7 @@ function CatalogOptionsState({
   return null;
 }
 
-function SchemaLoadState({
+export function SchemaLoadState({
   error,
   isLoading,
   onRetry,
@@ -650,4 +637,65 @@ async function uploadProductImage(file: File) {
       "Ảnh sản phẩm chưa sẵn sàng sử dụng. Vui lòng thử lại sau.",
     );
   return upload;
+}
+
+export function ProductImageField({
+  disabled,
+  error,
+  onChange,
+  onUploadingChange,
+  previewUrl,
+  value,
+}: {
+  disabled: boolean;
+  error?: string;
+  onChange: (mediaId: string, previewUrl: string) => void;
+  onUploadingChange: (uploading: boolean) => void;
+  previewUrl: string;
+  value: string;
+}) {
+  return (
+    <div className="space-y-3 rounded border border-border bg-muted/40 p-4">
+      <p className="text-xs font-semibold uppercase">Ảnh sản phẩm</p>
+      <div className="flex flex-wrap items-center gap-4">
+        <MediaAvatarUpload
+          accept={IMAGE_CONTENT_TYPES.join(",")}
+          disabled={disabled}
+          emptyLabel="Tải ảnh"
+          fallbackText="SP"
+          onChange={(mediaId, upload) => {
+            if (typeof mediaId === "string" && !Array.isArray(upload)) {
+              onChange(mediaId, upload.previewUrl);
+            }
+          }}
+          onUploadingChange={onUploadingChange}
+          previewAlt="Ảnh sản phẩm"
+          previewUrl={previewUrl}
+          replaceLabel="Thay ảnh sản phẩm"
+          uploadFile={uploadProductImage}
+          uploadLabel="Tải ảnh sản phẩm"
+          variant="logo"
+        />
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            JPG, PNG hoặc WEBP. Không bắt buộc.
+          </p>
+          {value ? (
+            <Button
+              disabled={disabled}
+              onClick={() => {
+                onChange("", "");
+              }}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              Xóa ảnh
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      {error ? <p className="text-xs text-error">{error}</p> : null}
+    </div>
+  );
 }

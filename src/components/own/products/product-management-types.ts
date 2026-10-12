@@ -3,6 +3,7 @@ import type {
   CatalogBrand,
   CatalogBrandListParams,
   CatalogEquipmentTypeListItem,
+  CatalogEquipmentTypeDetail,
   CatalogEquipmentTypeListParams,
   CatalogPagedResult,
   CatalogPublishedSpecSchema,
@@ -10,7 +11,20 @@ import type {
 import type {
   CreateEquipmentListingRequest,
   EquipmentListing,
+  EquipmentListingRentalRate,
+  UpdateEquipmentListingRequest,
+  InventoryAsset,
+  InventoryAssetCalendar,
+  CreateInventoryAssetRequest,
+  UpdateInventoryAssetRequest,
+  UpdateInventoryAssetBookingsRequest,
+  EquipmentListingCalendar,
+  InventoryCalendarRange,
 } from "@/types/inventory";
+import type {
+  DataTableFetchParams,
+  DataTableFetchResult,
+} from "@/types/data-table";
 
 export type ProductCreateActions = {
   fetchEquipmentTypes: (
@@ -23,4 +37,60 @@ export type ProductCreateActions = {
   create: (
     request: CreateEquipmentListingRequest,
   ) => Promise<ApiResult<EquipmentListing>>;
+};
+
+export type ProductDetailActions = {
+  fetch: (id: string) => Promise<ApiResult<EquipmentListing>>;
+  updateInformation: (
+    id: string,
+    request: UpdateEquipmentListingRequest,
+  ) => Promise<ApiResult<EquipmentListing>>;
+  updateRentalRate: (
+    id: string,
+    request: EquipmentListingRentalRate,
+  ) => Promise<ApiResult<EquipmentListingRentalRate>>;
+  fetchBrand: (id: string) => Promise<ApiResult<CatalogBrand>>;
+  fetchEquipmentType: (
+    id: string,
+  ) => Promise<ApiResult<CatalogEquipmentTypeDetail>>;
+  fetchSchemaVersion: (
+    id: string,
+    version: number,
+  ) => Promise<ApiResult<CatalogPublishedSpecSchema>>;
+};
+
+export type ProductPageActions = ProductDetailActions & {
+  fetchBrands: ProductCreateActions["fetchBrands"];
+  fetchAssets: (
+    id: string,
+    params: DataTableFetchParams,
+  ) => Promise<ApiResult<DataTableFetchResult<InventoryAsset>>>;
+  createAsset: (
+    id: string,
+    request: CreateInventoryAssetRequest,
+  ) => Promise<ApiResult<InventoryAsset>>;
+  fetchAsset: (id: string) => Promise<ApiResult<InventoryAsset>>;
+  updateAsset: (
+    id: string,
+    request: UpdateInventoryAssetRequest,
+  ) => Promise<ApiResult<InventoryAsset>>;
+  updateAssetBookings: (
+    id: string,
+    request: UpdateInventoryAssetBookingsRequest,
+  ) => Promise<ApiResult<InventoryAsset>>;
+  fetchAssetCalendar: (
+    id: string,
+  ) => Promise<ApiResult<InventoryAssetCalendar>>;
+  fetchCalendar: (
+    id: string,
+    range: InventoryCalendarRange,
+  ) => Promise<ApiResult<EquipmentListingCalendar>>;
+};
+
+export type ProductDetailInitialData = {
+  initialProduct: ApiResult<EquipmentListing>;
+  initialBrand: ApiResult<CatalogBrand> | null;
+  initialType: ApiResult<CatalogEquipmentTypeDetail> | null;
+  initialCalendar: ApiResult<EquipmentListingCalendar>;
+  initialToday: string;
 };

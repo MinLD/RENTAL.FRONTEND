@@ -1,8 +1,14 @@
+import {
+  EQUIPMENT_LISTING_STATUS,
+  type EquipmentListing,
+  type EquipmentListingStatus,
+} from "@/types/inventory";
+
 export function formatEquipmentListingRate(
-  amount: number | undefined,
-  currency: string | undefined,
+  amount: number | null | undefined,
+  currency: string | null | undefined,
 ) {
-  if (amount === undefined || !Number.isFinite(amount)) return "—";
+  if (amount == null || !Number.isFinite(amount)) return "—";
 
   if (currency) {
     try {
@@ -32,6 +38,49 @@ export function formatEquipmentListingDate(value: string | null | undefined) {
   }).format(date);
 }
 
-export function getEquipmentListingStatusLabel(status: string) {
-  return status === "Draft" ? "Bản nháp" : status || "—";
+export function getEquipmentListingStatusValue(
+  status: EquipmentListing["status"],
+): EquipmentListingStatus | undefined {
+  if (status === "Draft" || status === 1 || status === "1")
+    return EQUIPMENT_LISTING_STATUS.Draft;
+  if (status === "Active" || status === 2 || status === "2")
+    return EQUIPMENT_LISTING_STATUS.Active;
+  if (status === "Inactive" || status === 3 || status === "3")
+    return EQUIPMENT_LISTING_STATUS.Inactive;
+}
+
+export function getEquipmentListingStatusLabel(
+  status: EquipmentListing["status"],
+) {
+  switch (getEquipmentListingStatusValue(status)) {
+    case EQUIPMENT_LISTING_STATUS.Draft:
+      return "Bản nháp";
+    case EQUIPMENT_LISTING_STATUS.Active:
+      return "Đang hoạt động";
+    case EQUIPMENT_LISTING_STATUS.Inactive:
+      return "Tạm dừng";
+    default:
+      return status ? String(status) : "—";
+  }
+}
+
+export function getEquipmentListingStatusVariant(
+  status: EquipmentListing["status"],
+) {
+  switch (getEquipmentListingStatusValue(status)) {
+    case EQUIPMENT_LISTING_STATUS.Draft:
+      return "warning";
+    case EQUIPMENT_LISTING_STATUS.Active:
+      return "success";
+    default:
+      return "muted";
+  }
+}
+
+export function getEquipmentListingName(
+  product: Pick<EquipmentListing, "name" | "model">,
+) {
+  return (
+    product.name?.trim() || product.model?.trim() || "Sản phẩm chưa có tên"
+  );
 }

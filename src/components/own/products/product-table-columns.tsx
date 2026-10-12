@@ -6,6 +6,8 @@ import {
   formatEquipmentListingDate,
   formatEquipmentListingRate,
   getEquipmentListingStatusLabel,
+  getEquipmentListingStatusVariant,
+  getEquipmentListingName,
 } from "@/utils/inventory";
 
 export const productColumns: DataTableColumn<EquipmentListing>[] = [
@@ -13,10 +15,10 @@ export const productColumns: DataTableColumn<EquipmentListing>[] = [
     cell: (product) => (
       <div className="flex min-w-0 items-center gap-3">
         <AvatarWithSkeleton
-          alt={product.model || "Sản phẩm"}
+          alt={getEquipmentListingName(product)}
           className="size-10 shrink-0 rounded border border-border"
           fallback={
-            product.model
+            getEquipmentListingName(product)
               ?.trim()
               .split(/\s+/)
               .slice(0, 2)
@@ -29,22 +31,34 @@ export const productColumns: DataTableColumn<EquipmentListing>[] = [
           loading="lazy"
           src={product.thumbnailUrl}
         />
-        <span
-          className="block truncate font-semibold text-foreground"
-          title={product.model}
-        >
-          {product.model || "Chưa có tên model"}
-        </span>
+        <div className="min-w-0">
+          <span
+            className="block truncate font-semibold text-foreground"
+            title={getEquipmentListingName(product)}
+          >
+            {getEquipmentListingName(product)}
+          </span>
+        </div>
       </div>
     ),
-    header: "Sản phẩm / Model",
+    header: "Tên sản phẩm",
     id: "product",
     minWidth: 260,
     width: 300,
   },
   {
     cell: (product) => (
-      <Badge variant={product.status === "Draft" ? "warning" : "muted"}>
+      <span className="block truncate" title={product.model ?? undefined}>
+        {product.model || "—"}
+      </span>
+    ),
+    header: "Model",
+    id: "model",
+    width: 180,
+  },
+  {
+    cell: (product) => (
+      <Badge variant={getEquipmentListingStatusVariant(product.status)}>
         {getEquipmentListingStatusLabel(product.status)}
       </Badge>
     ),
@@ -62,11 +76,13 @@ export const productColumns: DataTableColumn<EquipmentListing>[] = [
     id: "totalQuantity",
     width: 110,
   },
-  ...([
-    ["dailyRate", "Giá thuê / ngày"],
-    ["weeklyRate", "Giá thuê / tuần"],
-    ["monthlyRate", "Giá thuê / tháng"],
-  ] as const).map(([key, label]): DataTableColumn<EquipmentListing> => ({
+  ...(
+    [
+      ["dailyRate", "Giá thuê / ngày"],
+      ["weeklyRate", "Giá thuê / tuần"],
+      ["monthlyRate", "Giá thuê / tháng"],
+    ] as const
+  ).map(([key, label]): DataTableColumn<EquipmentListing> => ({
     cell: (product) => (
       <span className="whitespace-nowrap font-medium tabular-nums">
         {formatEquipmentListingRate(

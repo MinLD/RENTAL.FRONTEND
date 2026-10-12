@@ -12,6 +12,7 @@ export function useCatalogSelectOptions<
     page: number;
     pageSize: number;
   }) => Promise<ApiResult<CatalogPagedResult<TItem>>>,
+  enabled = true,
 ) {
   const [items, setItems] = useState<TItem[]>([]);
   const [page, setPage] = useState(0);
@@ -57,13 +58,14 @@ export function useCatalogSelectOptions<
   );
 
   useEffect(() => {
+    if (!enabled) return;
     const requestRef = requestIdRef;
     const timeout = window.setTimeout(() => void loadPage(1), 0);
     return () => {
       window.clearTimeout(timeout);
       ++requestRef.current;
     };
-  }, [loadPage]);
+  }, [enabled, loadPage]);
 
   return {
     items,

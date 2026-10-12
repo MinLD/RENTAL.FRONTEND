@@ -13,7 +13,6 @@ export function useOwnProductsController(
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const createRefreshRef = useRef<(() => void) | null>(null);
   const submittingRef = useRef(false);
-
   function handleOpenCreateProduct(refresh: () => void) {
     createRefreshRef.current = refresh;
     setIsCreateDrawerOpen(true);
