@@ -18,7 +18,7 @@ export default async function OwLayout({ children }: LayoutProps<"/own">) {
   const user = await getCurrentUser();
 
   return (
-    <DashboardShell homeHref="/ow" navigation={navigation} user={user}>
+    <DashboardShell homeHref="/own" navigation={navigation} user={user}>
       {children}
     </DashboardShell>
   );

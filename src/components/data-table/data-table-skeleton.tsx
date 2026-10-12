@@ -115,11 +115,16 @@ export function DataTableRowsSkeleton({
                   "sticky top-0 z-20 bg-[#f8fafc]",
                   showActions &&
                     index === totalColumns - 1 &&
-                    "right-0 z-30 w-[132px] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]",
+                    "right-0 z-30 w-px whitespace-nowrap text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]",
                 )}
                 key={index}
               >
-                <Skeleton className="h-4 w-20" />
+                <Skeleton
+                  className={cn(
+                    "h-4",
+                    showActions && index === totalColumns - 1 ? "w-12" : "w-20",
+                  )}
+                />
               </TableHead>
             ))}
           </TableRow>
@@ -154,31 +159,30 @@ export function DataTableBodySkeletonRows({
       {Array.from({ length: rowCount }, (_, rowIndex) => (
         <TableRow key={rowIndex}>
           {skeletonColumns.map((column, columnIndex) => (
-            <TableCell key={columnIndex}>
-              {column.skeleton ?? (columnIndex === 0 ? (
-                <div className="flex items-center gap-3">
-                  <Skeleton className="size-9 rounded-full" />
-                  <Skeleton className="h-4 w-28" />
-                </div>
-              ) : (
-                <Skeleton
-                  className={cn(
-                    "h-4",
-                    columnIndex % 3 === 0
-                      ? "w-24"
-                      : columnIndex % 2 === 0
-                        ? "w-32"
-                        : "w-44",
-                  )}
-                />
-              ))}
+            <TableCell className="max-w-0" key={columnIndex}>
+              {column.skeleton ??
+                (columnIndex === 0 ? (
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-9 rounded-full" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                ) : (
+                  <Skeleton
+                    className={cn(
+                      "h-4",
+                      columnIndex % 3 === 0
+                        ? "w-24"
+                        : columnIndex % 2 === 0
+                          ? "w-32"
+                          : "w-44",
+                    )}
+                  />
+                ))}
             </TableCell>
           ))}
           {showActions ? (
-            <TableCell className="sticky right-0 z-10 bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
-              <div className="flex justify-end gap-2">
-                <Skeleton className="size-8" />
-                <Skeleton className="size-8" />
+            <TableCell className="sticky right-0 z-10 w-px whitespace-nowrap bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
+              <div className="inline-flex w-max items-center justify-end">
                 <Skeleton className="size-8" />
               </div>
             </TableCell>
