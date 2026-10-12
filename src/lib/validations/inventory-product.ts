@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { CALENDAR_BLOCK_REASONS } from "@/config/inventory";
 import type { CatalogSpecField } from "@/types/catalog";
 import { validateSpecificationValue } from "./catalog-spec-values";
 
@@ -176,4 +177,37 @@ export type InventoryAssetBookingsFormValues = z.infer<
 export const updateInventoryAssetBookingsRequestSchema =
   inventoryAssetBookingsFormSchema.extend({
     reason: inventoryAssetBookingsFormSchema.shape.reason.nullable(),
+  });
+
+const calendarBlockDates = {
+  startDate: z.iso.date({ error: "Vui lòng chọn ngày bắt đầu hợp lệ." }),
+  endDate: z.iso.date({ error: "Vui lòng chọn ngày kết thúc hợp lệ." }),
+};
+export const inventoryCalendarBlockFormSchema = z
+  .object({
+    ...calendarBlockDates,
+    reason: z
+      .string()
+      .refine(
+        (value) => z.enum(CALENDAR_BLOCK_REASONS).safeParse(value).success,
+        "Vui lòng chọn lý do chặn lịch.",
+      ),
+    note: z.string().trim(),
+  })
+  .refine((values) => values.endDate >= values.startDate, {
+    message: "Ngày kết thúc phải từ ngày bắt đầu trở đi.",
+    path: ["endDate"],
+  });
+export type InventoryCalendarBlockFormValues = z.infer<
+  typeof inventoryCalendarBlockFormSchema
+>;
+export const createInventoryCalendarBlockRequestSchema = z
+  .object({
+    ...calendarBlockDates,
+    reason: z.enum(CALENDAR_BLOCK_REASONS),
+    note: z.string().trim().nullable(),
+  })
+  .refine((values) => values.endDate >= values.startDate, {
+    message: "Ngày kết thúc phải từ ngày bắt đầu trở đi.",
+    path: ["endDate"],
   });

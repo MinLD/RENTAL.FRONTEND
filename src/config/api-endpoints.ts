@@ -339,6 +339,10 @@ export const API_ENDPOINTS = {
           `/api/v1/inventory/assets/${encodeURIComponent(id)}`,
         acceptingBookings: (id: string) =>
           `/api/v1/inventory/assets/${encodeURIComponent(id)}/accepting-bookings`,
+        calendarBlocks: (id: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar-blocks`,
+        calendarBlock: (id: string, blockId: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar-blocks/${encodeURIComponent(blockId)}`,
         calendar: (id: string) =>
           `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar`,
       },

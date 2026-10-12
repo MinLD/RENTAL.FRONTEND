@@ -5,13 +5,11 @@ import { LoaderCircle, Plus, Save } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import { DataTableState } from "@/components/data-table";
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField } from "@/components/forms/text-field";
 import { ResourcePanel } from "@/components/layout/resource-panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/use-api-resource";
 import {
@@ -25,8 +23,8 @@ import type {
   InventoryAsset,
   UpdateInventoryAssetRequest,
 } from "@/types/inventory";
-import { formatCalendarDate } from "@/utils/calendar";
 import { formatEquipmentListingDate } from "@/utils/inventory";
+import { ProductAssetCalendarPanel } from "./product-asset-calendar-panel";
 import type { ProductPageActions } from "./product-management-types";
 
 const ASSET_FORM_ID = "own-asset-form";
@@ -60,14 +58,10 @@ export function ProductAssetDrawer({
     [actions, assetId],
   );
   const asset = useApiResource(requestAsset, Boolean(assetId));
-  const requestCalendar = useCallback(
-    () => actions.fetchAssetCalendar(assetId),
-    [actions, assetId],
-  );
-  const calendar = useApiResource(
-    requestCalendar,
-    Boolean(assetId) && visitedTabs.includes("calendar"),
-  );
+  const onCalendarBusyChange = useCallback((busy: boolean) => {
+    submittingRef.current = busy;
+    setIsSubmitting(busy);
+  }, []);
   const data = asset.data;
 
   async function saveAsset(values: InventoryAssetFormValues) {
@@ -223,71 +217,16 @@ export function ProductAssetDrawer({
                   />
                 </div>
               ) : null}
-              <section className="space-y-3" hidden={activeTab !== "calendar"}>
-                <h2 className="text-sm font-semibold">Lịch sử dụng của máy</h2>
-                <ResourcePanel
-                  error={calendar.error}
-                  isLoading={calendar.isLoading}
-                  onRetry={() => void calendar.refresh()}
-                >
-                  {calendar.data ? (
-                    <p className="text-xs text-muted-foreground">
-                      Từ {formatCalendarDate(calendar.data.startDate)} đến{" "}
-                      {formatCalendarDate(calendar.data.endDate)}
-                    </p>
-                  ) : null}
-                  {calendar.data?.entries?.length ? (
-                    <div className="space-y-3">
-                      {[...calendar.data.entries]
-                        .sort((a, b) => a.startDate.localeCompare(b.startDate))
-                        .map((entry) => (
-                          <article
-                            className="space-y-2 rounded border border-border p-4"
-                            key={entry.id}
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-sm font-semibold">
-                                {formatCalendarDate(entry.startDate)} –{" "}
-                                {formatCalendarDate(entry.endDate)}
-                              </p>
-                              <Badge
-                                variant={
-                                  entry.type?.toLowerCase().includes("block")
-                                    ? "warning"
-                                    : "muted"
-                                }
-                              >
-                                {getEntryLabel(entry.type)}
-                              </Badge>
-                            </div>
-                            {entry.reason ? (
-                              <p className="text-xs text-muted-foreground">
-                                {entry.reason}
-                              </p>
-                            ) : null}
-                            {entry.note ? (
-                              <p className="whitespace-pre-line break-words text-sm">
-                                {entry.note}
-                              </p>
-                            ) : null}
-                            {entry.holdExpiresAt ? (
-                              <p className="text-xs text-muted-foreground">
-                                Hết hạn giữ chỗ:{" "}
-                                {formatEquipmentListingDate(
-                                  entry.holdExpiresAt,
-                                )}
-                              </p>
-                            ) : null}
-                          </article>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="grid place-items-center">
-                      <DataTableState message="Máy chưa có lịch sử dụng trong khoảng thời gian này." />
-                    </div>
-                  )}
-                </ResourcePanel>
-              </section>
+              {visitedTabs.includes("calendar") ? (
+                <div hidden={activeTab !== "calendar"}>
+                  <ProductAssetCalendarPanel
+                    actions={actions}
+                    assetId={assetId}
+                    onChanged={onChanged}
+                    onBusyChange={onCalendarBusyChange}
+                  />
+                </div>
+              ) : null}
             </div>
           ) : null}
         </ResourcePanel>
@@ -543,16 +482,4 @@ function InventoryAssetBookingsForm({
       />
     </form>
   );
-}
-
-function getEntryLabel(type: string) {
-  const labels: Record<string, string> = {
-    hold: "Giữ chỗ",
-    allocation: "Lịch thuê",
-    booking: "Lịch thuê",
-    rental: "Lịch thuê",
-    block: "Chặn lịch",
-    calendarblock: "Chặn lịch",
-  };
-  return labels[type?.toLowerCase()] ?? type ?? "Lịch sử dụng";
 }

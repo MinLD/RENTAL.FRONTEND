@@ -15,6 +15,8 @@ import {
   updateOwnInventoryAssetAction,
   updateOwnInventoryAssetBookingsAction,
   getOwnInventoryAssetCalendarAction,
+  createOwnInventoryCalendarBlockAction,
+  deleteOwnInventoryCalendarBlockAction,
   getOwnEquipmentListingCalendarAction,
 } from "@/services/actions/inventory-actions";
 import {
@@ -74,6 +76,8 @@ export default async function OwnProductDetailPage({
         updateAsset: updateOwnInventoryAssetAction,
         updateAssetBookings: updateOwnInventoryAssetBookingsAction,
         fetchAssetCalendar: getOwnInventoryAssetCalendarAction,
+        createCalendarBlock: createOwnInventoryCalendarBlockAction,
+        deleteCalendarBlock: deleteOwnInventoryCalendarBlockAction,
         fetchCalendar: getOwnEquipmentListingCalendarAction,
       }}
     />

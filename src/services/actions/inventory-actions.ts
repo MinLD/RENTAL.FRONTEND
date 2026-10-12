@@ -8,9 +8,14 @@ import {
   createInventoryAssetRequestSchema,
   updateInventoryAssetRequestSchema,
   updateInventoryAssetBookingsRequestSchema,
+  createInventoryCalendarBlockRequestSchema,
 } from "@/lib/validations/inventory-product";
 import type { ApiResult } from "@/services/api-error";
-import { serverApiJson, serverApiResult } from "@/services/server-api";
+import {
+  serverApiJson,
+  serverApiOk,
+  serverApiResult,
+} from "@/services/server-api";
 import {
   assertInventoryId as assertListingId,
   parseInventoryRequest as parseRequest,
@@ -36,6 +41,8 @@ import type {
   CreateInventoryAssetRequest,
   UpdateInventoryAssetRequest,
   UpdateInventoryAssetBookingsRequest,
+  CreateInventoryCalendarBlockRequest,
+  InventoryCalendarBlock,
   EquipmentListingCalendar,
   InventoryCalendarRange,
 } from "@/types/inventory";
@@ -148,6 +155,39 @@ export async function getOwnEquipmentListingCalendarAction(
   range: InventoryCalendarRange,
 ): Promise<ApiResult<EquipmentListingCalendar>> {
   return getOwnEquipmentListingCalendar(id, range);
+}
+
+export async function createOwnInventoryCalendarBlockAction(
+  assetId: string,
+  request: CreateInventoryCalendarBlockRequest,
+): Promise<ApiResult<InventoryCalendarBlock>> {
+  return serverApiResult(async () => {
+    assertListingId(assetId);
+    return serverApiJson<InventoryCalendarBlock>(
+      API_ENDPOINTS.backend.inventory.assets.calendarBlocks(assetId),
+      "Không thể tạo khoảng chặn lịch.",
+      {
+        method: "POST",
+        json: parseRequest(createInventoryCalendarBlockRequestSchema, request),
+      },
+    );
+  });
+}
+
+export async function deleteOwnInventoryCalendarBlockAction(
+  assetId: string,
+  blockId: string,
+): Promise<ApiResult<null>> {
+  return serverApiResult(async () => {
+    assertListingId(assetId);
+    assertListingId(blockId);
+    await serverApiOk(
+      API_ENDPOINTS.backend.inventory.assets.calendarBlock(assetId, blockId),
+      "Không thể xóa khoảng chặn lịch.",
+      { method: "DELETE" },
+    );
+    return null;
+  });
 }
 
 export async function getOwnEquipmentListingAction(

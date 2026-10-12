@@ -18,6 +18,8 @@ import type {
   CreateInventoryAssetRequest,
   UpdateInventoryAssetRequest,
   UpdateInventoryAssetBookingsRequest,
+  CreateInventoryCalendarBlockRequest,
+  InventoryCalendarBlock,
   EquipmentListingCalendar,
   InventoryCalendarRange,
 } from "@/types/inventory";
@@ -81,6 +83,14 @@ export type ProductPageActions = ProductDetailActions & {
   fetchAssetCalendar: (
     id: string,
   ) => Promise<ApiResult<InventoryAssetCalendar>>;
+  createCalendarBlock: (
+    id: string,
+    request: CreateInventoryCalendarBlockRequest,
+  ) => Promise<ApiResult<InventoryCalendarBlock>>;
+  deleteCalendarBlock: (
+    id: string,
+    blockId: string,
+  ) => Promise<ApiResult<null>>;
   fetchCalendar: (
     id: string,
     range: InventoryCalendarRange,

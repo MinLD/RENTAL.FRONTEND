@@ -134,3 +134,20 @@ export type InventoryAssetCalendar = {
   endDate: string;
   entries: InventoryAssetCalendarEntry[];
 };
+
+export type CalendarBlockReason =
+  | "Maintenance"
+  | "OwnerReserved"
+  | "Inspection"
+  | "Other";
+export type CreateInventoryCalendarBlockRequest = {
+  startDate: string;
+  endDate: string;
+  reason: CalendarBlockReason;
+  note: string | null;
+};
+export type InventoryCalendarBlock = CreateInventoryCalendarBlockRequest & {
+  id: string;
+  assetId: string;
+  createdAt: string;
+};
