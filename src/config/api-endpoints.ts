@@ -287,6 +287,7 @@ export const API_ENDPOINTS = {
     },
     inventory: {
       equipmentListings: {
+        create: "/api/v1/inventory/equipment-listings",
         list: ({ page, pageSize }: ListOwnEquipmentListingsParams) =>
           buildQueryEndpoint("/api/v1/inventory/equipment-listings", {
             page,

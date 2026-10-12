@@ -9,6 +9,7 @@ export function formatEquipmentListingRate(
       return new Intl.NumberFormat("vi-VN", {
         style: "currency",
         currency,
+        currencyDisplay: "code",
       }).format(amount);
     } catch {
       // Preserve the API currency when it is not an ISO currency code.

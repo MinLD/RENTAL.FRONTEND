@@ -26,6 +26,7 @@ import type {
   CatalogEquipmentTypeListResponse,
   CatalogPagedResult,
   CatalogPublishedSpecSchema,
+  CatalogPublishedSpecSchemaResponse,
   CatalogSpecDefinition,
   CatalogSpecSchema,
   CatalogSpecificationValidationResult,
@@ -413,7 +414,7 @@ export async function getCatalogEquipmentTypeSchemaAction(
   return serverApiResult(async () => {
     assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
 
-    const response = await serverApiJson<CatalogPublishedSpecSchema>(
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
       API_ENDPOINTS.backend.catalog.equipmentTypes.currentSchema(
         equipmentTypeId,
       ),
@@ -432,7 +433,7 @@ export async function getCatalogEquipmentTypeSchemaVersionAction(
     assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
     assertSchemaVersion(version);
 
-    const response = await serverApiJson<CatalogPublishedSpecSchema>(
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
       API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
         equipmentTypeId,
         version,

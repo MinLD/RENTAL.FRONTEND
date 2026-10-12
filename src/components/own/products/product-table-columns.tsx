@@ -58,9 +58,7 @@ export const productColumns: DataTableColumn<EquipmentListing>[] = [
         {new Intl.NumberFormat("vi-VN").format(product.totalQuantity)}
       </span>
     ),
-    className: "text-right",
     header: "Số lượng",
-    headerClassName: "text-right",
     id: "totalQuantity",
     width: 110,
   },
@@ -77,9 +75,7 @@ export const productColumns: DataTableColumn<EquipmentListing>[] = [
         )}
       </span>
     ),
-    className: "text-right",
     header: label,
-    headerClassName: "text-right",
     id: key,
     width: 170,
   })),

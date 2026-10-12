@@ -14,6 +14,7 @@ import {
   type CatalogEquipmentTypePrimarySpec,
   type CatalogEquipmentTypeStatus,
   type CatalogPublishedSpecSchema,
+  type CatalogPublishedSpecSchemaResponse,
   type CatalogSpecDefinition,
   type CatalogSpecField,
   type CatalogSpecOption,
@@ -191,11 +192,25 @@ export function normalizeCatalogSpecSchema(
 }
 
 export function normalizeCatalogPublishedSpecSchema(
-  schema: CatalogPublishedSpecSchema,
+  schema: CatalogPublishedSpecSchemaResponse,
 ): CatalogPublishedSpecSchema {
+  const version = schema.schemaVersion ?? schema.version;
   return {
     ...schema,
-    fields: normalizeCatalogSpecFields(schema.fields),
+    schemaVersion: version,
+    version,
+    fields: normalizeCatalogSpecFields(
+      schema.fields?.map((field, index) => ({
+        ...field,
+        displayOrder: field.displayOrder ?? index,
+        required: field.required ?? false,
+        filterable: field.filterable ?? false,
+        primary: field.primary ?? false,
+        options: field.options?.map((option) =>
+          typeof option === "string" ? { label: option, value: option } : option,
+        ),
+      })),
+    ),
   };
 }
 

@@ -29,3 +29,14 @@ export type EquipmentListingListResponse = {
   totalCount: number;
   totalPages: number;
 };
+
+export type CreateEquipmentListingRequest = {
+  equipmentTypeId: string;
+  brandId: string;
+  model: string;
+  serialNumber: string;
+  schemaVersion: number;
+  specValues: Record<string, string | number | boolean>;
+  rentalRate: EquipmentListingRentalRate;
+  thumbnailMediaId: string | null;
+};

@@ -11,6 +11,7 @@ export type CatalogSpecDataType =
   | "boolean"
   | "enum"
   | "number"
+  | "integer"
   | "text"
   | (string & {});
 
@@ -124,7 +125,19 @@ export type CatalogSpecSchema = {
 export type CatalogPublishedSpecSchema = {
   equipmentTypeId?: string;
   fields?: CatalogSpecField[] | null;
+  schemaVersion?: number;
   version?: number;
+};
+
+export type CatalogPublishedSpecSchemaResponse = {
+  equipmentTypeId?: string;
+  schemaVersion?: number;
+  version?: number;
+  fields?: Array<
+    Omit<Partial<CatalogSpecField>, "options"> & {
+      options?: Array<CatalogSpecOption | string> | null;
+    }
+  > | null;
 };
 
 export type CatalogEquipmentTypePrimarySpec = {

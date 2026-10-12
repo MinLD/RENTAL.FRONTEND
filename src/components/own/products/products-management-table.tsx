@@ -1,6 +1,9 @@
 "use client";
 
 import { DataTable } from "@/components/data-table";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useOwnProductsController } from "@/hooks/use-own-products-controller";
 import type { ApiResult } from "@/services/api-error";
 import type {
   DataTableFetchParams,
@@ -13,16 +16,27 @@ import {
 } from "@/utils/inventory";
 
 import { productColumns } from "./product-table-columns";
+import { ProductCreateDrawer } from "./product-create-drawer";
+import type { ProductCreateActions } from "./product-management-types";
 
 type ProductsManagementTableProps = {
+  createActions: ProductCreateActions;
   fetchProducts: (
     params: DataTableFetchParams,
   ) => Promise<ApiResult<DataTableFetchResult<EquipmentListing>>>;
 };
 
 export function ProductsManagementTable({
+  createActions,
   fetchProducts,
 }: ProductsManagementTableProps) {
+  const {
+    isCreateDrawerOpen,
+    isCreatingProduct,
+    setIsCreateDrawerOpen,
+    handleOpenCreateProduct,
+    handleCreateProduct,
+  } = useOwnProductsController(createActions.create);
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <DataTable<EquipmentListing>
@@ -68,10 +82,28 @@ export function ProductsManagementTable({
         getRowId={(product) => product.id}
         initialPageSize={20}
         pageSizeOptions={[10, 20, 50, 100]}
+        renderToolbarActions={({ refresh }) => (
+          <Button
+            disabled={isCreatingProduct}
+            onClick={() => handleOpenCreateProduct(refresh)}
+            type="button"
+          >
+            <Plus className="size-4" />
+            Thêm sản phẩm
+          </Button>
+        )}
         searchDebounceMs={0}
         showSearch={false}
         title="Danh sách sản phẩm"
       />
+      {isCreateDrawerOpen ? (
+        <ProductCreateDrawer
+          actions={createActions}
+          isSubmitting={isCreatingProduct}
+          onOpenChange={setIsCreateDrawerOpen}
+          onSubmit={handleCreateProduct}
+        />
+      ) : null}
     </div>
   );
 }
