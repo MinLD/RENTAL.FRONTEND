@@ -340,13 +340,6 @@ export function EquipmentTypeManagementTable({
         isLoading={isLoadingDetail}
         isSubmitting={isUpdatingEquipmentType}
         onOpenChange={(open) => !open && closeEquipmentTypeDetail()}
-        onPublish={(equipmentType) => {
-          setPendingAction({
-            action: "publish",
-            equipmentType,
-            refresh: listRefreshRef.current ?? refreshEquipmentTypeDetail,
-          });
-        }}
         onRefresh={refreshEquipmentTypeDetail}
         onSubmit={handleUpdateEquipmentType}
         open={Boolean(selectedEquipmentType)}

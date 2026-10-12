@@ -189,7 +189,7 @@ function DashboardSidebarItem({
 }
 
 function isItemActive(pathname: string, href: string) {
-  if (href === "/admin") {
+  if (href === "/admin" || href === "/own") {
     return pathname === href;
   }
 

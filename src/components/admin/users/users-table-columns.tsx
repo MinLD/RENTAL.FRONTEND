@@ -2,7 +2,7 @@ import type { DataTableColumn } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import type { AdminUserRow, AdminUserStatus } from "@/types/admin-users";
 
-import { formatShortId } from "./users-table-utils";
+import { formatShortId } from "@/utils/string";
 
 export const userColumns: DataTableColumn<AdminUserRow>[] = [
   {

@@ -77,23 +77,25 @@ const specFieldSchema = z
     }
   });
 
-export const catalogSpecSchemaFormSchema = z
-  .object({
-    fields: z.array(specFieldSchema).min(1, "Thêm ít nhất một thông số."),
-  })
-  .superRefine(({ fields }, context) => {
+export const catalogSpecFieldsFormSchema = z
+  .array(specFieldSchema)
+  .superRefine((fields, context) => {
     const keys = new Set<string>();
     fields.forEach((field, index) => {
       if (keys.has(field.key)) {
         context.addIssue({
           code: "custom",
-          path: ["fields", index, "key"],
+          path: [index, "key"],
           message: "Key bị trùng trong schema.",
         });
       }
       keys.add(field.key);
     });
   });
+
+export const catalogSpecSchemaFormSchema = z.object({
+  fields: catalogSpecFieldsFormSchema.min(1, "Thêm ít nhất một thông số."),
+});
 
 export type CatalogSpecSchemaFormValues = z.infer<
   typeof catalogSpecSchemaFormSchema

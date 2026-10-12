@@ -4,6 +4,18 @@ type ListAdminUsersParams = {
   pageSize: number;
 };
 
+type InventoryPaginationParams = {
+  page: number;
+  pageSize: number;
+};
+
+type ListOwnEquipmentListingsParams = InventoryPaginationParams & {
+  q?: string;
+  equipmentTypeId?: string;
+  brandId?: string;
+  status?: 1 | 2 | 3;
+};
+
 type ListAdminOrganizationsParams = {
   page: number;
   pageSize: number;
@@ -80,8 +92,10 @@ export const API_ENDPOINTS = {
     organizations: {
       register: "/api/v1/auth/organizations/register",
       mine: "/api/v1/auth/organizations/mine",
-      detail: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
-      profile: (id: string) => `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
+      detail: (id: string) =>
+        `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
+      profile: (id: string) =>
+        `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
     },
     adminOrganizations: {
       approve: (id: string) =>
@@ -102,7 +116,12 @@ export const API_ENDPOINTS = {
             Search: search?.trim(),
           },
         ),
-      list: ({ page, pageSize, search, status }: ListAdminOrganizationsParams) =>
+      list: ({
+        page,
+        pageSize,
+        search,
+        status,
+      }: ListAdminOrganizationsParams) =>
         buildQueryEndpoint("/api/v1/auth/admin/organizations", {
           Page: page,
           PageSize: pageSize,
@@ -221,11 +240,12 @@ export const API_ENDPOINTS = {
             Page: page,
             PageSize: pageSize,
             Sort: sort?.trim(),
-            Status: status === undefined
-              ? undefined
-              : (Array.isArray(status) ? status : [status]).map(
-                  (value) => EQUIPMENT_TYPE_STATUS_NAMES[value],
-                ),
+            Status:
+              status === undefined
+                ? undefined
+                : (Array.isArray(status) ? status : [status]).map(
+                    (value) => EQUIPMENT_TYPE_STATUS_NAMES[value],
+                  ),
           }),
         create: "/api/v1/catalog/equipment-types",
         currentSchema: (equipmentTypeId: string) =>
@@ -279,6 +299,53 @@ export const API_ENDPOINTS = {
       session: (sessionId: string) =>
         `/api/v1/auth/users/sessions/${encodeURIComponent(sessionId)}`,
       sessions: "/api/v1/auth/users/sessions",
+    },
+    inventory: {
+      equipmentListings: {
+        create: "/api/v1/inventory/equipment-listings",
+        detail: (id: string) =>
+          `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}`,
+        rentalRate: (id: string) =>
+          `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}/rental-rate`,
+        assets: (id: string, params?: InventoryPaginationParams) =>
+          buildQueryEndpoint(
+            `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}/assets`,
+            { page: params?.page, pageSize: params?.pageSize },
+          ),
+        calendar: (id: string, range: { from: string; to: string }) =>
+          buildQueryEndpoint(
+            `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}/calendar`,
+            range,
+          ),
+        list: ({
+          page,
+          pageSize,
+          q,
+          equipmentTypeId,
+          brandId,
+          status,
+        }: ListOwnEquipmentListingsParams) =>
+          buildQueryEndpoint("/api/v1/inventory/equipment-listings", {
+            Page: page,
+            PageSize: pageSize,
+            Q: q?.trim() || undefined,
+            EquipmentTypeId: equipmentTypeId,
+            BrandId: brandId,
+            Status: status,
+          }),
+      },
+      assets: {
+        detail: (id: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}`,
+        acceptingBookings: (id: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/accepting-bookings`,
+        calendarBlocks: (id: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar-blocks`,
+        calendarBlock: (id: string, blockId: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar-blocks/${encodeURIComponent(blockId)}`,
+        calendar: (id: string) =>
+          `/api/v1/inventory/assets/${encodeURIComponent(id)}/calendar`,
+      },
     },
     media: {
       upload: "/api/v1/media/uploads",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, LoaderCircle, Upload } from "lucide-react";
+import { Camera, LoaderCircle, Plus, Upload } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -31,7 +31,7 @@ type MediaAvatarUploadProps = {
   uploadLabel?: string;
   uploadFile?: (file: File) => Promise<MediaUploadResponse>;
   uploadFiles?: (files: File[]) => Promise<MediaUploadResponse[]>;
-  variant?: "avatar" | "logo";
+  variant?: "avatar" | "logo" | "add";
 };
 
 const sizeClassName = {
@@ -74,6 +74,7 @@ export function MediaAvatarUpload({
   const logoPreviewAlt = previewAlt ?? "Logo doanh nghiệp";
   const logoUploadLabel = uploadLabel ?? "Tải logo doanh nghiệp";
   const logoReplaceLabel = replaceLabel ?? "Thay logo doanh nghiệp";
+  const addUploadLabel = uploadLabel ?? "Thêm ảnh";
   const previewUrls = normalizeArray(previewUrl);
   const visiblePreviewUrls =
     previewUrl !== undefined
@@ -132,7 +133,13 @@ export function MediaAvatarUpload({
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
       <input
         accept={accept}
-        aria-label={variant === "logo" ? logoUploadLabel : "Chọn ảnh đại diện"}
+        aria-label={
+          variant === "add"
+            ? "Chọn tệp ảnh"
+            : variant === "logo"
+              ? logoUploadLabel
+              : "Chọn ảnh đại diện"
+        }
         className="sr-only"
         disabled={disabled || isUploading}
         id={inputId}
@@ -144,18 +151,27 @@ export function MediaAvatarUpload({
         type="file"
       />
 
-      {variant === "logo" ? (
+      {variant === "logo" || variant === "add" ? (
         <button
-          aria-label={visiblePreviewUrls[0] ? logoReplaceLabel : logoUploadLabel}
+          aria-label={
+            variant === "add"
+              ? addUploadLabel
+              : visiblePreviewUrls[0]
+                ? logoReplaceLabel
+                : logoUploadLabel
+          }
           className={cn(
             "relative flex shrink-0 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-primary/40 bg-primary/5 text-xs font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
             sizeClassName[size],
           )}
           disabled={disabled || isUploading}
           onClick={() => fileInputRef.current?.click()}
+          title={variant === "add" ? addUploadLabel : undefined}
           type="button"
         >
-          {visiblePreviewUrls[0] ? (
+          {variant === "add" ? (
+            <Plus className="size-6" />
+          ) : visiblePreviewUrls[0] ? (
             <AvatarWithSkeleton
               alt={logoPreviewAlt}
               className="size-full rounded-none bg-transparent"

@@ -6,40 +6,52 @@ import {
   Plus,
   RefreshCw,
   Save,
-  UnlockKeyhole,
   Star,
   Trash2,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useFieldArray,
+  useForm,
+  useWatch,
+  type FieldErrors,
+} from "react-hook-form";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { TextField } from "@/components/forms/text-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
+import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  catalogEquipmentTypeCreateFormSchema,
   catalogEquipmentTypeFormSchema,
   type CatalogEquipmentTypeFormMedia,
   type CatalogEquipmentTypeFormValues,
 } from "@/lib/validations/catalog-equipment-type";
-import { uploadMediaFiles } from "@/services/media-service";
 import {
-  CATALOG_EQUIPMENT_TYPE_STATUS,
-  type CatalogCategoryDetail,
-  type CatalogEquipmentTypeDetail,
-  type CreateCatalogEquipmentTypeRequest,
-  type UpdateCatalogEquipmentTypeRequest,
+  getSpecFieldFormValues,
+  toSpecDefinition,
+} from "@/lib/validations/catalog-spec-schema";
+import { uploadMediaFiles } from "@/services/media-service";
+import type {
+  CatalogCategoryDetail,
+  CatalogEquipmentTypeDetail,
+  CreateCatalogEquipmentTypeRequest,
+  UpdateCatalogEquipmentTypeRequest,
 } from "@/types/catalog";
 import type { MediaUploadResponse } from "@/types/media";
 
 import { EquipmentTypeStatusBadge } from "./equipment-type-table-columns";
 import type { CatalogSpecSchemaActions } from "./equipment-type-management-types";
 import { SpecSchemaPanel } from "./spec-schema-panel";
+import { SpecSchemaFieldEditor } from "./spec-schema-field-editor";
 
 const CREATE_EQUIPMENT_TYPE_FORM_ID = "admin-create-equipment-type-form";
 const UPDATE_EQUIPMENT_TYPE_FORM_ID = "admin-update-equipment-type-form";
@@ -61,10 +73,23 @@ export function EquipmentTypeCreateDrawer({
   open,
 }: EquipmentTypeCreateDrawerProps) {
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [activeTab, setActiveTab] = useState("detail");
+  const [wasOpen, setWasOpen] = useState(open);
   const isBusy = isSubmitting || isUploadingMedia;
+
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    setActiveTab("detail");
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setActiveTab("detail");
+    onOpenChange(nextOpen);
+  }
 
   return (
     <FormDrawer
+      activeTab={activeTab}
       className="sm:max-w-2xl"
       footer={
         <EquipmentTypeDrawerFooter
@@ -78,15 +103,21 @@ export function EquipmentTypeCreateDrawer({
             )
           }
           isSubmitting={isBusy}
-          onCancel={() => onOpenChange(false)}
+          onCancel={() => handleOpenChange(false)}
           submitLabel={isSubmitting ? "Đang tạo..." : "Tạo loại thiết bị"}
         />
       }
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
+      onTabChange={setActiveTab}
       open={open}
+      tabs={[
+        { label: "Thông tin", value: "detail" },
+        { label: "Thông số kỹ thuật", value: "schema" },
+      ]}
       title="Thêm loại thiết bị"
     >
       <EquipmentTypeForm
+        activeTab={activeTab}
         categories={categories}
         formId={CREATE_EQUIPMENT_TYPE_FORM_ID}
         isSubmitting={isBusy}
@@ -94,6 +125,7 @@ export function EquipmentTypeCreateDrawer({
           open ? "equipment-type-create-open" : "equipment-type-create-closed"
         }
         onMediaUploadingChange={setIsUploadingMedia}
+        onTabChange={setActiveTab}
         onSubmit={async (values) => {
           await onSubmit(toCreateEquipmentTypeRequest(values));
         }}
@@ -111,7 +143,6 @@ type EquipmentTypeDetailDrawerProps = {
   isLoading?: boolean;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
-  onPublish?: (equipmentType: CatalogEquipmentTypeDetail) => void;
   onRefresh: () => void;
   onSubmit: (
     id: string,
@@ -130,7 +161,6 @@ export function EquipmentTypeDetailDrawer({
   isLoading = false,
   isSubmitting = false,
   onOpenChange,
-  onPublish,
   onRefresh,
   onSubmit,
   open,
@@ -251,7 +281,6 @@ export function EquipmentTypeDetailDrawer({
                 isSubmitting={isBusy}
                 key={equipmentType.id}
                 onMediaUploadingChange={setIsUploadingMedia}
-                onPublish={onPublish}
                 onSubmit={async (values) => {
                   await onSubmit(
                     equipmentType.id,
@@ -306,31 +335,41 @@ function EquipmentTypeDetailSkeleton() {
 }
 
 function EquipmentTypeForm({
+  activeTab = "detail",
   categories,
   equipmentType,
   formId,
   isSubmitting,
   onMediaUploadingChange,
-  onPublish,
   onSubmit,
+  onTabChange,
 }: {
+  activeTab?: string;
   categories: CatalogCategoryDetail[];
   equipmentType?: CatalogEquipmentTypeDetail;
   formId: string;
   isSubmitting: boolean;
   onMediaUploadingChange: (isUploading: boolean) => void;
-  onPublish?: (equipmentType: CatalogEquipmentTypeDetail) => void;
   onSubmit: (values: CatalogEquipmentTypeFormValues) => Promise<void>;
+  onTabChange?: (tab: string) => void;
 }) {
+  const form = useForm<CatalogEquipmentTypeFormValues>({
+    defaultValues: getDefaultValues(equipmentType),
+    resolver: zodResolver(
+      equipmentType
+        ? catalogEquipmentTypeFormSchema
+        : catalogEquipmentTypeCreateFormSchema,
+    ),
+    shouldFocusError: Boolean(equipmentType),
+  });
   const {
     control,
     formState: { errors },
+    getValues,
     handleSubmit,
     register,
-  } = useForm<CatalogEquipmentTypeFormValues>({
-    defaultValues: getDefaultValues(equipmentType),
-    resolver: zodResolver(catalogEquipmentTypeFormSchema),
-  });
+  } = form;
+  const { fields, append, remove } = useFieldArray({ control, name: "fields" });
   const description = useWatch({ control, name: "description" });
 
   async function submitForm(values: CatalogEquipmentTypeFormValues) {
@@ -338,104 +377,144 @@ function EquipmentTypeForm({
   }
 
   return (
-    <form
-      className="grid gap-5"
-      id={formId}
-      noValidate
-      onSubmit={handleSubmit(submitForm)}
-    >
-      {equipmentType?.status !== undefined ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-border bg-muted/40 p-4">
-          <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Trạng thái
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {equipmentType.name}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <EquipmentTypeStatusBadge status={equipmentType.status} />
-            {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ||
-            equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Disabled ? (
-              <Button
-                disabled={isSubmitting}
-                onClick={() => onPublish?.(equipmentType)}
-                size="sm"
-                type="button"
-              >
-                <UnlockKeyhole className="size-4" />
-                Mở khóa
-              </Button>
+    <FormProvider {...form}>
+      <form
+        className="grid gap-5"
+        id={formId}
+        noValidate
+        onSubmit={handleSubmit(submitForm, (formErrors) => {
+          onTabChange?.(
+            Object.keys(formErrors).some((key) => key !== "fields")
+              ? "detail"
+              : "schema",
+          );
+        })}
+      >
+        <div hidden={activeTab !== "detail"}>
+          <div className="grid gap-5">
+            {equipmentType?.status !== undefined ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-muted/40 px-3 py-2">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  Trạng thái
+                </p>
+                <EquipmentTypeStatusBadge status={equipmentType.status} />
+              </div>
             ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextField
+                disabled={isSubmitting}
+                error={errors.code?.message}
+                id={`${formId}-code`}
+                label="Code"
+                placeholder="VD: EXCAVATOR"
+                required
+                {...register("code")}
+              />
+              <TextField
+                disabled={isSubmitting}
+                error={errors.name?.message}
+                id={`${formId}-name`}
+                label="Tên loại thiết bị"
+                placeholder="VD: Máy xúc"
+                required
+                {...register("name")}
+              />
+            </div>
+
+            <TextareaField
+              characterCount={description?.length ?? 0}
+              disabled={isSubmitting}
+              error={errors.description?.message}
+              label="Mô tả"
+              maxLength={2000}
+              placeholder="Mô tả ngắn về loại thiết bị..."
+              {...register("description")}
+            />
+
+            <Controller
+              control={control}
+              name="categoryIds"
+              render={({ field, fieldState }) => (
+                <CategoryMultiSelect
+                  categories={categories}
+                  disabled={isSubmitting}
+                  error={fieldState.error?.message}
+                  onChange={field.onChange}
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="media"
+              render={({ field, fieldState }) => (
+                <EquipmentTypeMediaField
+                  disabled={isSubmitting}
+                  error={
+                    fieldState.error?.message ??
+                    errors.media?.root?.message ??
+                    (errors.media
+                      ? "Vui lòng kiểm tra thông tin ảnh."
+                      : undefined)
+                  }
+                  itemErrors={errors.media}
+                  onChange={field.onChange}
+                  onUploadingChange={onMediaUploadingChange}
+                  value={field.value}
+                />
+              )}
+            />
           </div>
         </div>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          disabled={isSubmitting}
-          error={errors.code?.message}
-          id={`${formId}-code`}
-          label="Code"
-          placeholder="VD: EXCAVATOR"
-          required
-          {...register("code")}
-        />
-        <TextField
-          disabled={isSubmitting}
-          error={errors.name?.message}
-          id={`${formId}-name`}
-          label="Tên loại thiết bị"
-          placeholder="VD: Máy xúc"
-          required
-          {...register("name")}
-        />
-      </div>
-
-      <TextareaField
-        characterCount={description?.length ?? 0}
-        disabled={isSubmitting}
-        error={errors.description?.message}
-        label="Mô tả"
-        maxLength={2000}
-        placeholder="Mô tả ngắn về loại thiết bị..."
-        {...register("description")}
-      />
-
-      <Controller
-        control={control}
-        name="categoryIds"
-        render={({ field, fieldState }) => (
-          <CategoryMultiSelect
-            categories={categories}
-            disabled={isSubmitting}
-            error={fieldState.error?.message}
-            onChange={field.onChange}
-            value={field.value}
-          />
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="media"
-        render={({ field, fieldState }) => (
-          <EquipmentTypeMediaField
-            disabled={isSubmitting}
-            error={
-              fieldState.error?.message ??
-              errors.media?.root?.message ??
-              (errors.media ? "Vui lòng kiểm tra thông tin ảnh." : undefined)
-            }
-            itemErrors={errors.media}
-            onChange={field.onChange}
-            onUploadingChange={onMediaUploadingChange}
-            value={field.value}
-          />
-        )}
-      />
-    </form>
+        {!equipmentType ? (
+          <div hidden={activeTab !== "schema"}>
+            <fieldset className="min-w-0" disabled={isSubmitting}>
+              <h2 className=" pb-4 text-sm font-semibold">
+                Thông số kỹ thuật <span className="text-error">*</span>
+              </h2>
+              {fields.map((field, index) => (
+                <SpecSchemaFieldEditor
+                  index={index}
+                  key={field.id}
+                  onRemove={() => remove(index)}
+                  readOnly={isSubmitting}
+                />
+              ))}
+              <Button
+                className="mt-4"
+                onClick={() =>
+                  append(
+                    getSpecFieldFormValues(
+                      undefined,
+                      Math.max(
+                        -1,
+                        ...getValues("fields").map((field) =>
+                          Number.isFinite(field.displayOrder)
+                            ? field.displayOrder
+                            : -1,
+                        ),
+                      ) + 1,
+                    ),
+                  )
+                }
+                type="button"
+                variant="secondary"
+              >
+                <Plus className="size-4" />
+                Thêm thông số
+              </Button>
+            </fieldset>
+            {errors.fields?.message || errors.fields?.root?.message ? (
+              <p className="mt-3 text-sm text-error" role="alert">
+                {errors.fields.message ?? errors.fields.root?.message}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </form>
+    </FormProvider>
   );
 }
 
@@ -541,13 +620,12 @@ function EquipmentTypeMediaField({
 
   return (
     <div className="space-y-3">
-      <div className="rounded border border-border bg-muted/40 p-4">
+      <div>
         <p className="text-xs font-semibold uppercase text-foreground">Media</p>
-        <div className="mt-3 flex flex-wrap items-center gap-4">
+        <div className="mt-3">
           <MediaAvatarUpload
             accept={IMAGE_CONTENT_TYPES.join(",")}
             disabled={disabled}
-            fallbackText="Ảnh"
             mode="multiple"
             onChange={(_, upload) => {
               const uploads = Array.isArray(upload) ? upload : [upload];
@@ -561,14 +639,11 @@ function EquipmentTypeMediaField({
               onChange(ensureMediaThumbnail(nextItems));
             }}
             onUploadingChange={onUploadingChange}
-            previewUrl={value.map((item) => item.url ?? "")}
             size="md"
             uploadFiles={uploadEquipmentTypeImages}
+            uploadLabel="Thêm ảnh thiết bị"
+            variant="add"
           />
-          <p className="max-w-sm text-xs leading-5 text-muted-foreground">
-            Upload nhiều ảnh, chọn một ảnh làm thumbnail và sắp xếp bằng display
-            order.
-          </p>
         </div>
       </div>
 
@@ -577,25 +652,34 @@ function EquipmentTypeMediaField({
           {value
             .map((item, sourceIndex) => ({ item, sourceIndex }))
             .sort(
-              (left, right) =>
-                left.item.displayOrder - right.item.displayOrder,
+              (left, right) => left.item.displayOrder - right.item.displayOrder,
             )
             .map(({ item, sourceIndex }, index) => (
               <div
                 className={
                   item.isThumbnail
-                    ? "grid gap-3 rounded border border-amber-300 bg-amber-50 p-3 shadow-sm sm:grid-cols-[1fr_120px_auto_auto]"
-                    : "grid gap-3 rounded border border-border bg-background p-3 sm:grid-cols-[1fr_120px_auto_auto]"
+                    ? "grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded border border-amber-300 bg-amber-50 p-3 shadow-sm sm:grid-cols-[minmax(0,1fr)_80px_auto_auto]"
+                    : "grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded border border-border bg-background p-3 sm:grid-cols-[minmax(0,1fr)_80px_auto_auto]"
                 }
                 key={item.mediaId}
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    Ảnh {index + 1}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {item.mediaId}
-                  </p>
+                <div className="col-span-3 flex min-w-0 items-center gap-3 sm:col-span-1">
+                  <AvatarWithSkeleton
+                    alt={`Ảnh ${index + 1}`}
+                    className="size-16 shrink-0 rounded border border-border bg-background"
+                    fallback={`${index + 1}`}
+                    fallbackClassName="rounded bg-muted text-sm font-semibold text-muted-foreground"
+                    imageClassName="object-contain"
+                    src={item.url}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      Ảnh {index + 1}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.mediaId}
+                    </p>
+                  </div>
                 </div>
                 <TextField
                   disabled={disabled}
@@ -614,8 +698,18 @@ function EquipmentTypeMediaField({
                   value={item.displayOrder}
                 />
                 <Button
+                  aria-label={
+                    item.isThumbnail
+                      ? `Ảnh ${index + 1} thumbnail`
+                      : `thumbnail cho ảnh ${index + 1}`
+                  }
+                  aria-pressed={item.isThumbnail}
+                  className="size-10 p-0 sm:w-auto sm:px-3"
                   disabled={disabled}
                   onClick={() => setThumbnail(item.mediaId)}
+                  title={
+                    item.isThumbnail ? "thumbnail" : "thumbnail"
+                  }
                   type="button"
                   variant={item.isThumbnail ? "default" : "secondary"}
                 >
@@ -626,9 +720,12 @@ function EquipmentTypeMediaField({
                         : "size-4"
                     }
                   />
-                  {item.isThumbnail ? "Đang là thumbnail" : "Chọn thumbnail"}
+                  <span className="hidden sm:inline">
+                    {item.isThumbnail ? "thumbnail" : "thumbnail"}
+                  </span>
                 </Button>
                 <Button
+                  aria-label={`Xóa ảnh ${index + 1}`}
                   disabled={disabled}
                   onClick={() => removeMedia(item.mediaId)}
                   size="icon"
@@ -696,6 +793,7 @@ function getDefaultValues(
       })) ?? [],
     ),
     name: equipmentType?.name ?? "",
+    fields: equipmentType ? [] : [getSpecFieldFormValues()],
   };
 }
 
@@ -708,6 +806,7 @@ function toCreateEquipmentTypeRequest(
     description: normalizeNullableText(values.description),
     media: normalizeMediaRequest(values.media),
     name: values.name.trim(),
+    specSchema: toSpecDefinition(values),
   };
 }
 

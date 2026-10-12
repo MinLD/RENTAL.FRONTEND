@@ -4,6 +4,10 @@ import { ApiInputError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { serverApiJson, serverApiResult } from "@/services/server-api";
+import {
+  getCatalogBrand,
+  getCatalogEquipmentType,
+} from "@/services/queries/catalog-queries";
 import type {
   AdminCatalogBrandListParams,
   AdminCatalogBrandFilterParams,
@@ -26,6 +30,7 @@ import type {
   CatalogEquipmentTypeListResponse,
   CatalogPagedResult,
   CatalogPublishedSpecSchema,
+  CatalogPublishedSpecSchemaResponse,
   CatalogSpecDefinition,
   CatalogSpecSchema,
   CatalogSpecificationValidationResult,
@@ -76,16 +81,7 @@ export async function listCatalogBrandsAction(
 export async function getCatalogBrandAction(
   brandId: string,
 ): Promise<ApiResult<CatalogBrand>> {
-  return serverApiResult(async () => {
-    assertUuid(brandId, "ID thương hiệu không hợp lệ.");
-
-    const response = await serverApiJson<CatalogBrandDto>(
-      API_ENDPOINTS.backend.catalog.brands.detail(brandId),
-      "Không thể tải chi tiết thương hiệu.",
-    );
-
-    return normalizeCatalogBrand(response);
-  });
+  return getCatalogBrand(brandId);
 }
 
 export async function listAdminCatalogBrandsAction(
@@ -395,16 +391,7 @@ export async function getAdminCatalogEquipmentTypeAction(
 export async function getCatalogEquipmentTypeAction(
   id: string,
 ): Promise<ApiResult<CatalogEquipmentTypeDetail>> {
-  return serverApiResult(async () => {
-    assertUuid(id, "ID loại thiết bị không hợp lệ.");
-
-    const response = await serverApiJson<CatalogEquipmentTypeDetailDto>(
-      API_ENDPOINTS.backend.catalog.equipmentTypes.detail(id),
-      "Không thể tải chi tiết loại thiết bị.",
-    );
-
-    return normalizeCatalogEquipmentTypeDetail(response);
-  });
+  return getCatalogEquipmentType(id);
 }
 
 export async function getCatalogEquipmentTypeSchemaAction(
@@ -413,7 +400,7 @@ export async function getCatalogEquipmentTypeSchemaAction(
   return serverApiResult(async () => {
     assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
 
-    const response = await serverApiJson<CatalogPublishedSpecSchema>(
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
       API_ENDPOINTS.backend.catalog.equipmentTypes.currentSchema(
         equipmentTypeId,
       ),
@@ -432,7 +419,7 @@ export async function getCatalogEquipmentTypeSchemaVersionAction(
     assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
     assertSchemaVersion(version);
 
-    const response = await serverApiJson<CatalogPublishedSpecSchema>(
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
       API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
         equipmentTypeId,
         version,

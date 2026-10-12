@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { catalogSpecFieldsFormSchema } from "./catalog-spec-schema";
+
 const uuidSchema = z
   .string()
   .trim()
@@ -20,7 +22,9 @@ export const catalogEquipmentTypeMediaFormSchema = z.object({
 });
 
 export const catalogEquipmentTypeFormSchema = z.object({
-  categoryIds: z.array(uuidSchema).min(1, "Vui lòng chọn ít nhất một danh mục."),
+  categoryIds: z
+    .array(uuidSchema)
+    .min(1, "Vui lòng chọn ít nhất một danh mục."),
   code: z.string().trim().min(1, "Vui lòng nhập code loại thiết bị."),
   description: z
     .string()
@@ -29,7 +33,13 @@ export const catalogEquipmentTypeFormSchema = z.object({
     .optional(),
   media: z.array(catalogEquipmentTypeMediaFormSchema),
   name: z.string().trim().min(1, "Vui lòng nhập tên loại thiết bị."),
+  fields: catalogSpecFieldsFormSchema,
 });
+
+export const catalogEquipmentTypeCreateFormSchema =
+  catalogEquipmentTypeFormSchema.extend({
+    fields: catalogSpecFieldsFormSchema.min(1, "Thêm ít nhất một thông số."),
+  });
 
 export type CatalogEquipmentTypeFormMedia = z.infer<
   typeof catalogEquipmentTypeMediaFormSchema

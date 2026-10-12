@@ -138,7 +138,7 @@ export function OrganizationStatusView({
 
     try {
       await refreshSession();
-      router.push("/ow");
+      router.push("/own");
       router.refresh();
     } catch {
       toast.error("Phiên đăng nhập cần được cập nhật. Vui lòng đăng nhập lại.");
