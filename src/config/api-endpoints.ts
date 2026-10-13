@@ -1,3 +1,5 @@
+import type { PublicEquipmentListingListParams } from "@/types/inventory";
+
 type ListAdminUsersParams = {
   keyword?: string;
   page: number;
@@ -302,6 +304,22 @@ export const API_ENDPOINTS = {
     },
     inventory: {
       equipmentListings: {
+        publicDetail: (id: string) =>
+          `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}`,
+        publicList: ({
+          equipmentTypeId,
+          brandId,
+          q,
+          page = 1,
+          pageSize = 20,
+        }: PublicEquipmentListingListParams = {}) =>
+          buildQueryEndpoint("/api/v1/inventory/public/equipment-listings", {
+            EquipmentTypeId: equipmentTypeId,
+            BrandId: brandId,
+            Q: q?.trim(),
+            Page: page,
+            PageSize: pageSize,
+          }),
         create: "/api/v1/inventory/equipment-listings",
         detail: (id: string) =>
           `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}`,
@@ -360,6 +378,10 @@ export const API_ENDPOINTS = {
       refresh: "/api/auth/refresh",
     },
     mock: {
+      inventory: {
+        equipmentListingDetail: (id: string) =>
+          `/api/mock/inventory/public/equipment-listings/${encodeURIComponent(id)}`,
+      },
       passwordReset: {
         request: "/api/mock/auth/password-reset/request",
         reset: "/api/mock/auth/password-reset/reset",

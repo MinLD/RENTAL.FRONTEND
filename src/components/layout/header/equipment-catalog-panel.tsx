@@ -50,8 +50,6 @@ export function EquipmentCatalogPanel({
     hoverCategory,
     cancelHover,
   } = useCatalogNavigation(initialData, isOpen);
-  const linkClassName =
-    "inline-flex items-center text-xs font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary";
 
   return (
     <div
@@ -147,14 +145,6 @@ export function EquipmentCatalogPanel({
                 ))}
               </ul>
             )}
-            <Link
-              className={`${linkClassName} mt-auto pt-4`}
-              href={catalogBrowseHref({ categoryId: category.id })}
-              onClick={onNavigate}
-              prefetch={false}
-            >
-              Xem tất cả {category.name.toLocaleLowerCase("vi-VN")}
-            </Link>
           </div>
         )}
       </section>

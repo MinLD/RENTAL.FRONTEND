@@ -56,6 +56,45 @@ export type EquipmentListingListResponse = {
   totalPages: number;
 };
 
+export type PublicEquipmentListing = Pick<
+  EquipmentListing,
+  | "id"
+  | "equipmentTypeId"
+  | "brandId"
+  | "name"
+  | "description"
+  | "model"
+  | "manufactureYear"
+  | "schemaVersion"
+  | "specValues"
+  | "rentalRate"
+  | "media"
+  | "thumbnailUrl"
+  | "totalQuantity"
+> & {
+  availableQuantity: number;
+};
+
+export type PublicEquipmentListingListResponse = Omit<
+  EquipmentListingListResponse,
+  "items"
+> & {
+  items: PublicEquipmentListing[];
+};
+
+export type PublicEquipmentListingDetail = Omit<
+  PublicEquipmentListing,
+  "availableQuantity"
+>;
+
+export type PublicEquipmentListingListParams = {
+  equipmentTypeId?: string;
+  brandId?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+};
+
 export type CreateEquipmentListingRequest = {
   equipmentTypeId: string;
   brandId: string;

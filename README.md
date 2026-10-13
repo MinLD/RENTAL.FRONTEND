@@ -44,6 +44,20 @@ Chỉ tạo thư mục/file khi có nhu cầu thực tế. `page.tsx` nên mỏn
 khối business logic lớn. Dự án chỉ sử dụng App Router, không tạo `pages` hoặc
 `src/pages`.
 
+## Mock chi tiết thiết bị
+
+Khi chạy `npm run dev`, API mock trả cùng một thiết bị cho mọi ID:
+
+```text
+GET /api/mock/inventory/public/equipment-listings/any-id
+```
+
+Dữ liệu nằm trong `src/mocks/inventory/equipment-listing.ts`, có ảnh local để
+không phụ thuộc backend. Trong Server Component, gọi
+`getPublicEquipmentListing(id)` từ `src/services/queries/inventory-queries.ts`;
+service tự dùng mock khi phát triển. Đặt `MOCK_PUBLIC_EQUIPMENT_DETAIL=false`
+để chuyển sang API backend thật. Khi chạy production, service luôn dùng API thật.
+
 ## Docker và dev VPS
 
 Image runtime dùng Next.js standalone, chạy bằng user `node` và lắng nghe cổng

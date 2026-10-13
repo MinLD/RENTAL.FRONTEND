@@ -7,6 +7,8 @@ import { serverApiJson, serverApiResult } from "@/services/server-api";
 import type {
   CatalogBrand,
   CatalogBrandDto,
+  CatalogBrandListParams,
+  CatalogBrandListResponse,
   CatalogCategoryDetail,
   CatalogCategoryDetailResponse,
   CatalogCategoryListResponse,
@@ -19,10 +21,23 @@ import type {
 } from "@/types/catalog";
 import {
   normalizeCatalogBrand,
+  normalizeCatalogBrandList,
   normalizeCatalogCategoryList,
   normalizeCatalogEquipmentTypeDetail,
   normalizeCatalogEquipmentTypeList,
 } from "@/utils/catalog";
+
+export async function getCatalogBrands(
+  params: CatalogBrandListParams = {},
+): Promise<ApiResult<CatalogPagedResult<CatalogBrand>>> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<CatalogBrandListResponse>(
+      API_ENDPOINTS.backend.catalog.brands.list(params),
+      "Không thể tải danh sách thương hiệu.",
+    );
+    return normalizeCatalogBrandList(response, params);
+  });
+}
 
 export async function getCatalogCategories(): Promise<
   ApiResult<CatalogPagedResult<CatalogCategoryDetail>>
