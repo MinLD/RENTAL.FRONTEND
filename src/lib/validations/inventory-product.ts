@@ -20,6 +20,20 @@ const rateInputSchema = z
     "Giá thuê phải là số từ 0 trở lên.",
   );
 
+const manufactureYearInputSchema = z
+  .string()
+  .trim()
+  .refine(
+    (value) => !value || (/^\d{4}$/.test(value) && Number(value) >= 1),
+    "Vui lòng nhập năm gồm 4 chữ số.",
+  );
+const manufactureYearRequestSchema = z
+  .number()
+  .int()
+  .min(1)
+  .max(9999)
+  .nullable();
+
 export const productCreateFormSchema = z.object({
   equipmentTypeId: uuidSchema,
   brandId: uuidSchema,
@@ -27,6 +41,8 @@ export const productCreateFormSchema = z.object({
   description: z.string().trim(),
   model: z.string().trim().min(1, "Vui lòng nhập model sản phẩm."),
   serialNumber: z.string().trim().min(1, "Vui lòng nhập số serial."),
+  manufactureYear: manufactureYearInputSchema,
+  mediaIds: z.array(uuidSchema),
   dailyRate: rateInputSchema,
   weeklyRate: rateInputSchema,
   monthlyRate: rateInputSchema,
@@ -61,6 +77,8 @@ export const createEquipmentListingRequestSchema = z.object({
   description: productCreateFormSchema.shape.description.nullable(),
   model: z.string().trim().min(1, "Vui lòng nhập model sản phẩm."),
   serialNumber: z.string().trim().min(1, "Vui lòng nhập số serial."),
+  manufactureYear: manufactureYearRequestSchema,
+  mediaIds: productCreateFormSchema.shape.mediaIds,
   schemaVersion: z.number().int().positive("Phiên bản thông số không hợp lệ."),
   specValues: z.record(
     z.string(),
@@ -81,6 +99,8 @@ export const productInformationFormSchema = productCreateFormSchema
     name: true,
     description: true,
     model: true,
+    manufactureYear: true,
+    mediaIds: true,
     thumbnailMediaId: true,
   })
   .extend({
@@ -133,6 +153,8 @@ export const updateEquipmentListingRequestSchema =
       name: true,
       description: true,
       model: true,
+      manufactureYear: true,
+      mediaIds: true,
       thumbnailMediaId: true,
       schemaVersion: true,
       specValues: true,
@@ -153,17 +175,11 @@ export const createInventoryAssetRequestSchema = productCreateFormSchema.pick({
 });
 export const updateInventoryAssetRequestSchema = z.object({
   serialNumber: productCreateFormSchema.shape.serialNumber.optional(),
-  manufactureYear: z.number().int().min(1).max(9999).nullable().optional(),
+  manufactureYear: manufactureYearRequestSchema.optional(),
 });
 export const inventoryAssetFormSchema = z.object({
   serialNumber: productCreateFormSchema.shape.serialNumber,
-  manufactureYear: z
-    .string()
-    .trim()
-    .refine(
-      (value) => !value || (/^\d{4}$/.test(value) && Number(value) >= 1),
-      "Vui lòng nhập năm gồm 4 chữ số.",
-    ),
+  manufactureYear: manufactureYearInputSchema,
 });
 export type InventoryAssetFormValues = z.infer<typeof inventoryAssetFormSchema>;
 

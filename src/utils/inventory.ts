@@ -1,8 +1,23 @@
 import {
   EQUIPMENT_LISTING_STATUS,
   type EquipmentListing,
+  type EquipmentListingMedia,
   type EquipmentListingStatus,
 } from "@/types/inventory";
+
+export function getEquipmentListingMedia(
+  product: EquipmentListing,
+): EquipmentListingMedia[] {
+  const media = new Map((product.media ?? []).map((item) => [item.id, item]));
+  // Preserve listings created before the gallery was introduced.
+  if (product.thumbnailMediaId && !media.has(product.thumbnailMediaId)) {
+    media.set(product.thumbnailMediaId, {
+      id: product.thumbnailMediaId,
+      url: product.thumbnailUrl,
+    });
+  }
+  return Array.from(media.values());
+}
 
 export function formatEquipmentListingRate(
   amount: number | null | undefined,
