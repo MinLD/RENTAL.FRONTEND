@@ -7,37 +7,7 @@ export function TopBar() {
   return (
     <div className="bg-navy text-navy-foreground">
       <Container className="flex h-8 items-center justify-between gap-4 text-xs">
-        <div className="flex min-w-0 items-center gap-5">
-          <a className="flex shrink-0 items-center gap-1.5" href="tel:19006828">
-            <svg
-              aria-hidden="true"
-              className="size-3.5 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M5 4h3l1.5 4-2 1.5a15 15 0 0 0 7 7l1.5-2L20 16v3a1 1 0 0 1-1 1C10.7 20 4 13.3 4 5a1 1 0 0 1 1-1Z"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-              />
-            </svg>
-            <span>
-              <span className="text-primary">Hotline đặt máy:</span>{" "}
-              <strong className="font-semibold">1900 6828</strong>{" "}
-              <span className="text-primary">(24/7)</span>
-            </span>
-          </a>
-
-          <a
-            className="hidden min-w-0 items-center gap-1.5 sm:flex"
-            href="mailto:hotro@vinarental.vn"
-          >
-            <Mail size="20" />
-            <span className="truncate">hotro@vinarental.vn</span>
-          </a>
-        </div>
+        <div className="flex min-w-0 items-center gap-5"></div>
 
         <div className="flex items-center gap-1.5 md:hidden">
           <Link
