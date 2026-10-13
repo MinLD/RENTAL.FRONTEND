@@ -25,6 +25,8 @@ export type EquipmentListingRentalRateResponse = {
     EquipmentListingRentalRate[Key] | null;
 };
 
+export type EquipmentListingMedia = { id: string; url: string | null };
+
 export type EquipmentListing = {
   id: string;
   ownerUserId: string;
@@ -33,6 +35,8 @@ export type EquipmentListing = {
   name: string | null;
   description: string | null;
   model: string | null;
+  manufactureYear: number | null;
+  media: EquipmentListingMedia[] | null;
   schemaVersion: number;
   specValues: Record<string, unknown> | string;
   thumbnailMediaId: string | null;
@@ -59,6 +63,8 @@ export type CreateEquipmentListingRequest = {
   description: string | null;
   model: string;
   serialNumber: string;
+  manufactureYear: number | null;
+  mediaIds: string[];
   schemaVersion: number;
   specValues: Record<string, string | number | boolean>;
   rentalRate: EquipmentListingRentalRate;
@@ -70,6 +76,8 @@ export type UpdateEquipmentListingRequest = {
   name?: string;
   description?: string | null;
   model?: string;
+  manufactureYear?: number | null;
+  mediaIds?: string[];
   thumbnailMediaId?: string | null;
   schemaVersion?: number;
   specValues?: Record<string, string | number | boolean>;
@@ -136,10 +144,7 @@ export type InventoryAssetCalendar = {
 };
 
 export type CalendarBlockReason =
-  | "Maintenance"
-  | "OwnerReserved"
-  | "Inspection"
-  | "Other";
+  "Maintenance" | "OwnerReserved" | "Inspection" | "Other";
 export type CreateInventoryCalendarBlockRequest = {
   startDate: string;
   endDate: string;

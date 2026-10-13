@@ -58,6 +58,7 @@ export function ProductInformationPanel({
           rows={[
             { label: "Tên sản phẩm", value: product.name },
             { label: "Model", value: product.model },
+            { label: "Năm sản xuất", value: product.manufactureYear },
             {
               label: "Mô tả",
               value: product.description ? (

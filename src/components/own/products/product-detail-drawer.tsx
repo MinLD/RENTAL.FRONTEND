@@ -46,6 +46,7 @@ import {
 import {
   formatEquipmentListingDate,
   getEquipmentListingName,
+  getEquipmentListingMedia,
   getEquipmentListingStatusValue,
   getEquipmentListingStatusLabel,
 } from "@/utils/inventory";
@@ -240,15 +241,17 @@ function ProductDetailForms({
 }) {
   // Each form keeps its own values, including after saving the other tab.
   const [initialProduct] = useState(product);
+  const [initialMedia] = useState(() => getEquipmentListingMedia(product));
   const savedThumbnailRef = useRef(product.thumbnailMediaId);
+  const savedMediaIdsRef = useRef(initialMedia.map((item) => item.id));
   const brands = useCatalogSelectOptions(
     fetchBrands,
     visitedTabs.includes("information"),
   );
   const [initialBrandName] = useState(brandName ?? "Thương hiệu hiện tại");
-  const [imagePreviewUrl, setImagePreviewUrl] = useState(
-    initialProduct.thumbnailUrl ?? "",
-  );
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<
+    Record<string, string | null>
+  >(() => Object.fromEntries(initialMedia.map((item) => [item.id, item.url])));
   const informationForm = useForm<ProductInformationFormValues>({
     defaultValues: {
       brandId: initialProduct.brandId,
@@ -258,10 +261,16 @@ function ProductDetailForms({
         getEquipmentListingStatusValue(initialProduct.status) ?? "",
       ) as ProductInformationFormValues["status"],
       model: initialProduct.model ?? "",
+      manufactureYear: initialProduct.manufactureYear?.toString() ?? "",
+      mediaIds: initialMedia.map((item) => item.id),
       thumbnailMediaId: initialProduct.thumbnailMediaId ?? "",
     },
     resolver: zodResolver(productInformationFormSchema),
     shouldFocusError: false,
+  });
+  const thumbnailMediaId = useWatch({
+    control: informationForm.control,
+    name: "thumbnailMediaId",
   });
   const rateForm = useForm<ProductRentalRateFormValues>({
     defaultValues: {
@@ -283,6 +292,15 @@ function ProductDetailForms({
       request.description = values.description || null;
     if (dirtyFields.status)
       request.status = Number(values.status) as EquipmentListingStatus;
+    if (dirtyFields.manufactureYear)
+      request.manufactureYear = values.manufactureYear
+        ? Number(values.manufactureYear)
+        : null;
+    if (
+      JSON.stringify(values.mediaIds) !==
+      JSON.stringify(savedMediaIdsRef.current)
+    )
+      request.mediaIds = values.mediaIds;
     // Omit unchanged media and specifications in PATCH to preserve existing data.
     if ((values.thumbnailMediaId || null) !== savedThumbnailRef.current)
       request.thumbnailMediaId = values.thumbnailMediaId || null;
@@ -290,6 +308,7 @@ function ProductDetailForms({
       const result = await onUpdateInformation(request);
       if (result?.success) {
         savedThumbnailRef.current = result.data.thumbnailMediaId;
+        savedMediaIdsRef.current = [...values.mediaIds];
         informationForm.reset(values);
       } else if (result) applyServerErrors(informationForm, result.error);
     } catch (error) {
@@ -416,6 +435,16 @@ function ProductDetailForms({
               />
             )}
           />
+          <TextField
+            {...informationForm.register("manufactureYear")}
+            disabled={isBusy}
+            error={informationForm.formState.errors.manufactureYear?.message}
+            id={`${INFO_FORM_ID}-manufactureYear`}
+            label="Năm sản xuất"
+            placeholder="VD: 2024"
+            inputMode="numeric"
+            maxLength={4}
+          />
         </div>
         <TextareaField
           {...informationForm.register("description")}
@@ -427,18 +456,30 @@ function ProductDetailForms({
         />
         <Controller
           control={informationForm.control}
-          name="thumbnailMediaId"
+          name="mediaIds"
           render={({ field, fieldState }) => (
             <ProductImageField
               disabled={isBusy}
-              error={fieldState.error?.message}
-              onChange={(id, url) => {
-                field.onChange(id);
-                setImagePreviewUrl(url);
+              error={
+                fieldState.error?.message ||
+                informationForm.formState.errors.thumbnailMediaId?.message
+              }
+              onChange={(media, thumbnail) => {
+                field.onChange(media.map((item) => item.id));
+                informationForm.setValue("thumbnailMediaId", thumbnail, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                setImagePreviewUrls(
+                  Object.fromEntries(media.map((item) => [item.id, item.url])),
+                );
               }}
               onUploadingChange={onUploadingChange}
-              previewUrl={imagePreviewUrl}
-              value={field.value}
+              thumbnailMediaId={thumbnailMediaId}
+              value={field.value.map((id) => ({
+                id,
+                url: imagePreviewUrls[id] ?? null,
+              }))}
             />
           )}
         />

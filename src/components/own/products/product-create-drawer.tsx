@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, Plus, RefreshCw } from "lucide-react";
+import { LoaderCircle, Plus, RefreshCw, Star, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
@@ -14,6 +14,7 @@ import { TextField } from "@/components/forms/text-field";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { MediaAvatarUpload } from "@/components/media/media-avatar-upload";
 import { Button } from "@/components/ui/button";
+import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCatalogSelectOptions } from "@/hooks/use-catalog-select-options";
 import {
@@ -25,7 +26,7 @@ import {
   type ProductCreateFormValues,
 } from "@/lib/validations/inventory-product";
 import type { ApiResult } from "@/services/api-error";
-import { uploadMediaFile } from "@/services/media-service";
+import { uploadMediaFiles } from "@/services/media-service";
 import type {
   CatalogPublishedSpecSchema,
   CatalogSpecField,
@@ -33,6 +34,7 @@ import type {
 import type {
   CreateEquipmentListingRequest,
   EquipmentListing,
+  EquipmentListingMedia,
 } from "@/types/inventory";
 
 import type { ProductCreateActions } from "./product-management-types";
@@ -62,7 +64,9 @@ export function ProductCreateDrawer({
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [schemaError, setSchemaError] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<
+    Record<string, string | null>
+  >({});
   const schemaRequestIdRef = useRef(0);
   const equipmentTypes = useCatalogSelectOptions(actions.fetchEquipmentTypes);
   const brands = useCatalogSelectOptions(actions.fetchBrands);
@@ -79,6 +83,8 @@ export function ProductCreateDrawer({
       description: "",
       model: "",
       serialNumber: "",
+      manufactureYear: "",
+      mediaIds: [],
       dailyRate: "",
       weeklyRate: "",
       monthlyRate: "",
@@ -99,6 +105,7 @@ export function ProductCreateDrawer({
   } = form;
   const equipmentTypeId = useWatch({ control, name: "equipmentTypeId" });
   const specInputs = useWatch({ control, name: "specInputs" });
+  const thumbnailMediaId = useWatch({ control, name: "thumbnailMediaId" });
   const isBusy = isSubmitting || isUploadingImage;
   const schemaReady = Boolean(
     schema &&
@@ -184,6 +191,10 @@ export function ProductCreateDrawer({
         description: values.description || null,
         model: values.model,
         serialNumber: values.serialNumber,
+        manufactureYear: values.manufactureYear
+          ? Number(values.manufactureYear)
+          : null,
+        mediaIds: values.mediaIds,
         schemaVersion: schema.schemaVersion,
         specValues: buildSpecificationValues(fields, values.specInputs),
         rentalRate: {
@@ -221,6 +232,8 @@ export function ProductCreateDrawer({
                 "description",
                 "model",
                 "serialNumber",
+                "manufactureYear",
+                "mediaIds",
                 "dailyRate",
                 "weeklyRate",
                 "monthlyRate",
@@ -405,6 +418,16 @@ export function ProductCreateDrawer({
               required
               {...register("serialNumber")}
             />
+            <TextField
+              {...register("manufactureYear")}
+              disabled={isBusy}
+              error={errors.manufactureYear?.message}
+              id={`${FORM_ID}-manufactureYear`}
+              label="Năm sản xuất"
+              placeholder="VD: 2024"
+              inputMode="numeric"
+              maxLength={4}
+            />
           </div>
           <TextareaField
             {...register("description")}
@@ -417,18 +440,31 @@ export function ProductCreateDrawer({
           />
           <Controller
             control={control}
-            name="thumbnailMediaId"
+            name="mediaIds"
             render={({ field, fieldState }) => (
               <ProductImageField
                 disabled={isBusy}
-                error={fieldState.error?.message}
-                onChange={(mediaId, previewUrl) => {
-                  field.onChange(mediaId);
-                  setImagePreviewUrl(previewUrl);
+                error={
+                  fieldState.error?.message || errors.thumbnailMediaId?.message
+                }
+                onChange={(media, thumbnail) => {
+                  field.onChange(media.map((item) => item.id));
+                  setValue("thumbnailMediaId", thumbnail, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                  setImagePreviewUrls(
+                    Object.fromEntries(
+                      media.map((item) => [item.id, item.url]),
+                    ),
+                  );
                 }}
                 onUploadingChange={setIsUploadingImage}
-                previewUrl={imagePreviewUrl}
-                value={field.value}
+                thumbnailMediaId={thumbnailMediaId}
+                value={field.value.map((id) => ({
+                  id,
+                  url: imagePreviewUrls[id] ?? null,
+                }))}
               />
             )}
           />
@@ -628,15 +664,15 @@ export function SchemaLoadState({
   return null;
 }
 
-async function uploadProductImage(file: File) {
-  if (!IMAGE_CONTENT_TYPES.includes(file.type))
+async function uploadProductImages(files: File[]) {
+  if (files.some((file) => !IMAGE_CONTENT_TYPES.includes(file.type)))
     throw new Error("Ảnh sản phẩm chỉ hỗ trợ JPG, PNG hoặc WEBP.");
-  const upload = await uploadMediaFile(file);
-  if (upload.status.toLowerCase() !== "ready")
+  const uploads = await uploadMediaFiles(files);
+  if (uploads.some((upload) => upload.status.toLowerCase() !== "ready"))
     throw new Error(
       "Ảnh sản phẩm chưa sẵn sàng sử dụng. Vui lòng thử lại sau.",
     );
-  return upload;
+  return uploads;
 }
 
 export function ProductImageField({
@@ -644,15 +680,15 @@ export function ProductImageField({
   error,
   onChange,
   onUploadingChange,
-  previewUrl,
+  thumbnailMediaId,
   value,
 }: {
   disabled: boolean;
   error?: string;
-  onChange: (mediaId: string, previewUrl: string) => void;
+  onChange: (media: EquipmentListingMedia[], thumbnailMediaId: string) => void;
   onUploadingChange: (uploading: boolean) => void;
-  previewUrl: string;
-  value: string;
+  thumbnailMediaId: string;
+  value: EquipmentListingMedia[];
 }) {
   return (
     <div className="space-y-3 rounded border border-border bg-muted/40 p-4">
@@ -661,40 +697,95 @@ export function ProductImageField({
         <MediaAvatarUpload
           accept={IMAGE_CONTENT_TYPES.join(",")}
           disabled={disabled}
-          emptyLabel="Tải ảnh"
-          fallbackText="SP"
-          onChange={(mediaId, upload) => {
-            if (typeof mediaId === "string" && !Array.isArray(upload)) {
-              onChange(mediaId, upload.previewUrl);
-            }
+          mode="multiple"
+          onChange={(_, upload) => {
+            const uploads = Array.isArray(upload) ? upload : [upload];
+            const media = Array.from(
+              new Map([
+                ...value.map((item) => [item.id, item] as const),
+                ...uploads.map(
+                  (item) =>
+                    [
+                      item.mediaId,
+                      { id: item.mediaId, url: item.previewUrl },
+                    ] as const,
+                ),
+              ]).values(),
+            );
+            onChange(media, thumbnailMediaId || media[0]?.id || "");
           }}
           onUploadingChange={onUploadingChange}
-          previewAlt="Ảnh sản phẩm"
-          previewUrl={previewUrl}
-          replaceLabel="Thay ảnh sản phẩm"
-          uploadFile={uploadProductImage}
-          uploadLabel="Tải ảnh sản phẩm"
-          variant="logo"
+          uploadFiles={uploadProductImages}
+          uploadLabel="Thêm ảnh sản phẩm"
+          variant="add"
         />
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
             JPG, PNG hoặc WEBP. Không bắt buộc.
           </p>
-          {value ? (
-            <Button
-              disabled={disabled}
-              onClick={() => {
-                onChange("", "");
-              }}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              Xóa ảnh
-            </Button>
-          ) : null}
+          <p className="text-xs text-muted-foreground">
+            Có thể chọn nhiều ảnh. Chọn ngôi sao để đặt ảnh đại diện.
+          </p>
         </div>
       </div>
+      {value.map((item, index) => (
+        <div
+          className="flex min-w-0 flex-wrap items-center gap-3 rounded border border-border bg-background p-3"
+          key={item.id}
+        >
+          <AvatarWithSkeleton
+            alt={`Ảnh sản phẩm ${index + 1}`}
+            className="size-16 shrink-0 rounded border border-border"
+            fallback={`${index + 1}`}
+            fallbackClassName="rounded bg-muted text-sm"
+            imageClassName="object-contain"
+            src={item.url}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Ảnh {index + 1}</p>
+            {item.id === thumbnailMediaId ? (
+              <p className="text-xs text-muted-foreground">Ảnh đại diện</p>
+            ) : null}
+          </div>
+          <Button
+            aria-label={`Chọn ảnh ${index + 1} làm ảnh đại diện`}
+            aria-pressed={item.id === thumbnailMediaId}
+            disabled={disabled}
+            onClick={() => onChange(value, item.id)}
+            size="icon"
+            title="Đặt làm ảnh đại diện"
+            type="button"
+            variant="default"
+          >
+            <Star
+              className={
+                item.id === thumbnailMediaId
+                  ? "size-4 fill-amber-400 text-amber-500"
+                  : "size-4"
+              }
+            />
+          </Button>
+          <Button
+            aria-label={`Xóa ảnh ${index + 1}`}
+            disabled={disabled}
+            onClick={() => {
+              const media = value.filter((image) => image.id !== item.id);
+              onChange(
+                media,
+                item.id === thumbnailMediaId
+                  ? media[0]?.id || ""
+                  : thumbnailMediaId,
+              );
+            }}
+            size="icon"
+            title="Xóa ảnh"
+            type="button"
+            variant="default"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      ))}
       {error ? <p className="text-xs text-error">{error}</p> : null}
     </div>
   );
