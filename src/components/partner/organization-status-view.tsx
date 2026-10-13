@@ -323,7 +323,7 @@ export function OrganizationStatusView({
         )}
         {isSuspended && (
           <Button asChild>
-            <a href="tel:19006828">Liên hệ hỗ trợ</a>
+            <a href="mailto:hotro@dprental.vn">Liên hệ hỗ trợ</a>
           </Button>
         )}
         <Button

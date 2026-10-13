@@ -1,41 +1,53 @@
-export const FOOTER_SUPPORT_LINKS = [
-  {
-    label: "Quy chế hoạt động & Bảo chứng Sàn",
-    href: "/marketplace-rules",
-  },
-  {
-    label: "Tiêu chuẩn kiểm định an toàn 45 điểm",
-    href: "/inspection-standards",
-  },
-  {
-    label: "Chính sách bảo mật nguồn cung cấp thiết bị",
-    href: "/supplier-privacy",
-  },
+type FooterLink = {
+  label: string;
+  href: string;
+  available?: boolean;
+};
 
+export const FOOTER_SUPPORT_LINKS: readonly FooterLink[] = [
   {
-    label: "Quy trình xuất hóa đơn VAT điện tử",
-    href: "/vat-invoice",
+    label: "Hướng dẫn thuê thiết bị",
+    href: "/rental-guide",
+    available: false,
+  },
+  {
+    label: "Chính sách thuê thiết bị",
+    href: "/rental-policy",
+    available: false,
+  },
+  {
+    label: "Chính sách thanh toán",
+    href: "/payment-policy",
+    available: false,
+  },
+  {
+    label: "Hủy đơn & hoàn tiền",
+    href: "/cancellation-policy",
+    available: false,
+  },
+  {
+    label: "Giải quyết khiếu nại",
+    href: "/complaint-policy",
+    available: false,
   },
 ] as const;
 
 export const FOOTER_PARTNER_LINKS = [
   {
     label: "Trở thành nhà cung cấp thiết bị",
-    href: "/partner/equipment-provider",
+    href: "/partner",
   },
 ] as const;
 
-export const FOOTER_LEGAL_LINKS = [
+export const FOOTER_LEGAL_LINKS: readonly FooterLink[] = [
   {
-    label: "Điều khoản dịch vụ",
+    label: "Điều khoản sử dụng",
     href: "/terms",
+    available: false,
   },
   {
     label: "Chính sách bảo mật",
     href: "/privacy",
-  },
-  {
-    label: "Sơ đồ bãi máy",
-    href: "/yard-map",
+    available: false,
   },
 ] as const;
