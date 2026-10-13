@@ -1,5 +1,9 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { getSetCookieHeaders } from "@/services/auth-cookie";
+import {
+  getAuthCookieValues,
+  getSetCookieHeaders,
+} from "@/services/auth-cookie";
+import { logAuthFailure } from "@/services/auth-diagnostics";
 import { buildBackendApiUrl } from "@/services/backend-api";
 
 export const AUTH_REFRESH_ENDPOINT = API_ENDPOINTS.backend.auth.refresh;
@@ -12,7 +16,18 @@ type RefreshSnapshot = {
   statusText: string;
 };
 
-const refreshSessionPromises = new Map<string, Promise<RefreshSnapshot>>();
+type RefreshSession = {
+  promise: Promise<RefreshSnapshot>;
+  expiresAt: number;
+};
+// Late requests can still carry the previous cookie after a successful rotation.
+// Share their result briefly, including across bundles in the same Node process.
+const refreshState = globalThis as typeof globalThis & {
+  __dprentalRefreshSessions?: Map<string, RefreshSession>;
+};
+const refreshSessions = (refreshState.__dprentalRefreshSessions ??= new Map());
+const REFRESH_RESULT_GRACE_MS = 5_000;
+const MAX_CACHED_REFRESH_SESSIONS = 256;
 
 export function isAuthRefreshEndpoint(endpoint: string) {
   return endpoint.replace(/\/+$/, "") === AUTH_REFRESH_ENDPOINT;
@@ -52,11 +67,14 @@ function createSnapshotResponse(snapshot: RefreshSnapshot) {
     headers.append("set-cookie", setCookieHeader);
   }
 
-  return new Response(snapshot.body.slice(0), {
-    headers,
-    status: snapshot.status,
-    statusText: snapshot.statusText,
-  });
+  return new Response(
+    [204, 205, 304].includes(snapshot.status) ? null : snapshot.body.slice(0),
+    {
+      headers,
+      status: snapshot.status,
+      statusText: snapshot.statusText,
+    },
+  );
 }
 
 async function refreshBackendSessionSnapshot(cookieHeader: string | null) {
@@ -69,6 +87,8 @@ async function refreshBackendSessionSnapshot(cookieHeader: string | null) {
     method: "POST",
   });
   const setCookieHeaders = getSetCookieHeaders(response.headers);
+
+  if (!response.ok) await logAuthFailure("refresh", response);
 
   return {
     body: await response.arrayBuffer(),
@@ -91,19 +111,41 @@ export async function refreshBackendSession(cookieHeader: string | null) {
   }
 
   const sessionKey = await hashSessionKey(refreshToken);
-  const existingRefreshSessionPromise = refreshSessionPromises.get(sessionKey);
+  const now = Date.now();
+  for (const [key, session] of refreshSessions) {
+    if (session.expiresAt <= now) refreshSessions.delete(key);
+  }
+  const existingRefreshSession = refreshSessions.get(sessionKey);
 
-  if (existingRefreshSessionPromise) {
-    return createSnapshotResponse(await existingRefreshSessionPromise);
+  if (existingRefreshSession) {
+    return createSnapshotResponse(await existingRefreshSession.promise);
   }
 
-  const refreshSessionPromise = refreshBackendSessionSnapshot(cookieHeader);
-
-  refreshSessionPromises.set(sessionKey, refreshSessionPromise);
+  const session: RefreshSession = {
+    promise: refreshBackendSessionSnapshot(cookieHeader),
+    expiresAt: Number.POSITIVE_INFINITY,
+  };
+  refreshSessions.set(sessionKey, session);
 
   try {
-    return createSnapshotResponse(await refreshSessionPromise);
-  } finally {
-    refreshSessionPromises.delete(sessionKey);
+    const snapshot = await session.promise;
+    const response = createSnapshotResponse(snapshot);
+    if (response.ok && getAuthCookieValues(response.headers).accessToken) {
+      session.expiresAt = Date.now() + REFRESH_RESULT_GRACE_MS;
+      if (refreshSessions.size > MAX_CACHED_REFRESH_SESSIONS) {
+        for (const [key, entry] of refreshSessions) {
+          if (key !== sessionKey && Number.isFinite(entry.expiresAt)) {
+            refreshSessions.delete(key);
+            if (refreshSessions.size <= MAX_CACHED_REFRESH_SESSIONS) break;
+          }
+        }
+      }
+    } else {
+      refreshSessions.delete(sessionKey);
+    }
+    return response;
+  } catch (error) {
+    refreshSessions.delete(sessionKey);
+    throw error;
   }
 }

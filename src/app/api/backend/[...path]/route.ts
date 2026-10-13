@@ -44,7 +44,10 @@ function buildForwardedHeaders(request: NextRequest, cookieHeader?: string) {
   return headers;
 }
 
-function createProxyResponse(backendResponse: Response, preventCaching = false) {
+function createProxyResponse(
+  backendResponse: Response,
+  preventCaching = false,
+) {
   const responseHeaders = new Headers();
   const contentType = backendResponse.headers.get("content-type");
 
@@ -111,7 +114,9 @@ async function proxyBackendRequest(
   const refreshResponse = await refreshBackendSession(cookieHeader);
 
   if (!refreshResponse.ok) {
-    const response = await createResponse(backendResponse);
+    // A refresh outage must retain its actual status, not masquerade as an
+    // expired session because the original protected request returned 401.
+    const response = await createResponse(refreshResponse);
 
     if (refreshResponse.status === 401) {
       clearAuthCookies(response);
