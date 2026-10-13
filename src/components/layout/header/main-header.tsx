@@ -1,13 +1,14 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { Container } from "@/components/layout/container";
 import { getCurrentUser } from "@/services/session-service";
-import { Bell, ChevronDown, ShoppingCart } from "lucide-react";
+import { Bell, ShoppingCart } from "lucide-react";
 import { AuthLinks } from "./auth-links";
 import { MobileMenu } from "./mobile-menu";
 import { UserMenu } from "./user-menu";
 
-export async function MainHeader() {
+export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
   const user = await getCurrentUser();
 
   return (
@@ -27,14 +28,7 @@ export async function MainHeader() {
         </Link>
 
         <div className="order-last flex w-full min-w-0 items-center gap-2 md:order-none md:flex-1">
-          <button
-            aria-label="Mở danh mục thiết bị"
-            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1 rounded border border-primary bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover md:hidden"
-            type="button"
-          >
-            Tất cả
-            <ChevronDown size={14} />
-          </button>
+          {catalogMenu}
 
           <form
             aria-label="Tìm kiếm thiết bị"

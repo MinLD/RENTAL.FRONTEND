@@ -2,14 +2,21 @@ import {
   CATALOG_EQUIPMENT_TYPE_STATUS,
   type CatalogBrand,
   type CatalogBrandDto,
+  type CatalogBrandListParams,
+  type CatalogBrandListResponse,
   type CatalogCategory,
   type CatalogCategoryDetail,
   type CatalogCategoryDetailResponse,
+  type CatalogCategoryListParams,
+  type CatalogCategoryListResponse,
   type CatalogCategoryDto,
   type CatalogEquipmentTypeDetail,
   type CatalogEquipmentTypeDetailDto,
   type CatalogEquipmentTypeListItem,
   type CatalogEquipmentTypeListItemDto,
+  type CatalogEquipmentTypeListParams,
+  type CatalogEquipmentTypeListResponse,
+  type CatalogPagedResult,
   type CatalogEquipmentTypeMediaResponse,
   type CatalogEquipmentTypePrimarySpec,
   type CatalogEquipmentTypeStatus,
@@ -22,6 +29,54 @@ import {
   type CatalogSpecificationValidationError,
   type CatalogSpecificationValidationResult,
 } from "@/types/catalog";
+
+export function normalizeCatalogBrandList(
+  response: CatalogBrandListResponse,
+  params: CatalogBrandListParams = {},
+): CatalogPagedResult<CatalogBrand> {
+  return {
+    data: (response.items ?? []).map(normalizeCatalogBrand),
+    page: response.page ?? params.page ?? 1,
+    pageSize: response.pageSize ?? params.pageSize ?? 0,
+    totalItems: response.totalCount ?? 0,
+    totalPages: response.totalPages ?? 0,
+  };
+}
+
+export function normalizeCatalogCategoryList(
+  response: CatalogCategoryDetailResponse[] | CatalogCategoryListResponse,
+  params: CatalogCategoryListParams = {},
+): CatalogPagedResult<CatalogCategoryDetail> {
+  if (Array.isArray(response)) {
+    return {
+      data: response.map(normalizeCatalogCategoryDetail),
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? response.length,
+      totalItems: response.length,
+      totalPages: 1,
+    };
+  }
+  return {
+    data: (response.items ?? []).map(normalizeCatalogCategoryDetail),
+    page: response.page ?? params.page ?? 1,
+    pageSize: response.pageSize ?? params.pageSize ?? 0,
+    totalItems: response.totalCount ?? 0,
+    totalPages: response.totalPages ?? 0,
+  };
+}
+
+export function normalizeCatalogEquipmentTypeList(
+  response: CatalogEquipmentTypeListResponse,
+  params: CatalogEquipmentTypeListParams = {},
+): CatalogPagedResult<CatalogEquipmentTypeListItem> {
+  return {
+    data: (response.items ?? []).map(normalizeCatalogEquipmentTypeListItem),
+    page: response.page ?? params.page ?? 1,
+    pageSize: response.pageSize ?? params.pageSize ?? 0,
+    totalItems: response.totalCount ?? 0,
+    totalPages: response.totalPages ?? 0,
+  };
+}
 
 const EQUIPMENT_TYPE_STATUS_LABELS: Record<CatalogEquipmentTypeStatus, string> = {
   [CATALOG_EQUIPMENT_TYPE_STATUS.Draft]: "Nháp",

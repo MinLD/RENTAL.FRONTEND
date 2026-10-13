@@ -7,13 +7,48 @@ import { serverApiJson, serverApiResult } from "@/services/server-api";
 import type {
   CatalogBrand,
   CatalogBrandDto,
+  CatalogCategoryDetail,
+  CatalogCategoryDetailResponse,
+  CatalogCategoryListResponse,
   CatalogEquipmentTypeDetail,
   CatalogEquipmentTypeDetailDto,
+  CatalogEquipmentTypeListItem,
+  CatalogEquipmentTypeListParams,
+  CatalogEquipmentTypeListResponse,
+  CatalogPagedResult,
 } from "@/types/catalog";
 import {
   normalizeCatalogBrand,
+  normalizeCatalogCategoryList,
   normalizeCatalogEquipmentTypeDetail,
+  normalizeCatalogEquipmentTypeList,
 } from "@/utils/catalog";
+
+export async function getCatalogCategories(): Promise<
+  ApiResult<CatalogPagedResult<CatalogCategoryDetail>>
+> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<
+      CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
+    >(
+      API_ENDPOINTS.backend.catalog.categories.list(),
+      "Không thể tải danh sách danh mục.",
+    );
+    return normalizeCatalogCategoryList(response);
+  });
+}
+
+export async function getCatalogEquipmentTypes(
+  params: CatalogEquipmentTypeListParams = {},
+): Promise<ApiResult<CatalogPagedResult<CatalogEquipmentTypeListItem>>> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
+      API_ENDPOINTS.backend.catalog.equipmentTypes.list(params),
+      "Không thể tải danh sách loại thiết bị.",
+    );
+    return normalizeCatalogEquipmentTypeList(response, params);
+  });
+}
 
 function assertCatalogId(id: string, message: string) {
   if (

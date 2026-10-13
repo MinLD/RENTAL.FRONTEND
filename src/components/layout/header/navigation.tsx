@@ -1,45 +1,17 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { Container } from "@/components/layout/container";
 import { MAIN_NAVIGATION } from "@/config/navigation";
 
-export function Navigation() {
+export function Navigation({ catalogMenu }: { catalogMenu: ReactNode }) {
   return (
-    <nav aria-label="Điều hướng chính" className="hidden bg-navy text-navy-foreground md:block">
+    <nav
+      aria-label="Điều hướng chính"
+      className="hidden bg-navy text-navy-foreground md:block"
+    >
       <Container className="flex h-10 items-stretch">
-        <button
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 bg-primary px-3 text-xs font-semibold text-primary-foreground lg:px-5"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            className="size-4"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M5 7h14M5 12h14M5 17h14"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeWidth="1.5"
-            />
-          </svg>
-          DANH MỤC THIẾT BỊ
-          <svg
-            aria-hidden="true"
-            className="size-3"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="m7 10 5 5 5-5"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-        </button>
+        {catalogMenu}
 
         <div aria-hidden="true" className="w-10 shrink-0 lg:w-14" />
 
