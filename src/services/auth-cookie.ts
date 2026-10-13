@@ -97,7 +97,7 @@ function getCookieAttributes(setCookieHeader: string): CookieAttributes {
 
 export function copyAuthCookies(
   backendHeaders: Headers,
-  response: NextResponse,
+  response: { cookies: Pick<NextResponse["cookies"], "set"> },
 ) {
   const authCookies = getAuthCookieValues(backendHeaders);
 
@@ -122,7 +122,9 @@ export function copyAuthCookies(
   }
 }
 
-export function clearAuthCookies(response: NextResponse) {
+export function clearAuthCookies(response: {
+  cookies: Pick<NextResponse["cookies"], "set">;
+}) {
   for (const cookieName of AUTH_COOKIE_NAMES) {
     response.cookies.set(cookieName, "", {
       expires: new Date(0),

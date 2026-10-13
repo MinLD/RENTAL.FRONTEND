@@ -1,7 +1,11 @@
-import { headers as getRequestHeaders } from "next/headers";
+import { cookies, headers as getRequestHeaders } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 
-import { mergeAuthCookiesIntoCookieHeader } from "@/services/auth-cookie";
+import {
+  clearAuthCookies,
+  copyAuthCookies,
+  mergeAuthCookiesIntoCookieHeader,
+} from "@/services/auth-cookie";
 import {
   isAuthRefreshEndpoint,
   refreshBackendSession,
@@ -30,8 +34,9 @@ export async function serverApi(endpoint: string, init?: ServerApiInit) {
     ...requestInit
   } = init ?? {};
   const requestHeaders = await getRequestHeaders();
+  const cookieStore = await cookies();
   const headers = new Headers(initHeaders);
-  const forwardedCookieHeader = cookieHeader ?? requestHeaders.get("cookie");
+  const forwardedCookieHeader = cookieHeader ?? cookieStore.toString();
 
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json");
@@ -64,15 +69,25 @@ export async function serverApi(endpoint: string, init?: ServerApiInit) {
 
   const response = await requestBackend(forwardedCookieHeader);
 
-  if (response.status !== 401 || isAuthRefreshEndpoint(endpoint)) {
+  // SSR cannot send refreshed cookies to the browser. Its session is renewed
+  // in proxy.ts before rendering; never consume a rotating refresh token here.
+  if (
+    response.status !== 401 ||
+    isAuthRefreshEndpoint(endpoint) ||
+    !requestHeaders.has("next-action")
+  ) {
     return response;
   }
 
   const refreshResponse = await refreshBackendSession(forwardedCookieHeader);
 
   if (!refreshResponse.ok) {
-    return response;
+    if (refreshResponse.status === 401)
+      clearAuthCookies({ cookies: cookieStore });
+    return refreshResponse;
   }
+
+  copyAuthCookies(refreshResponse.headers, { cookies: cookieStore });
 
   return requestBackend(
     mergeAuthCookiesIntoCookieHeader(

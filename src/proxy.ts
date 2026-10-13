@@ -8,12 +8,13 @@ import {
   mergeAuthCookiesIntoCookieHeader,
 } from "@/services/auth-cookie";
 import { refreshBackendSession } from "@/services/auth-refresh";
+import { logAuthFailure } from "@/services/auth-diagnostics";
 import { getJwtRoles, shouldRefreshJwtToken } from "@/services/auth-token";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import type { AuthUser } from "@/types/auth";
 
-const REFRESH_BUFFER_SECONDS = 60;
+const REFRESH_BUFFER_SECONDS = 10;
 const ACCOUNT_ROUTE = "/account";
 const PARTNER_ROUTE = "/partner";
 
@@ -160,98 +161,128 @@ function shouldRefreshRequestSession(request: NextRequest) {
   return shouldRefresh ?? true;
 }
 
-async function refreshRequestSession(request: NextRequest) {
-  if (!shouldRefreshRequestSession(request)) {
-    return null;
-  }
-
-  try {
-    const refreshResponse = await refreshBackendSession(
-      request.headers.get("cookie"),
-    );
-
-    if (!refreshResponse.ok) {
-      const response = NextResponse.next();
-
-      if (refreshResponse.status === 401) {
-        clearAuthCookies(response);
-      }
-
-      return response;
-    }
-
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set(
-      "cookie",
-      mergeAuthCookiesIntoCookieHeader(
-        request.headers.get("cookie"),
-        refreshResponse.headers,
-      ),
-    );
-
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-
-    copyAuthCookies(refreshResponse.headers, response);
-
-    return response;
-  } catch {
-    return null;
-  }
-}
-
 async function getBackendCurrentUser(cookieHeader: string | null) {
-  try {
-    const response = await fetch(
-      buildBackendApiUrl(API_ENDPOINTS.backend.currentUser.me),
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-        },
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as AuthUser;
-  } catch {
-    return null;
-  }
+  return fetch(buildBackendApiUrl(API_ENDPOINTS.backend.currentUser.me), {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    },
+  });
 }
 
-async function validateRequestSession(request: NextRequest) {
+async function validateRequestSession(request: NextRequest): Promise<{
+  cookieHeader: string | null;
+  refreshResponse: Response | null;
+  user: AuthUser | null;
+  invalidSession: boolean;
+  status: number;
+}> {
   const originalCookieHeader = request.headers.get("cookie");
   let cookieHeader = originalCookieHeader;
   let refreshResponse: Response | null = null;
-
-  if (shouldRefreshRequestSession(request)) {
+  const refresh = async () => {
     refreshResponse = await refreshBackendSession(originalCookieHeader);
+    if (refreshResponse.ok) {
+      cookieHeader = mergeAuthCookiesIntoCookieHeader(
+        originalCookieHeader,
+        refreshResponse.headers,
+      );
+    }
+    return refreshResponse;
+  };
 
-    if (!refreshResponse.ok) {
+  try {
+    if (shouldRefreshRequestSession(request)) {
+      const response = await refresh();
+      if (!response.ok) {
+        return {
+          refreshResponse,
+          cookieHeader,
+          user: null,
+          invalidSession: response.status === 401,
+          status: response.status,
+        };
+      }
+    }
+
+    let userResponse = await getBackendCurrentUser(cookieHeader);
+    // A backend may reject a token before its JWT exp; retry on actual 401,
+    // never on a permission error, network failure or 5xx.
+    if (
+      userResponse.status === 401 &&
+      !refreshResponse &&
+      hasRefreshToken(request)
+    ) {
+      await logAuthFailure("current-user-before-refresh", userResponse);
+      const response = await refresh();
+      if (!response.ok) {
+        return {
+          refreshResponse,
+          cookieHeader,
+          user: null,
+          invalidSession: response.status === 401,
+          status: response.status,
+        };
+      }
+      userResponse = await getBackendCurrentUser(cookieHeader);
+    }
+
+    if (!userResponse.ok) {
+      await logAuthFailure("current-user", userResponse);
       return {
         refreshResponse,
+        cookieHeader,
         user: null,
+        // If refresh succeeded, a downstream 401 does not prove that the
+        // refresh token expired. Keep its newly issued cookies for recovery.
+        invalidSession:
+          userResponse.status === 401 && !hasRefreshToken(request),
+        status: userResponse.status === 401 ? 503 : userResponse.status,
       };
     }
 
-    cookieHeader = mergeAuthCookiesIntoCookieHeader(
-      originalCookieHeader,
-      refreshResponse.headers,
-    );
+    return {
+      refreshResponse,
+      cookieHeader,
+      user: (await userResponse.json()) as AuthUser,
+      invalidSession: false,
+      status: 200,
+    };
+  } catch {
+    console.warn("Authentication request failed", {
+      stage: "validate-session",
+      code: "UPSTREAM_UNAVAILABLE",
+    });
+    return {
+      refreshResponse,
+      cookieHeader,
+      user: null,
+      invalidSession: false,
+      status: 503,
+    };
   }
+}
 
-  return {
-    cookieHeader,
-    refreshResponse,
-    user: await getBackendCurrentUser(cookieHeader),
-  };
+function buildUnavailableSessionResponse(request: NextRequest, status: number) {
+  if (
+    !isPortalRoute(request.nextUrl.pathname) &&
+    !isAuthenticatedRoute(request.nextUrl.pathname)
+  ) {
+    return NextResponse.next();
+  }
+  return NextResponse.json(
+    {
+      message:
+        status === 403
+          ? "Bạn không có quyền truy cập trang này."
+          : "Chưa thể xác thực phiên đăng nhập. Vui lòng tải lại trang để thử lại.",
+    },
+    {
+      status: status === 403 ? 403 : 503,
+      headers: { "Cache-Control": "no-store", "Retry-After": "5" },
+    },
+  );
 }
 
 function copyRefreshedSessionCookies(
@@ -306,7 +337,10 @@ export async function proxy(request: NextRequest) {
     const session = await validateRequestSession(request);
 
     if (!session.user) {
-      return buildInvalidSessionResponse(request);
+      if (session.invalidSession) return buildInvalidSessionResponse(request);
+      const response = buildUnavailableSessionResponse(request, session.status);
+      copyRefreshedSessionCookies(session.refreshResponse, response);
+      return response;
     }
 
     const authState = getValidatedRouteAuthState(
@@ -337,14 +371,6 @@ export async function proxy(request: NextRequest) {
     }
 
     return NextResponse.next();
-  }
-
-  if (hasAnyAuthCookie(request)) {
-    const refreshResponse = await refreshRequestSession(request);
-
-    if (refreshResponse) {
-      return refreshResponse;
-    }
   }
 
   return NextResponse.next();
