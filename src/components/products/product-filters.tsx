@@ -5,17 +5,20 @@ import { useState } from "react";
 import { Filter } from "lucide-react";
 
 import { ProductFilterSection } from "./product-filter-section";
+import { ProductAdvancedFilters } from "./product-advanced-filters";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseData } from "@/types/product-browse";
+import { hasCatalogListings } from "@/utils/catalog";
 
 export function ProductFilters({
   filters,
   categories,
   equipmentTypes,
   brands,
+  specificationFields,
 }: Pick<
   ProductBrowseData,
-  "filters" | "categories" | "equipmentTypes" | "brands"
+  "filters" | "categories" | "equipmentTypes" | "brands" | "specificationFields"
 >) {
   const { isPending, navigate } = useProductBrowseNavigation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,27 +59,30 @@ export function ProductFilters({
       >
         <ProductFilterSection
           allLabel="Tất cả danh mục"
+          defaultExpanded
           disabled={isPending}
           emptyMessage="Chưa có danh mục thiết bị."
           errorMessage="Không thể tải danh mục."
           name="categoryId"
           onChange={(categoryId) =>
-            navigate({ categoryId, equipmentTypeId: undefined })
+            navigate({ categoryId, equipmentTypeId: undefined, filters: undefined })
           }
-          options={categories.success ? categories.data.data : null}
+          options={categories.success ? categories.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm danh mục..."
           title="1. Danh mục thiết bị"
           value={filters.categoryId}
         />
         <ProductFilterSection
-          allLabel={filters.categoryId ? undefined : "Tất cả loại thiết bị"}
+          allLabel="Tất cả loại thiết bị"
           disabled={isPending}
           emptyMessage="Danh mục chưa có loại thiết bị."
           errorMessage="Không thể tải loại thiết bị."
           key={filters.categoryId ?? "all-types"}
           name="equipmentTypeId"
-          onChange={(equipmentTypeId) => navigate({ equipmentTypeId })}
-          options={equipmentTypes.success ? equipmentTypes.data.data : null}
+          onChange={(equipmentTypeId) =>
+            navigate({ equipmentTypeId, filters: undefined })
+          }
+          options={equipmentTypes.success ? equipmentTypes.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm loại thiết bị..."
           title="2. Loại thiết bị"
           value={filters.equipmentTypeId}
@@ -88,10 +94,15 @@ export function ProductFilters({
           errorMessage="Không thể tải thương hiệu."
           name="brandId"
           onChange={(brandId) => navigate({ brandId })}
-          options={brands.success ? brands.data.data : null}
+          options={brands.success ? brands.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm thương hiệu..."
           title="3. Thương hiệu"
           value={filters.brandId}
+        />
+        <ProductAdvancedFilters
+          key={JSON.stringify([filters.equipmentTypeId, filters.from, filters.to, filters.requestedQuantity, filters.filters, specificationFields])}
+          filters={filters}
+          specificationFields={specificationFields}
         />
       </div>
     </aside>

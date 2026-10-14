@@ -97,10 +97,34 @@ export type EquipmentAvailabilityCheckResponse =
     isAvailable: boolean;
   };
 
+export const PUBLIC_EQUIPMENT_LISTING_SORTS = [
+  "created_desc",
+  "created_asc",
+  "model_desc",
+  "model_asc",
+  "relevance",
+] as const;
+
+export type PublicEquipmentListingSort =
+  (typeof PUBLIC_EQUIPMENT_LISTING_SORTS)[number];
+
+export type PublicEquipmentListingSpecFilter = {
+  field: string;
+  operator: "eq" | "gt" | "gte" | "lt" | "lte";
+  value: string | number | boolean;
+};
+
 export type PublicEquipmentListingListParams = {
+  categoryId?: string;
   equipmentTypeId?: string;
   brandId?: string;
   q?: string;
+  sort?: PublicEquipmentListingSort;
+  /** Raw JSON array string. URLSearchParams handles encoding. */
+  filters?: string;
+  from?: string;
+  to?: string;
+  requestedQuantity?: number;
   page?: number;
   pageSize?: number;
 };

@@ -30,6 +30,17 @@ import {
   type CatalogSpecificationValidationResult,
 } from "@/types/catalog";
 
+function normalizeCatalogListingCount(listingCount?: number | null) {
+  return typeof listingCount === "number" &&
+    Number.isInteger(listingCount) && listingCount >= 0
+    ? { listingCount }
+    : {};
+}
+
+export function hasCatalogListings(item: { listingCount?: number }) {
+  return (item.listingCount ?? 0) >= 1;
+}
+
 export function normalizeCatalogBrandList(
   response: CatalogBrandListResponse,
   params: CatalogBrandListParams = {},
@@ -86,6 +97,7 @@ const EQUIPMENT_TYPE_STATUS_LABELS: Record<CatalogEquipmentTypeStatus, string> =
 
 export function normalizeCatalogBrand(brand: CatalogBrandDto): CatalogBrand {
   return {
+    ...normalizeCatalogListingCount(brand.listingCount),
     code: normalizeText(brand.code) ?? "",
     ...(normalizeText(brand.createdAt)
       ? { createdAt: normalizeText(brand.createdAt) }
@@ -117,6 +129,7 @@ export function normalizeCatalogCategory(
   category: CatalogCategoryDto,
 ): CatalogCategory {
   return {
+    ...normalizeCatalogListingCount(category.listingCount),
     id: category.id ?? "",
     name: normalizeText(category.name) ?? "Chưa đặt tên",
     ...(normalizeText(category.imageMediaId)
@@ -151,6 +164,7 @@ export function normalizeCatalogEquipmentTypeListItem(
   equipmentType: CatalogEquipmentTypeListItemDto,
 ): CatalogEquipmentTypeListItem {
   return {
+    ...normalizeCatalogListingCount(equipmentType.listingCount),
     categories: normalizeCatalogCategories(equipmentType.categories),
     code: normalizeText(equipmentType.code) ?? "",
     ...(typeof equipmentType.currentSchemaVersion === "number"

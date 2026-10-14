@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
+import { parsePublicEquipmentListingListParams } from "@/lib/validations/public-equipment-search";
 import { authApiClient } from "@/services/api-client";
 import type {
   EquipmentAvailabilityCheckRequest,
@@ -48,8 +49,9 @@ export async function fetchPublicEquipmentListings(
   params: PublicEquipmentListingListParams,
   signal?: AbortSignal,
 ): Promise<PublicEquipmentListingListResponse> {
+  const request = parsePublicEquipmentListingListParams(params);
   const response = await authApiClient(
-    API_ENDPOINTS.backend.inventory.equipmentListings.publicList(params),
+    API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
     { signal },
   );
   return response.json();

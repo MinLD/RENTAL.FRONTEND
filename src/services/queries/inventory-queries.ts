@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
+import { parsePublicEquipmentListingListParams } from "@/lib/validations/public-equipment-search";
 import { ApiInputError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
 import {
@@ -17,14 +18,6 @@ import type {
   PublicEquipmentListingDetail,
   PublicEquipmentListingListResponse,
 } from "@/types/inventory";
-
-const publicEquipmentListingListParamsSchema = z.object({
-  equipmentTypeId: z.uuid().optional(),
-  brandId: z.uuid().optional(),
-  q: z.string().trim().optional(),
-  page: z.number().int().positive().default(1),
-  pageSize: z.number().int().positive().default(20),
-});
 
 export async function getPublicEquipmentListing(
   id: string,
@@ -42,10 +35,7 @@ export async function getPublicEquipmentListings(
   params: PublicEquipmentListingListParams = {},
 ): Promise<ApiResult<PublicEquipmentListingListResponse>> {
   return serverApiResult(async () => {
-    const request = parseInventoryRequest(
-      publicEquipmentListingListParamsSchema,
-      params,
-    );
+    const request = parsePublicEquipmentListingListParams(params);
     return serverApiJson<PublicEquipmentListingListResponse>(
       API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
       "Không thể tải danh sách thiết bị.",

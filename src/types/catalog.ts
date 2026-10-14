@@ -20,6 +20,7 @@ export type CatalogBrandDto = {
   createdAt?: string;
   id?: string;
   isActive?: boolean;
+  listingCount?: number | null;
   logoMediaId?: string | null;
   logoUrl?: string | null;
   name?: string | null;
@@ -45,6 +46,7 @@ export type UpdateCatalogBrandRequest = CreateCatalogBrandRequest;
 
 export type CatalogCategoryDto = {
   id?: string;
+  listingCount?: number | null;
   imageMediaId?: string | null;
   imageUrl?: string | null;
   name?: string | null;
@@ -152,6 +154,7 @@ export type CatalogEquipmentTypeListItemDto = {
   currentSchemaVersion?: number | null;
   description?: string | null;
   id?: string;
+  listingCount?: number | null;
   name?: string | null;
   publishedAt?: string | null;
   status?: CatalogEquipmentTypeStatus;
@@ -285,6 +288,7 @@ export type CatalogBrand = {
   createdAt?: string;
   id: string;
   isActive: boolean;
+  listingCount?: number;
   logoMediaId?: string;
   logoUrl?: string;
   name: string;
@@ -294,6 +298,7 @@ export type CatalogBrand = {
 
 export type CatalogCategory = {
   id: string;
+  listingCount?: number;
   imageMediaId?: string;
   imageUrl?: string;
   name: string;
@@ -311,6 +316,7 @@ export type CatalogEquipmentTypeListItem = {
   currentSchemaVersion?: number;
   description?: string;
   id: string;
+  listingCount?: number;
   name: string;
   publishedAt?: string;
   status?: CatalogEquipmentTypeStatus;

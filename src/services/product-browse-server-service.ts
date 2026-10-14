@@ -4,18 +4,19 @@ import { redirect } from "next/navigation";
 
 import {
   PRODUCT_DEFAULT_PAGE_SIZE,
-  PRODUCT_PAGE_SIZES,
   productBrowseHref,
 } from "@/config/product-browse";
 import {
   getCatalogBrands,
   getCatalogCategories,
   getCatalogEquipmentType,
+  getCatalogEquipmentTypeSchemaVersion,
   getCatalogEquipmentTypes,
 } from "@/services/queries/catalog-queries";
 import { getPublicEquipmentListings } from "@/services/queries/inventory-queries";
 import type { ApiResult } from "@/services/api-error";
-import type { CatalogPagedResult } from "@/types/catalog";
+import type { CatalogEquipmentTypeDetail, CatalogPagedResult, CatalogSpecField } from "@/types/catalog";
+import { PUBLIC_EQUIPMENT_LISTING_SORTS } from "@/types/inventory";
 import type {
   ProductBrowseData,
   ProductBrowseFilters,
@@ -30,7 +31,8 @@ function getSearchParam(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
 }
 
-// Search filter options locally, including options beyond the first API page.
+// The public catalog rejects PageSize > 100. Collect every page so local
+// filtering includes the entire catalog without a "load more" control.
 async function getAllFilterOptions<T>(
   getPage: (page: number) => Promise<ApiResult<CatalogPagedResult<T>>>,
 ): Promise<ApiResult<CatalogPagedResult<T>>> {
@@ -48,6 +50,24 @@ async function getAllFilterOptions<T>(
   return first;
 }
 
+async function getSpecificationFields(
+  selected: ApiResult<CatalogEquipmentTypeDetail> | null,
+): Promise<ApiResult<CatalogSpecField[]> | null> {
+  if (!selected || !selected.success) return selected;
+  const type = selected.data;
+  const version = type.currentSchemaVersion;
+  if (!version) return { success: true, data: [] };
+  if (
+    type.specSchema?.version === version &&
+    type.specSchema.status?.toLowerCase() === "published" &&
+    type.specSchema.definition?.fields
+  ) {
+    return { success: true, data: type.specSchema.definition.fields };
+  }
+  const schema = await getCatalogEquipmentTypeSchemaVersion(type.id, version);
+  return schema.success ? { success: true, data: schema.data.fields ?? [] } : schema;
+}
+
 export async function getProductBrowseData(
   params: ProductBrowseSearchParams,
 ): Promise<ProductBrowseData> {
@@ -55,20 +75,29 @@ export async function getProductBrowseData(
   const requestedSize = Number(
     getSearchParam(params.pageSize) ?? PRODUCT_DEFAULT_PAGE_SIZE,
   );
+  const requestedSort = getSearchParam(params.sort);
+  const requestedQuantity = getSearchParam(params.requestedQuantity);
   const filters: ProductBrowseFilters = {
     categoryId: getSearchParam(params.categoryId),
     equipmentTypeId: getSearchParam(params.equipmentTypeId),
     brandId: getSearchParam(params.brandId),
     q: getSearchParam(params.q),
+    sort: PUBLIC_EQUIPMENT_LISTING_SORTS.find((sort) => sort === requestedSort),
+    filters: getSearchParam(params.filters),
+    from: getSearchParam(params.from),
+    to: getSearchParam(params.to),
+    requestedQuantity:
+      requestedQuantity !== undefined ? Number(requestedQuantity) : undefined,
     page:
       Number.isSafeInteger(requestedPage) && requestedPage > 0
         ? requestedPage
         : 1,
-    pageSize: PRODUCT_PAGE_SIZES.some((size) => size === requestedSize)
-      ? requestedSize
-      : PRODUCT_DEFAULT_PAGE_SIZE,
+    pageSize:
+      Number.isSafeInteger(requestedSize) && requestedSize > 0 && requestedSize <= 100
+        ? requestedSize
+        : PRODUCT_DEFAULT_PAGE_SIZE,
   };
-  const [categories, equipmentTypes, brands, products] = await Promise.all([
+  const [categories, equipmentTypes, brands, products, selectedType] = await Promise.all([
     getCatalogCategories(),
     getAllFilterOptions((page) =>
       getCatalogEquipmentTypes({
@@ -81,15 +110,8 @@ export async function getProductBrowseData(
     getAllFilterOptions((page) =>
       getCatalogBrands({ page, pageSize: 100, sort: "name_asc" }),
     ),
-    filters.categoryId && !filters.equipmentTypeId
-      ? null
-      : getPublicEquipmentListings({
-          equipmentTypeId: filters.equipmentTypeId,
-          brandId: filters.brandId,
-          q: filters.q,
-          page: filters.page,
-          pageSize: filters.pageSize,
-        }),
+    getPublicEquipmentListings(filters),
+    filters.equipmentTypeId ? getCatalogEquipmentType(filters.equipmentTypeId) : null,
   ]);
   // Retain a linked type even if it is outside the current category's options.
   if (
@@ -99,11 +121,10 @@ export async function getProductBrowseData(
       (item) => item.id === filters.equipmentTypeId,
     )
   ) {
-    const selected = await getCatalogEquipmentType(filters.equipmentTypeId);
-    if (selected.success) equipmentTypes.data.data.push(selected.data);
+    if (selectedType?.success) equipmentTypes.data.data.push(selectedType.data);
   }
   if (
-    products?.success &&
+    products.success &&
     filters.page > Math.max(1, products.data.totalPages)
   ) {
     redirect(
@@ -113,5 +134,6 @@ export async function getProductBrowseData(
       }),
     );
   }
-  return { filters, categories, equipmentTypes, brands, products };
+  const specificationFields = await getSpecificationFields(selectedType);
+  return { filters, categories, equipmentTypes, brands, products, specificationFields };
 }

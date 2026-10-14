@@ -28,6 +28,7 @@ export function ProductFilterSection({
   errorMessage,
   disabled,
   onChange,
+  defaultExpanded = false,
 }: {
   title: string;
   name: string;
@@ -39,6 +40,7 @@ export function ProductFilterSection({
   errorMessage: string;
   disabled: boolean;
   onChange: (id: string | undefined) => void;
+  defaultExpanded?: boolean;
 }) {
   const [keyword, setKeyword] = useState("");
   const query = searchText(keyword);
@@ -49,11 +51,15 @@ export function ProductFilterSection({
     ...(allLabel ? [{ id: "", name: allLabel }] : []),
     ...(matches ?? []),
   ];
+  const selectedLabel = options?.find((option) => option.id === value)?.name;
   return (
-    <fieldset className="min-w-0" disabled={disabled}>
-      <legend className="mb-3 text-[11px] font-bold uppercase">
+    <details className="min-w-0" open={defaultExpanded}>
+      <summary className="cursor-pointer text-[11px] font-bold uppercase">
         {title}
-      </legend>
+        {selectedLabel ? <span className="mt-1 block truncate text-xs font-normal normal-case text-primary">{selectedLabel}</span> : null}
+      </summary>
+      <fieldset className="mt-3 min-w-0" disabled={disabled}>
+      <legend className="sr-only">{title}</legend>
       {options ? (
         <>
           <div className="relative mb-2">
@@ -70,7 +76,7 @@ export function ProductFilterSection({
               value={keyword}
             />
           </div>
-          <div className="max-h-52 space-y-1 overflow-y-auto pr-1">
+          <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
             {choices.map((option) => (
               <label
                 className={`flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-xs leading-4 ${(value ?? "") === option.id ? "font-semibold text-primary" : "hover:text-primary"}`}
@@ -100,6 +106,7 @@ export function ProductFilterSection({
           <ProductRefreshButton />
         </div>
       )}
-    </fieldset>
+      </fieldset>
+    </details>
   );
 }
