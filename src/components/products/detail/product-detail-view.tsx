@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, Package, Tag } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { QueryProvider } from "@/providers/query-provider";
 import type { PublicEquipmentListingDetail } from "@/types/inventory";
 import type { CatalogSpecField } from "@/types/catalog";
 import { getEquipmentListingName } from "@/utils/inventory";
@@ -76,13 +77,16 @@ export function ProductDetailView({
               </p>
             </div>
           </div>
-          <ProductRentalPanel
-            name={name}
-            rentalRate={product.rentalRate}
-            totalQuantity={product.totalQuantity}
-            availableQuantity={product.availableQuantity}
-            today={getTodayRentalDate()}
-          />
+          <QueryProvider>
+            <ProductRentalPanel
+              key={product.id}
+              listingId={product.id}
+              name={name}
+              rentalRate={product.rentalRate}
+              totalQuantity={product.totalQuantity}
+              today={getTodayRentalDate()}
+            />
+          </QueryProvider>
           <div className="min-w-0 lg:col-start-1">
             <ProductDetailTabs
               description={product.description}

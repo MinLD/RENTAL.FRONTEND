@@ -84,6 +84,19 @@ export type PublicEquipmentListingListResponse = Omit<
 
 export type PublicEquipmentListingDetail = PublicEquipmentListing;
 
+export type EquipmentAvailabilityCheckRequest = {
+  startDate: string;
+  endDate: string;
+  requestedQuantity: number;
+};
+
+export type EquipmentAvailabilityCheckResponse =
+  EquipmentAvailabilityCheckRequest & {
+    listingId: string;
+    availableQuantity: number;
+    isAvailable: boolean;
+  };
+
 export type PublicEquipmentListingListParams = {
   equipmentTypeId?: string;
   brandId?: string;

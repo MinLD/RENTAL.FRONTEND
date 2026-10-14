@@ -1,3 +1,5 @@
+export const EQUIPMENT_AVAILABILITY_DEBOUNCE_MS = 400;
+
 export const CALENDAR_BLOCK_REASONS = [
   "Maintenance",
   "OwnerReserved",

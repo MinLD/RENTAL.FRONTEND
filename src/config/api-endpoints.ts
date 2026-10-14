@@ -304,6 +304,8 @@ export const API_ENDPOINTS = {
     },
     inventory: {
       equipmentListings: {
+        publicAvailabilityCheck: (id: string) =>
+          `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}/availability/check`,
         publicDetail: (id: string) =>
           `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}`,
         publicList: ({

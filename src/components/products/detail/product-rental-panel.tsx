@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Minus, Package, Plus } from "lucide-react";
+import { ArrowRight, Minus, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useEquipmentAvailability } from "@/hooks/use-equipment-availability";
 import type { EquipmentListingRentalRateResponse } from "@/types/inventory";
 import { formatEquipmentListingRate } from "@/utils/inventory";
 import { formatRentalDate, getRentalDayCount } from "@/utils/product-detail";
@@ -21,19 +22,20 @@ import {
   RENTAL_DAYS_PER_MONTH,
   RENTAL_DAYS_PER_WEEK,
 } from "@/utils/rental-pricing";
+import { ProductAvailabilityStatus } from "./product-availability-status";
 import { ProductRentalPriceBreakdown } from "./product-rental-price-breakdown";
 
 export function ProductRentalPanel({
+  listingId,
   name,
   rentalRate,
   totalQuantity,
-  availableQuantity,
   today,
 }: {
+  listingId: string;
   name: string;
   rentalRate: EquipmentListingRentalRateResponse | null;
   totalQuantity: number;
-  availableQuantity: number;
   today: string;
 }) {
   const [from, setFrom] = useState(today);
@@ -41,8 +43,8 @@ export function ProductRentalPanel({
   const [quantityInput, setQuantityInput] = useState("1");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const quantity = Number(quantityInput);
-  const maxQuantity = Number.isFinite(availableQuantity)
-    ? Math.max(0, Math.floor(availableQuantity))
+  const maxQuantity = Number.isFinite(totalQuantity)
+    ? Math.max(0, Math.floor(totalQuantity))
     : 0;
   const days = getRentalDayCount(from, to);
   const dailyRate = rentalRate?.dailyRate;
@@ -52,14 +54,17 @@ export function ProductRentalPanel({
   if (!from || !to) error = "Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc.";
   else if (from < today) error = "Ngày bắt đầu thuê không được trước hôm nay.";
   else if (!days) error = "Ngày kết thúc phải từ ngày bắt đầu thuê trở đi.";
-  else if (!maxQuantity)
-    error = "Thiết bị hiện chưa có số lượng sẵn sàng để thuê.";
+  else if (!maxQuantity) error = "Thiết bị hiện chưa có số lượng để thuê.";
   else if (
     !Number.isSafeInteger(quantity) ||
     quantity < 1 ||
     quantity > maxQuantity
   )
     error = `Chọn số lượng từ 1 đến ${maxQuantity} thiết bị.`;
+  const availabilityCheck = useEquipmentAvailability(
+    listingId,
+    error ? null : { startDate: from, endDate: to, requestedQuantity: quantity },
+  );
   const estimate = !error
     ? calculateRentalPrice(days, quantity, rentalRate)
     : null;
@@ -113,21 +118,7 @@ export function ProductRentalPanel({
           />
         </label>
       </div>
-      <div className="my-5 flex items-start gap-2.5 text-xs">
-        <Package
-          aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-secondary"
-        />
-        <div>
-          <p className="font-medium">
-            Hiện có {maxQuantity}/{totalQuantity} thiết bị sẵn sàng
-          </p>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-            Số lượng có thể thuê sẽ được xác nhận theo lịch bạn chọn.
-          </p>
-        </div>
-      </div>
-      <div className="space-y-2">
+      <div className="mt-5 space-y-2">
         <label className="text-xs font-semibold" htmlFor="rental-quantity">
           Số lượng thiết bị
         </label>
@@ -185,6 +176,14 @@ export function ProductRentalPanel({
           {error}
         </p>
       ) : null}
+      {!error ? (
+        <ProductAvailabilityStatus
+          availability={availabilityCheck.availability}
+          isChecking={availabilityCheck.isChecking}
+          isError={availabilityCheck.isError}
+          onRetry={() => void availabilityCheck.refetch()}
+        />
+      ) : null}
       <div className="mt-6 border-t border-border pt-4">
         <h2 className="mb-3 text-xs font-semibold">Dự tính chi phí</h2>
         <dl className="space-y-2.5 text-xs">
@@ -231,7 +230,7 @@ export function ProductRentalPanel({
       </div>
       <Button
         className="mt-5 w-full"
-        disabled={!estimate}
+        disabled={!estimate || !availabilityCheck.availability?.isAvailable}
         onClick={() => setIsPreviewOpen(true)}
       >
         Tiếp tục thuê <ArrowRight aria-hidden="true" className="size-4" />
