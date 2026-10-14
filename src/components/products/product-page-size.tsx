@@ -10,6 +10,9 @@ export function ProductPageSize({
   filters: ProductBrowseFilters;
 }) {
   const { isPending, navigate } = useProductBrowseNavigation();
+  const pageSizes = PRODUCT_PAGE_SIZES.some((size) => size === filters.pageSize)
+    ? PRODUCT_PAGE_SIZES
+    : [...PRODUCT_PAGE_SIZES, filters.pageSize].sort((a, b) => a - b);
   return (
     <label>
       <span className="sr-only">Sản phẩm mỗi trang</span>
@@ -20,7 +23,7 @@ export function ProductPageSize({
         onChange={(event) => navigate({ pageSize: Number(event.target.value) })}
         value={filters.pageSize}
       >
-        {PRODUCT_PAGE_SIZES.map((size) => (
+        {pageSizes.map((size) => (
           <option key={size} value={size}>
             {size}
           </option>

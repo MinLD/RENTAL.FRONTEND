@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { PRODUCT_CARD_IMAGE_SIZES } from "@/config/product-images";
 import type { PublicEquipmentListing } from "@/types/inventory";
 import { getProductThumbnailSrc } from "@/utils/product-image";
@@ -22,7 +21,12 @@ export function ProductCard({
   const name = getEquipmentListingName(product);
   const thumbnail = getProductThumbnailSrc(product);
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded border border-border bg-background">
+    <article className="h-full">
+      <Link
+        aria-label={name}
+        className="group flex h-full flex-col overflow-hidden rounded border border-border bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        href={`/products/${encodeURIComponent(product.id)}`}
+      >
       <div className="relative aspect-[16/10] overflow-hidden">
         <ProductImage
           name={name}
@@ -72,7 +76,7 @@ export function ProductCard({
           </div>
         </dl>
         <div className="mt-auto pt-3.5">
-          <div className="mb-2.5 flex flex-wrap items-end justify-between gap-1 pt-3">
+          <div className="flex flex-wrap items-end justify-between gap-1 pt-3">
             <span className="text-[10px] uppercase text-muted-foreground">
               Giá thuê
             </span>
@@ -88,16 +92,9 @@ export function ProductCard({
               </span>
             </span>
           </div>
-          <Button
-            asChild
-            className="h-8 w-full bg-secondary text-[11px] uppercase text-secondary-foreground hover:bg-secondary/90"
-          >
-            <Link href={`/products/${encodeURIComponent(product.id)}`}>
-              Xem chi tiết
-            </Link>
-          </Button>
         </div>
       </div>
+      </Link>
     </article>
   );
 }

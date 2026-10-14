@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Filter } from "lucide-react";
 
 import { ProductFilterSection } from "./product-filter-section";
+import { ProductAdvancedFilters } from "./product-advanced-filters";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseData } from "@/types/product-browse";
 
@@ -13,9 +14,10 @@ export function ProductFilters({
   categories,
   equipmentTypes,
   brands,
+  specificationFields,
 }: Pick<
   ProductBrowseData,
-  "filters" | "categories" | "equipmentTypes" | "brands"
+  "filters" | "categories" | "equipmentTypes" | "brands" | "specificationFields"
 >) {
   const { isPending, navigate } = useProductBrowseNavigation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,12 +58,13 @@ export function ProductFilters({
       >
         <ProductFilterSection
           allLabel="Tất cả danh mục"
+          defaultExpanded
           disabled={isPending}
           emptyMessage="Chưa có danh mục thiết bị."
           errorMessage="Không thể tải danh mục."
           name="categoryId"
           onChange={(categoryId) =>
-            navigate({ categoryId, equipmentTypeId: undefined })
+            navigate({ categoryId, equipmentTypeId: undefined, filters: undefined })
           }
           options={categories.success ? categories.data.data : null}
           placeholder="Tìm danh mục..."
@@ -69,13 +72,15 @@ export function ProductFilters({
           value={filters.categoryId}
         />
         <ProductFilterSection
-          allLabel={filters.categoryId ? undefined : "Tất cả loại thiết bị"}
+          allLabel="Tất cả loại thiết bị"
           disabled={isPending}
           emptyMessage="Danh mục chưa có loại thiết bị."
           errorMessage="Không thể tải loại thiết bị."
           key={filters.categoryId ?? "all-types"}
           name="equipmentTypeId"
-          onChange={(equipmentTypeId) => navigate({ equipmentTypeId })}
+          onChange={(equipmentTypeId) =>
+            navigate({ equipmentTypeId, filters: undefined })
+          }
           options={equipmentTypes.success ? equipmentTypes.data.data : null}
           placeholder="Tìm loại thiết bị..."
           title="2. Loại thiết bị"
@@ -92,6 +97,11 @@ export function ProductFilters({
           placeholder="Tìm thương hiệu..."
           title="3. Thương hiệu"
           value={filters.brandId}
+        />
+        <ProductAdvancedFilters
+          key={JSON.stringify([filters.equipmentTypeId, filters.from, filters.to, filters.requestedQuantity, filters.filters, specificationFields])}
+          filters={filters}
+          specificationFields={specificationFields}
         />
       </div>
     </aside>

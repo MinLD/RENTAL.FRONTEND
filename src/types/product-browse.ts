@@ -4,14 +4,14 @@ import type {
   CatalogCategoryDetail,
   CatalogEquipmentTypeListItem,
   CatalogPagedResult,
+  CatalogSpecField,
 } from "@/types/catalog";
-import type { PublicEquipmentListingListResponse } from "@/types/inventory";
+import type {
+  PublicEquipmentListingListParams,
+  PublicEquipmentListingListResponse,
+} from "@/types/inventory";
 
-export type ProductBrowseFilters = {
-  categoryId?: string;
-  equipmentTypeId?: string;
-  brandId?: string;
-  q?: string;
+export type ProductBrowseFilters = PublicEquipmentListingListParams & {
   page: number;
   pageSize: number;
 };
@@ -21,5 +21,6 @@ export type ProductBrowseData = {
   categories: ApiResult<CatalogPagedResult<CatalogCategoryDetail>>;
   equipmentTypes: ApiResult<CatalogPagedResult<CatalogEquipmentTypeListItem>>;
   brands: ApiResult<CatalogPagedResult<CatalogBrand>>;
-  products: ApiResult<PublicEquipmentListingListResponse> | null;
+  specificationFields: ApiResult<CatalogSpecField[]> | null;
+  products: ApiResult<PublicEquipmentListingListResponse>;
 };

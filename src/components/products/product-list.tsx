@@ -11,15 +11,6 @@ export function ProductList({
   products,
   equipmentTypes,
 }: Pick<ProductBrowseData, "products" | "equipmentTypes">) {
-  if (!products) {
-    return (
-      <EmptyState
-        className="min-h-80"
-        title="Chọn loại thiết bị"
-        description="Chọn một loại thiết bị ở bộ lọc bên trái để xem sản phẩm trong danh mục này."
-      />
-    );
-  }
   if (!products.success) {
     return (
       <EmptyState
