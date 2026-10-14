@@ -31,7 +31,8 @@ function getSearchParam(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
 }
 
-// Search filter options locally, including options beyond the first API page.
+// The public catalog rejects PageSize > 100. Collect every page so local
+// filtering includes the entire catalog without a "load more" control.
 async function getAllFilterOptions<T>(
   getPage: (page: number) => Promise<ApiResult<CatalogPagedResult<T>>>,
 ): Promise<ApiResult<CatalogPagedResult<T>>> {

@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { catalogBrowseHref } from "@/config/catalog-navigation";
 import { getCatalogCategories } from "@/services/queries/catalog-queries";
 import type { CatalogCategoryDetail } from "@/types/catalog";
+import { hasCatalogListings } from "@/utils/catalog";
 
 const CATEGORY_SLIDE_CLASS_NAME = "basis-1/2 sm:basis-1/3 lg:basis-1/5";
 const CATEGORY_IMAGE_SIZES =
@@ -65,7 +66,7 @@ async function HomeCategoryItems() {
     );
   }
   const categories = result.data.data.filter(
-    (category) => category.isActive && category.id,
+    (category) => category.isActive && category.id && hasCatalogListings(category),
   );
   if (!categories.length) {
     return (

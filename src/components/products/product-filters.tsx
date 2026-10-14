@@ -8,6 +8,7 @@ import { ProductFilterSection } from "./product-filter-section";
 import { ProductAdvancedFilters } from "./product-advanced-filters";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseData } from "@/types/product-browse";
+import { hasCatalogListings } from "@/utils/catalog";
 
 export function ProductFilters({
   filters,
@@ -66,7 +67,7 @@ export function ProductFilters({
           onChange={(categoryId) =>
             navigate({ categoryId, equipmentTypeId: undefined, filters: undefined })
           }
-          options={categories.success ? categories.data.data : null}
+          options={categories.success ? categories.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm danh mục..."
           title="1. Danh mục thiết bị"
           value={filters.categoryId}
@@ -81,7 +82,7 @@ export function ProductFilters({
           onChange={(equipmentTypeId) =>
             navigate({ equipmentTypeId, filters: undefined })
           }
-          options={equipmentTypes.success ? equipmentTypes.data.data : null}
+          options={equipmentTypes.success ? equipmentTypes.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm loại thiết bị..."
           title="2. Loại thiết bị"
           value={filters.equipmentTypeId}
@@ -93,7 +94,7 @@ export function ProductFilters({
           errorMessage="Không thể tải thương hiệu."
           name="brandId"
           onChange={(brandId) => navigate({ brandId })}
-          options={brands.success ? brands.data.data : null}
+          options={brands.success ? brands.data.data.filter(hasCatalogListings) : null}
           placeholder="Tìm thương hiệu..."
           title="3. Thương hiệu"
           value={filters.brandId}
