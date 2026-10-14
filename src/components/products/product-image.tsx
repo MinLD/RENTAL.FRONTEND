@@ -11,12 +11,14 @@ export function ProductImage({
   sizes = "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 320px",
   imageClassName,
   loading = "lazy",
+  compact = false,
 }: {
   src?: string | null;
   name: string;
   sizes?: string;
   imageClassName?: string;
   loading?: "lazy" | "eager";
+  compact?: boolean;
 }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const validSrc =
@@ -30,8 +32,11 @@ export function ProductImage({
         className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background text-muted-foreground/50"
         role="img"
       >
-        <PackageOpen aria-hidden="true" className="size-12 stroke-1" />
-        <span className="text-xs">Chưa có hình ảnh</span>
+        <PackageOpen
+          aria-hidden="true"
+          className={cn(compact ? "size-6" : "size-12", "stroke-1")}
+        />
+        {!compact ? <span className="text-xs">Chưa có hình ảnh</span> : null}
       </div>
     );
   return (
