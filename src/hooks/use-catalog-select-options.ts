@@ -15,33 +15,31 @@ export function useCatalogSelectOptions<
   enabled = true,
 ) {
   const [items, setItems] = useState<TItem[]>([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
-  const loadPage = useCallback(
-    async (nextPage: number) => {
+  const loadOptions = useCallback(
+    async () => {
       const requestId = ++requestIdRef.current;
       setIsLoading(true);
       setError(null);
       try {
-        const result = await fetchOptions({ page: nextPage, pageSize: 20 });
-        if (requestId !== requestIdRef.current) return;
-        if (!result.success) {
-          setError(result.error.message);
-          return;
-        }
-        setItems((current) => {
-          const merged =
-            nextPage === 1
-              ? result.data.data
-              : [...current, ...result.data.data];
-          return [...new Map(merged.map((item) => [item.id, item])).values()];
-        });
-        setPage(nextPage);
-        setTotalPages(result.data.totalPages);
+        const options = new Map<string, TItem>();
+        let nextPage = 1;
+        let totalPages = 1;
+        do {
+          const result = await fetchOptions({ page: nextPage, pageSize: 100 });
+          if (requestId !== requestIdRef.current) return;
+          if (!result.success) {
+            setError(result.error.message);
+            return;
+          }
+          for (const item of result.data.data) options.set(item.id, item);
+          setItems([...options.values()]);
+          totalPages = result.data.totalPages;
+          nextPage += 1;
+        } while (nextPage <= totalPages);
       } catch (error) {
         if (requestId === requestIdRef.current) {
           setError(
@@ -60,19 +58,17 @@ export function useCatalogSelectOptions<
   useEffect(() => {
     if (!enabled) return;
     const requestRef = requestIdRef;
-    const timeout = window.setTimeout(() => void loadPage(1), 0);
+    const timeout = window.setTimeout(() => void loadOptions(), 0);
     return () => {
       window.clearTimeout(timeout);
       ++requestRef.current;
     };
-  }, [enabled, loadPage]);
+  }, [enabled, loadOptions]);
 
   return {
     items,
     isLoading,
     error,
-    hasMore: page < totalPages,
-    loadMore: () => void loadPage(page + 1),
-    retry: () => void loadPage(page + 1),
+    retry: () => void loadOptions(),
   };
 }

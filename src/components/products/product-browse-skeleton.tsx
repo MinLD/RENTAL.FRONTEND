@@ -34,17 +34,9 @@ export function ProductBrowseSkeleton() {
     <div aria-busy="true" className="flex-1 bg-background py-5 sm:py-6">
       <Container>
         <Skeleton className="mb-4 h-4 w-44" />
-        <div className="mb-5 grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="flex gap-2">
-            <Skeleton className="h-10 flex-1" />
-            <Skeleton className="h-10 w-24" />
-          </div>
-          <div className="flex items-center justify-end gap-3">
-            <Skeleton className="h-10 w-18" />
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-8 w-8" />
-          </div>
+        <div className="mb-5 flex max-w-xl gap-2">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-24" />
         </div>
         <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
           <div className="rounded border border-border p-3">

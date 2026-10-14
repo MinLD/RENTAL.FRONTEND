@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { DetailTabs } from "@/components/layout/detail-page";
+import { PRODUCT_DESCRIPTION_IMAGE_SIZES } from "@/config/product-images";
 import type { ProductSpecification } from "@/utils/product-detail";
 import { ProductImage } from "../product-image";
 import type { EquipmentListingRentalRateResponse } from "@/types/inventory";
@@ -36,7 +37,11 @@ export function ProductDetailTabs({
                 {description || "Mô tả thiết bị đang được cập nhật."}
               </p>
               <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border">
-                <ProductImage src={thumbnailUrl} name={name} />
+                <ProductImage
+                  src={thumbnailUrl}
+                  name={name}
+                  sizes={PRODUCT_DESCRIPTION_IMAGE_SIZES}
+                />
               </div>
             </div>
           ),

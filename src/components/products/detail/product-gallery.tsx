@@ -13,6 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { EquipmentListingMedia } from "@/types/inventory";
+import {
+  PRODUCT_GALLERY_IMAGE_SIZES,
+  PRODUCT_ZOOM_IMAGE_SIZES,
+} from "@/config/product-images";
 import { ProductImage } from "../product-image";
 
 export function ProductGallery({
@@ -35,8 +39,9 @@ export function ProductGallery({
         <ProductImage
           src={selected?.url}
           name={name}
-          sizes="(max-width: 1024px) 100vw, 800px"
+          sizes={PRODUCT_GALLERY_IMAGE_SIZES}
           loading="eager"
+          fetchPriority="high"
         />
         {selected?.url ? (
           <Dialog>
@@ -61,7 +66,8 @@ export function ProductGallery({
                   src={selected.url}
                   name={name}
                   imageClassName="object-contain"
-                  sizes="100vw"
+                  sizes={PRODUCT_ZOOM_IMAGE_SIZES}
+                  loading="eager"
                 />
               </div>
             </DialogContent>

@@ -4,7 +4,6 @@ import { Container } from "@/components/layout/container";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
-import { ProductPageSize } from "./product-page-size";
 import { ProductPagination } from "./product-pagination";
 import { ProductSearch } from "./product-search";
 import { ProductResults } from "./product-results";
@@ -35,15 +34,8 @@ export function ProductBrowseView({
             <span className="text-foreground">Thiết bị cho thuê</span>
           </nav>
           <h1 className="sr-only">Thiết bị cho thuê</h1>
-          <div className="mb-5 grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="mb-5 max-w-xl">
             <ProductSearch key={filters.q ?? ""} filters={filters} />
-            {result ? (
-              <ProductPagination filters={filters} totalPages={result.totalPages} />
-            ) : (
-              <div className="flex justify-end">
-                <ProductPageSize filters={filters} />
-              </div>
-            )}
           </div>
           <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
             <ProductFilters
@@ -65,6 +57,12 @@ export function ProductBrowseView({
                   products={products}
                 />
               </ProductResults>
+              {result && result.items.length > 0 ? (
+                <ProductPagination
+                  filters={filters}
+                  totalPages={result.totalPages}
+                />
+              ) : null}
             </section>
           </div>
         </Container>

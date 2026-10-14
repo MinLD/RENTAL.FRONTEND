@@ -58,10 +58,11 @@ export function ProductList({
       aria-label="Danh sách thiết bị"
       className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
     >
-      {products.data.items.map((product) => (
+      {products.data.items.map((product, index) => (
         <li key={product.id}>
           <ProductCard
             product={product}
+            prioritizeImage={index === 0}
             equipmentTypeName={typeNames.get(product.equipmentTypeId)}
           />
         </li>

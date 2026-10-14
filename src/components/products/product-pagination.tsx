@@ -16,7 +16,6 @@ export function ProductPagination({
   const { isPending } = useProductBrowseNavigation();
   return (
     <ListPagination
-      className="pt-0"
       disabled={isPending}
       page={filters.page}
       totalPages={totalPages}

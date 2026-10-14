@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PRODUCT_CARD_IMAGE_SIZES } from "@/config/product-images";
 import type { PublicEquipmentListing } from "@/types/inventory";
+import { getProductThumbnailSrc } from "@/utils/product-image";
 import {
   formatEquipmentListingRate,
   getEquipmentListingName,
@@ -11,17 +13,24 @@ import { ProductImage } from "./product-image";
 export function ProductCard({
   product,
   equipmentTypeName,
+  prioritizeImage = false,
 }: {
   product: PublicEquipmentListing;
   equipmentTypeName?: string;
+  prioritizeImage?: boolean;
 }) {
   const name = getEquipmentListingName(product);
-  const thumbnail =
-    product.thumbnailUrl || product.media?.find((item) => item.url)?.url;
+  const thumbnail = getProductThumbnailSrc(product);
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded border border-border bg-background">
       <div className="relative aspect-[16/10] overflow-hidden">
-        <ProductImage name={name} src={thumbnail} />
+        <ProductImage
+          name={name}
+          src={thumbnail}
+          sizes={PRODUCT_CARD_IMAGE_SIZES}
+          loading={prioritizeImage ? "eager" : "lazy"}
+          fetchPriority={prioritizeImage ? "high" : undefined}
+        />
         <span
           className={`absolute left-2 top-2 rounded px-2 py-1 text-[10px] font-semibold uppercase text-white ${product.availableQuantity > 0 ? "bg-success" : "bg-secondary"}`}
         >

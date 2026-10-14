@@ -13,6 +13,7 @@ import {
 import { Search } from "lucide-react";
 
 import { ProductImage } from "@/components/products/product-image";
+import { getProductThumbnailSrc } from "@/utils/product-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EQUIPMENT_SEARCH_MIN_LENGTH } from "@/config/equipment-search";
 import { productBrowseHref } from "@/config/product-browse";
@@ -208,9 +209,7 @@ export function EquipmentSearch() {
           >
             {search.suggestions.map((product, index) => {
               const name = getEquipmentListingName(product);
-              const src =
-                product.thumbnailUrl ||
-                product.media?.find((media) => media.url)?.url;
+              const src = getProductThumbnailSrc(product);
               return (
                 <li key={product.id} role="presentation">
                   <Link
