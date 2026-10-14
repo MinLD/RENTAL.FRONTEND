@@ -378,10 +378,6 @@ export const API_ENDPOINTS = {
       refresh: "/api/auth/refresh",
     },
     mock: {
-      inventory: {
-        equipmentListingDetail: (id: string) =>
-          `/api/mock/inventory/public/equipment-listings/${encodeURIComponent(id)}`,
-      },
       passwordReset: {
         request: "/api/mock/auth/password-reset/request",
         reset: "/api/mock/auth/password-reset/reset",

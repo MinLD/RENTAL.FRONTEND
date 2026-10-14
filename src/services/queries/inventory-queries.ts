@@ -1,10 +1,6 @@
 import "server-only";
 
 import { z } from "zod";
-import {
-  getMockPublicEquipmentListing,
-  isPublicEquipmentDetailMockEnabled,
-} from "@/mocks/inventory/equipment-listing";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { ApiInputError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
@@ -34,9 +30,6 @@ export async function getPublicEquipmentListing(
   id: string,
 ): Promise<ApiResult<PublicEquipmentListingDetail>> {
   return serverApiResult(async () => {
-    if (isPublicEquipmentDetailMockEnabled()) {
-      return getMockPublicEquipmentListing();
-    }
     assertInventoryId(id);
     return serverApiJson<PublicEquipmentListingDetail>(
       API_ENDPOINTS.backend.inventory.equipmentListings.publicDetail(id),

@@ -82,10 +82,7 @@ export type PublicEquipmentListingListResponse = Omit<
   items: PublicEquipmentListing[];
 };
 
-export type PublicEquipmentListingDetail = Omit<
-  PublicEquipmentListing,
-  "availableQuantity"
->;
+export type PublicEquipmentListingDetail = PublicEquipmentListing;
 
 export type PublicEquipmentListingListParams = {
   equipmentTypeId?: string;

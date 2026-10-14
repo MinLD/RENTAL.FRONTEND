@@ -13,14 +13,17 @@ export function ProductFilters({
   categories,
   equipmentTypes,
   brands,
-}: Pick<ProductBrowseData, "filters" | "categories" | "equipmentTypes" | "brands">) {
+}: Pick<
+  ProductBrowseData,
+  "filters" | "categories" | "equipmentTypes" | "brands"
+>) {
   const { isPending, navigate } = useProductBrowseNavigation();
   const [isExpanded, setIsExpanded] = useState(false);
   return (
     <aside
       aria-busy={isPending}
       aria-labelledby="product-filter-title"
-      className="min-w-0 self-start rounded border border-border bg-background lg:sticky lg:top-4"
+      className="min-w-0 self-start rounded border border-border bg-background lg:sticky lg:top-[calc(var(--site-header-height,8rem)+1rem)]"
     >
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3">
         <h2

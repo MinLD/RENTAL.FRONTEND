@@ -4,12 +4,13 @@ import { EquipmentCatalogMenu } from "./equipment-catalog-menu";
 import { MainHeader } from "./main-header";
 import { Navigation } from "./navigation";
 import { TopBar } from "./top-bar";
+import { SiteHeader } from "./site-header";
 
 export async function Header() {
   const initialData = await getCatalogNavigationInitialData();
   return (
     <QueryProvider>
-      <header>
+      <SiteHeader>
         <TopBar />
         <MainHeader
           catalogMenu={
@@ -19,7 +20,7 @@ export async function Header() {
         <Navigation
           catalogMenu={<EquipmentCatalogMenu initialData={initialData} />}
         />
-      </header>
+      </SiteHeader>
     </QueryProvider>
   );
 }

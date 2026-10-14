@@ -18,6 +18,8 @@ import type {
   CatalogEquipmentTypeListParams,
   CatalogEquipmentTypeListResponse,
   CatalogPagedResult,
+  CatalogPublishedSpecSchema,
+  CatalogPublishedSpecSchemaResponse,
 } from "@/types/catalog";
 import {
   normalizeCatalogBrand,
@@ -25,6 +27,7 @@ import {
   normalizeCatalogCategoryList,
   normalizeCatalogEquipmentTypeDetail,
   normalizeCatalogEquipmentTypeList,
+  normalizeCatalogPublishedSpecSchema,
 } from "@/utils/catalog";
 
 export async function getCatalogBrands(
@@ -95,5 +98,24 @@ export async function getCatalogEquipmentType(
       "Không thể tải chi tiết loại thiết bị.",
     );
     return normalizeCatalogEquipmentTypeDetail(response);
+  });
+}
+
+export async function getCatalogEquipmentTypeSchemaVersion(
+  equipmentTypeId: string,
+  version: number,
+): Promise<ApiResult<CatalogPublishedSpecSchema>> {
+  return serverApiResult(async () => {
+    assertCatalogId(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
+    if (!Number.isInteger(version) || version <= 0)
+      throw new ApiInputError("Version schema không hợp lệ.");
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
+      API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
+        equipmentTypeId,
+        version,
+      ),
+      "Không thể tải schema version của loại thiết bị.",
+    );
+    return normalizeCatalogPublishedSpecSchema(response);
   });
 }

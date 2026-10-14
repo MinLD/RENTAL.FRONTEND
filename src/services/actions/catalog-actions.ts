@@ -7,6 +7,7 @@ import { serverApiJson, serverApiResult } from "@/services/server-api";
 import {
   getCatalogBrand,
   getCatalogEquipmentType,
+  getCatalogEquipmentTypeSchemaVersion,
 } from "@/services/queries/catalog-queries";
 import type {
   AdminCatalogBrandListParams,
@@ -412,20 +413,7 @@ export async function getCatalogEquipmentTypeSchemaVersionAction(
   equipmentTypeId: string,
   version: number,
 ): Promise<ApiResult<CatalogPublishedSpecSchema>> {
-  return serverApiResult(async () => {
-    assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-    assertSchemaVersion(version);
-
-    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
-      API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
-        equipmentTypeId,
-        version,
-      ),
-      "Không thể tải schema version của loại thiết bị.",
-    );
-
-    return normalizeCatalogPublishedSpecSchema(response);
-  });
+  return getCatalogEquipmentTypeSchemaVersion(equipmentTypeId, version);
 }
 
 export async function validateCatalogSpecificationsAction(

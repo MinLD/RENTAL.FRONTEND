@@ -1,10 +1,12 @@
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import type { PublicEquipmentListing } from "@/types/inventory";
 import {
   formatEquipmentListingRate,
   getEquipmentListingName,
 } from "@/utils/inventory";
 import { ProductImage } from "./product-image";
-import { ProductPreview } from "./product-preview";
 
 export function ProductCard({
   product,
@@ -77,7 +79,14 @@ export function ProductCard({
               </span>
             </span>
           </div>
-          <ProductPreview product={product} />
+          <Button
+            asChild
+            className="h-8 w-full bg-secondary text-[11px] uppercase text-secondary-foreground hover:bg-secondary/90"
+          >
+            <Link href={`/products/${encodeURIComponent(product.id)}`}>
+              Xem chi tiết
+            </Link>
+          </Button>
         </div>
       </div>
     </article>

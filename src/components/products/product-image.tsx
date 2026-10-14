@@ -3,13 +3,20 @@
 import Image from "next/image";
 import { useState } from "react";
 import { PackageOpen } from "lucide-react";
+import { cn } from "@/utils/cn";
 
 export function ProductImage({
   src,
   name,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 320px",
+  imageClassName,
+  loading = "lazy",
 }: {
   src?: string | null;
   name: string;
+  sizes?: string;
+  imageClassName?: string;
+  loading?: "lazy" | "eager";
 }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const validSrc =
@@ -30,10 +37,14 @@ export function ProductImage({
   return (
     <Image
       alt={name}
-      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      className={cn(
+        "object-cover transition-transform duration-300 group-hover:scale-105",
+        imageClassName,
+      )}
       fill
+      loading={loading}
       onError={() => setFailedSrc(src)}
-      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 320px"
+      sizes={sizes}
       src={src}
       unoptimized
     />
