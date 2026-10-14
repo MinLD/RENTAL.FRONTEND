@@ -7,13 +7,66 @@ import { serverApiJson, serverApiResult } from "@/services/server-api";
 import type {
   CatalogBrand,
   CatalogBrandDto,
+  CatalogBrandListParams,
+  CatalogBrandListResponse,
+  CatalogCategoryDetail,
+  CatalogCategoryDetailResponse,
+  CatalogCategoryListResponse,
   CatalogEquipmentTypeDetail,
   CatalogEquipmentTypeDetailDto,
+  CatalogEquipmentTypeListItem,
+  CatalogEquipmentTypeListParams,
+  CatalogEquipmentTypeListResponse,
+  CatalogPagedResult,
+  CatalogPublishedSpecSchema,
+  CatalogPublishedSpecSchemaResponse,
 } from "@/types/catalog";
 import {
   normalizeCatalogBrand,
+  normalizeCatalogBrandList,
+  normalizeCatalogCategoryList,
   normalizeCatalogEquipmentTypeDetail,
+  normalizeCatalogEquipmentTypeList,
+  normalizeCatalogPublishedSpecSchema,
 } from "@/utils/catalog";
+
+export async function getCatalogBrands(
+  params: CatalogBrandListParams = {},
+): Promise<ApiResult<CatalogPagedResult<CatalogBrand>>> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<CatalogBrandListResponse>(
+      API_ENDPOINTS.backend.catalog.brands.list(params),
+      "Không thể tải danh sách thương hiệu.",
+    );
+    return normalizeCatalogBrandList(response, params);
+  });
+}
+
+export async function getCatalogCategories(): Promise<
+  ApiResult<CatalogPagedResult<CatalogCategoryDetail>>
+> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<
+      CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
+    >(
+      API_ENDPOINTS.backend.catalog.categories.list(),
+      "Không thể tải danh sách danh mục.",
+    );
+    return normalizeCatalogCategoryList(response);
+  });
+}
+
+export async function getCatalogEquipmentTypes(
+  params: CatalogEquipmentTypeListParams = {},
+): Promise<ApiResult<CatalogPagedResult<CatalogEquipmentTypeListItem>>> {
+  return serverApiResult(async () => {
+    const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
+      API_ENDPOINTS.backend.catalog.equipmentTypes.list(params),
+      "Không thể tải danh sách loại thiết bị.",
+    );
+    return normalizeCatalogEquipmentTypeList(response, params);
+  });
+}
 
 function assertCatalogId(id: string, message: string) {
   if (
@@ -45,5 +98,24 @@ export async function getCatalogEquipmentType(
       "Không thể tải chi tiết loại thiết bị.",
     );
     return normalizeCatalogEquipmentTypeDetail(response);
+  });
+}
+
+export async function getCatalogEquipmentTypeSchemaVersion(
+  equipmentTypeId: string,
+  version: number,
+): Promise<ApiResult<CatalogPublishedSpecSchema>> {
+  return serverApiResult(async () => {
+    assertCatalogId(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
+    if (!Number.isInteger(version) || version <= 0)
+      throw new ApiInputError("Version schema không hợp lệ.");
+    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
+      API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
+        equipmentTypeId,
+        version,
+      ),
+      "Không thể tải schema version của loại thiết bị.",
+    );
+    return normalizeCatalogPublishedSpecSchema(response);
   });
 }

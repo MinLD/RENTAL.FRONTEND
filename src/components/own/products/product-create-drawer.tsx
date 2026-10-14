@@ -560,21 +560,17 @@ export function ProductCreateDrawer({
 export function CatalogOptionsState({
   error,
   isLoading,
-  hasMore,
   items,
   disabled,
   label,
-  loadMore,
   retry,
   showLoadingMessage = true,
 }: {
   error: string | null;
   isLoading: boolean;
-  hasMore: boolean;
   items: unknown[];
   disabled: boolean;
   label: string;
-  loadMore: () => void;
   retry: () => void;
   showLoadingMessage?: boolean;
 }) {
@@ -604,18 +600,6 @@ export function CatalogOptionsState({
   if (!items.length)
     return (
       <p className="text-xs text-muted-foreground">Chưa có {label} để chọn.</p>
-    );
-  if (hasMore)
-    return (
-      <Button
-        disabled={disabled}
-        onClick={loadMore}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        Tải thêm {label}
-      </Button>
     );
   return null;
 }

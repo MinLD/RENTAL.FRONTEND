@@ -1,3 +1,5 @@
+import type { PublicEquipmentListingListParams } from "@/types/inventory";
+
 type ListAdminUsersParams = {
   keyword?: string;
   page: number;
@@ -302,6 +304,24 @@ export const API_ENDPOINTS = {
     },
     inventory: {
       equipmentListings: {
+        publicAvailabilityCheck: (id: string) =>
+          `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}/availability/check`,
+        publicDetail: (id: string) =>
+          `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}`,
+        publicList: ({
+          equipmentTypeId,
+          brandId,
+          q,
+          page = 1,
+          pageSize = 20,
+        }: PublicEquipmentListingListParams = {}) =>
+          buildQueryEndpoint("/api/v1/inventory/public/equipment-listings", {
+            EquipmentTypeId: equipmentTypeId,
+            BrandId: brandId,
+            Q: q?.trim(),
+            Page: page,
+            PageSize: pageSize,
+          }),
         create: "/api/v1/inventory/equipment-listings",
         detail: (id: string) =>
           `/api/v1/inventory/equipment-listings/${encodeURIComponent(id)}`,

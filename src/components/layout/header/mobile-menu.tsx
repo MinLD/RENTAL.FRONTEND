@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
-import { MAIN_NAVIGATION } from "@/config/navigation";
+import { MAIN_NAVIGATION, isMainNavigationActive } from "@/config/navigation";
 import { logout } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
 
@@ -27,6 +27,7 @@ type MobileMenuProps = Readonly<{
 
 export function MobileMenu({ user }: MobileMenuProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const panelId = useId();
@@ -147,9 +148,11 @@ export function MobileMenu({ user }: MobileMenuProps) {
               {MAIN_NAVIGATION.map((item) => (
                 <li key={item.href}>
                   <Link
-                    aria-current={item.isActive ? "page" : undefined}
+                    aria-current={
+                      isMainNavigationActive(pathname, item.href) ? "page" : undefined
+                    }
                     className={`flex rounded px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary/10 hover:text-primary ${
-                      item.isActive ? "bg-primary/10 text-primary" : ""
+                      isMainNavigationActive(pathname, item.href) ? "bg-primary/10 text-primary" : ""
                     }`}
                     href={item.href}
                     onClick={() => setIsOpen(false)}

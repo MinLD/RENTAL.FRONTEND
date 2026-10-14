@@ -7,6 +7,7 @@ import { serverApiJson, serverApiResult } from "@/services/server-api";
 import {
   getCatalogBrand,
   getCatalogEquipmentType,
+  getCatalogEquipmentTypeSchemaVersion,
 } from "@/services/queries/catalog-queries";
 import type {
   AdminCatalogBrandListParams,
@@ -48,6 +49,9 @@ import type {
 } from "@/types/data-table";
 import {
   normalizeCatalogBrand,
+  normalizeCatalogBrandList as mapCatalogBrandPagedResult,
+  normalizeCatalogCategoryList as mapCatalogCategoryPagedResult,
+  normalizeCatalogEquipmentTypeList,
   normalizeCatalogCategoryDetail,
   normalizeCatalogEquipmentTypeDetail,
   normalizeCatalogEquipmentTypeListItem,
@@ -338,13 +342,7 @@ export async function listCatalogEquipmentTypesAction(
       "Không thể tải danh sách loại thiết bị.",
     );
 
-    return {
-      data: (response.items ?? []).map(normalizeCatalogEquipmentTypeListItem),
-      page: response.page ?? params.page ?? 1,
-      pageSize: response.pageSize ?? params.pageSize ?? 0,
-      totalItems: response.totalCount ?? 0,
-      totalPages: response.totalPages ?? 0,
-    };
+    return normalizeCatalogEquipmentTypeList(response, params);
   });
 }
 
@@ -415,20 +413,7 @@ export async function getCatalogEquipmentTypeSchemaVersionAction(
   equipmentTypeId: string,
   version: number,
 ): Promise<ApiResult<CatalogPublishedSpecSchema>> {
-  return serverApiResult(async () => {
-    assertUuid(equipmentTypeId, "ID loại thiết bị không hợp lệ.");
-    assertSchemaVersion(version);
-
-    const response = await serverApiJson<CatalogPublishedSpecSchemaResponse>(
-      API_ENDPOINTS.backend.catalog.equipmentTypes.publishedSchemaVersion(
-        equipmentTypeId,
-        version,
-      ),
-      "Không thể tải schema version của loại thiết bị.",
-    );
-
-    return normalizeCatalogPublishedSpecSchema(response);
-  });
+  return getCatalogEquipmentTypeSchemaVersion(equipmentTypeId, version);
 }
 
 export async function validateCatalogSpecificationsAction(
@@ -627,42 +612,6 @@ export async function publishCatalogSpecSchemaDraftAction(
 
     return normalizeCatalogSpecSchema(response);
   });
-}
-
-function mapCatalogBrandPagedResult(
-  response: CatalogBrandListResponse,
-  params: CatalogBrandListParams = {},
-): CatalogPagedResult<CatalogBrand> {
-  return {
-    data: (response.items ?? []).map(normalizeCatalogBrand),
-    page: response.page ?? params.page ?? 1,
-    pageSize: response.pageSize ?? params.pageSize ?? 0,
-    totalItems: response.totalCount ?? 0,
-    totalPages: response.totalPages ?? 0,
-  };
-}
-
-function mapCatalogCategoryPagedResult(
-  response: CatalogCategoryDetailResponse[] | CatalogCategoryListResponse,
-  params: CatalogCategoryListParams = {},
-): CatalogPagedResult<CatalogCategoryDetail> {
-  if (Array.isArray(response)) {
-    return {
-      data: response.map(normalizeCatalogCategoryDetail),
-      page: params.page ?? 1,
-      pageSize: params.pageSize ?? response.length,
-      totalItems: response.length,
-      totalPages: 1,
-    };
-  }
-
-  return {
-    data: (response.items ?? []).map(normalizeCatalogCategoryDetail),
-    page: response.page ?? params.page ?? 1,
-    pageSize: response.pageSize ?? params.pageSize ?? 0,
-    totalItems: response.totalCount ?? 0,
-    totalPages: response.totalPages ?? 0,
-  };
 }
 
 function assertUuid(value: string, message: string) {
