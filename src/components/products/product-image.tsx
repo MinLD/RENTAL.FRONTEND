@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { PackageOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,6 +19,8 @@ type ProductImageProps = {
   loading?: "lazy" | "eager";
   compact?: boolean;
   fetchPriority?: "high" | "low" | "auto";
+  fallback?: ReactNode;
+  maxRetries?: number;
 };
 
 export function ProductImage({
@@ -36,18 +38,23 @@ export function ProductImage({
 function ProductImageFallback({
   name,
   compact = false,
-}: Pick<ProductImageProps, "name" | "compact">) {
+  fallback,
+}: Pick<ProductImageProps, "name" | "compact" | "fallback">) {
   return (
     <div
-      aria-label={`Chưa có ảnh ${name}`}
+      aria-label={fallback != null ? name : `Chưa có ảnh ${name}`}
       className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background text-muted-foreground/50"
       role="img"
     >
-      <PackageOpen
-        aria-hidden="true"
-        className={cn(compact ? "size-6" : "size-12", "stroke-1")}
-      />
-      {!compact ? <span className="text-xs">Chưa có hình ảnh</span> : null}
+      {fallback ?? (
+        <>
+          <PackageOpen
+            aria-hidden="true"
+            className={cn(compact ? "size-6" : "size-12", "stroke-1")}
+          />
+          {!compact ? <span className="text-xs">Chưa có hình ảnh</span> : null}
+        </>
+      )}
     </div>
   );
 }
@@ -60,14 +67,17 @@ function LoadingProductImage({
   loading = "lazy",
   compact = false,
   fetchPriority,
+  fallback,
+  maxRetries = 0,
 }: Omit<ProductImageProps, "src"> & { src: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const handleImageRef = useCallback((image: HTMLImageElement | null) => {
     imageRef.current = image;
     // A cached image can finish before hydration attaches load/error handlers.
-    if (image?.complete) {
-      setStatus(image.naturalWidth > 0 ? "loaded" : "error");
+    if (image?.complete && image.naturalWidth > 0) {
+      setStatus("loaded");
     }
   }, []);
 
@@ -101,8 +111,26 @@ function LoadingProductImage({
     };
   }, [loading, status]);
 
+  useEffect(() => {
+    if (status !== "error" || retryAttempt >= maxRetries) return;
+    const timer = setTimeout(() => {
+      setRetryAttempt((attempt) => attempt + 1);
+      setStatus("loading");
+    }, 1000 * 2 ** retryAttempt);
+    return () => clearTimeout(timer);
+  }, [maxRetries, retryAttempt, status]);
+
   if (status === "error") {
-    return <ProductImageFallback name={name} compact={compact} />;
+    if (retryAttempt < maxRetries) {
+      return (
+        <div aria-busy="true" className="absolute inset-0">
+          <Skeleton aria-hidden="true" className="absolute inset-0 rounded-none" />
+        </div>
+      );
+    }
+    return (
+      <ProductImageFallback name={name} compact={compact} fallback={fallback} />
+    );
   }
   return (
     <div aria-busy={status === "loading"} className="absolute inset-0">
@@ -110,6 +138,7 @@ function LoadingProductImage({
         <Skeleton aria-hidden="true" className="absolute inset-0 rounded-none" />
       ) : null}
       <Image
+        key={retryAttempt}
         alt={name}
         className={cn(
           "object-cover transition-[opacity,transform,translate,scale,rotate] duration-300 group-hover:scale-105 motion-reduce:transition-none",
