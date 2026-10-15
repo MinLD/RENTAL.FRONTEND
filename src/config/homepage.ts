@@ -1,3 +1,10 @@
+export const HOME_BRANDS_PAGE_SIZE = 12;
+
+export const HOME_PRODUCTS_PAGE_SIZE = 8;
+export const HOME_PRODUCTS_STALE_TIME = 5 * 60 * 1000;
+export const HOME_PRODUCT_IMAGE_SIZES =
+  "(min-width: 1280px) 292px, (min-width: 1024px) calc(25vw - 28px), (min-width: 640px) calc(33.33vw - 24px), calc(80vw - 28px)";
+
 export type HomeHeroAction = {
   href: string;
   label: string;
