@@ -5,14 +5,22 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   CATALOG_NAVIGATION_HOVER_DELAY,
+  CATALOG_NAVIGATION_BRAND_PARAMS,
   CATALOG_NAVIGATION_STALE_TIME,
   catalogNavigationEquipmentParams,
 } from "@/config/catalog-navigation";
 import {
   fetchCatalogCategories,
+  fetchCatalogBrands,
   fetchCatalogEquipmentTypes,
 } from "@/services/catalog-service";
 import type { CatalogNavigationInitialData } from "@/types/catalog-navigation";
+import type { CatalogPagedResult } from "@/types/catalog";
+import { hasCatalogListings } from "@/utils/catalog";
+
+function withListings<T extends { listingCount?: number }>(result: CatalogPagedResult<T>) {
+  return { ...result, data: result.data.filter(hasCatalogListings) };
+}
 
 export function useCatalogNavigation(
   initialData: CatalogNavigationInitialData,
@@ -33,6 +41,7 @@ export function useCatalogNavigation(
     ...options,
     queryKey: ["catalog", "categories"],
     queryFn: ({ signal }) => fetchCatalogCategories(signal),
+    select: withListings,
     initialData: initialData.categories.success
       ? initialData.categories.data
       : undefined,
@@ -48,11 +57,20 @@ export function useCatalogNavigation(
     enabled: isOpen && Boolean(category?.id),
     queryKey: ["catalog", "equipment-types", params],
     queryFn: ({ signal }) => fetchCatalogEquipmentTypes(params, signal),
+    select: withListings,
     initialData:
       category?.id === initialData.categoryId &&
       initialData.equipmentTypes?.success
         ? initialData.equipmentTypes.data
         : undefined,
+  });
+
+  const brands = useQuery({
+    ...options,
+    queryKey: ["catalog", "brands", CATALOG_NAVIGATION_BRAND_PARAMS],
+    queryFn: ({ signal }) => fetchCatalogBrands(CATALOG_NAVIGATION_BRAND_PARAMS, signal),
+    select: withListings,
+    initialData: initialData.brands.success ? initialData.brands.data : undefined,
   });
 
   function cancelHover() {
@@ -85,6 +103,7 @@ export function useCatalogNavigation(
   }, [isOpen]);
 
   return {
+    brands,
     categories,
     category,
     equipmentTypes,

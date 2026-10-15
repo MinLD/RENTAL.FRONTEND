@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FULL_NAME_MAX_LENGTH } from "@/config/profile";
 
 const optionalText = z.string().trim().optional();
 const vietnamPhoneRegex = /^(0\d{9}|\+84\d{9})$/;
@@ -13,7 +14,11 @@ export const profileSchema = z.object({
     .trim()
     .min(1, "Vui lòng nhập email.")
     .email("Email không hợp lệ."),
-  fullName: z.string().trim().min(1, "Vui lòng nhập họ và tên."),
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập họ và tên.")
+    .max(FULL_NAME_MAX_LENGTH, `Họ và tên không được quá ${FULL_NAME_MAX_LENGTH} ký tự.`),
   identityNumber: optionalText.refine(
     (value) => !value || /^\d{12}$/.test(value),
     "CCCD/CMND phải gồm 12 chữ số.",

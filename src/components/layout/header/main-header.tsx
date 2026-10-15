@@ -28,13 +28,13 @@ export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
           </span>
         </Link>
 
-        <div className="order-last flex w-full min-w-0 items-center gap-2 md:order-none md:flex-1">
+        <div className="order-last flex w-full min-w-0 items-center gap-2 md:order-none md:mx-auto md:max-w-xl md:flex-1">
           {catalogMenu}
 
           <EquipmentSearch />
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:ml-0">
           <button
             aria-label="Thông báo"
             className="relative inline-flex size-9 cursor-pointer items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"

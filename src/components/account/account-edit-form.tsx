@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  CalendarDays,
-  Mail,
-  Phone,
-  Save,
-  UserRound,
-} from "lucide-react";
+import { CalendarDays, Info, Mail, Phone, Save, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   useActionState,
@@ -25,6 +19,7 @@ import type { AccountProfileInitialData } from "@/components/account/account-typ
 import { AccountCitizenIdField } from "@/components/account/account-citizen-id-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
+import { FULL_NAME_MAX_LENGTH } from "@/config/profile";
 import { profileSchema } from "@/lib/validations/profile";
 import {
   updateProfileAction,
@@ -62,19 +57,26 @@ export function AccountEditForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
   const [isFieldsDirty, setIsFieldsDirty] = useState(false);
-  const [clientFieldErrors, setClientFieldErrors] = useState<AccountFieldErrors>({});
+  const [clientFieldErrors, setClientFieldErrors] =
+    useState<AccountFieldErrors>({});
   const [state, formAction, isPending] = useActionState(
     updateProfileAction,
     initialUpdateProfileActionState,
   );
   const isDirty = isFieldsDirty || isAvatarDirty;
   const isBusy = isPending || isAvatarUploading;
-  const displayedFieldErrors = isFieldsDirty
-    ? clientFieldErrors
-    : (state.fieldErrors ?? {});
   const hasClientFieldErrors = Object.values(clientFieldErrors).some(Boolean);
+  const displayedFieldErrors =
+    isFieldsDirty || hasClientFieldErrors
+      ? clientFieldErrors
+      : (state.fieldErrors ?? {});
   const submissionInProgress = useRef(false);
   const handledActionState = useRef(initialUpdateProfileActionState);
+  const missingProfileFields = [
+    ...(!initialProfile.identityNumber?.trim() ? ["CCCD/CMND"] : []),
+    ...(!initialProfile.dateOfBirth?.trim() ? ["ngày sinh"] : []),
+    ...(!initialProfile.phoneNumber?.trim() ? ["SDT"] : []),
+  ];
 
   useEffect(() => {
     if (!state.message || handledActionState.current === state) {
@@ -108,7 +110,14 @@ export function AccountEditForm({
     }
 
     toast.error(state.message);
-  }, [avatarPreviewUrl, initialProfile.avatarUrl, onSavingChange, router, state, userId]);
+  }, [
+    avatarPreviewUrl,
+    initialProfile.avatarUrl,
+    onSavingChange,
+    router,
+    state,
+    userId,
+  ]);
 
   function handleCancel() {
     if (isBusy || submissionInProgress.current) return;
@@ -121,7 +130,10 @@ export function AccountEditForm({
 
   function handleFormAction(formData: FormData) {
     if (!isDirty || isBusy || submissionInProgress.current) return;
-    if (!validateProfileForm(formData)) return;
+    if (!validateProfileForm(formData)) {
+      onSavingChange?.(false);
+      return;
+    }
     submissionInProgress.current = true;
     setIsFieldsDirty(false);
     formAction(formData);
@@ -148,8 +160,7 @@ export function AccountEditForm({
         getTextValue(formData, "dateOfBirth") !== initialProfile.dateOfBirth ||
         normalizeIdentityNumberValue(
           identityNumber ?? getTextValue(formData, "identityNumber"),
-        ) !==
-          normalizeIdentityNumberValue(initialProfile.identityNumber),
+        ) !== normalizeIdentityNumberValue(initialProfile.identityNumber),
     );
     validateProfileForm(formData, identityNumber);
   }
@@ -185,13 +196,31 @@ export function AccountEditForm({
   return (
     <section className="rounded-lg border border-border bg-background p-6 shadow-sm">
       <div>
-        <h1 className="text-xl font-bold text-foreground">
-          Thông tin cá nhân
-        </h1>
+        <h1 className="text-xl font-bold text-foreground">Thông tin cá nhân</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Cập nhật các trường có thể chỉnh sửa trong hồ sơ người dùng.
         </p>
       </div>
+
+      {missingProfileFields.length > 0 ? (
+        <div
+          aria-label="Lưu ý hoàn thiện thông tin"
+          className="mt-2 flex items-start gap-2  py-2.5 text-xs leading-5 text-primary"
+          role="note"
+        >
+          <Info
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0 text-primary"
+          />
+          <p>
+            Để thuê thiết bị hoặc đăng ký tổ chức, vui lòng bổ sung{" "}
+            <strong className="font-semibold">
+              {missingProfileFields.join(" và ")}
+            </strong>{" "}
+            và lưu thông tin.
+          </p>
+        </div>
+      ) : null}
 
       <form
         action={handleFormAction}
@@ -200,7 +229,12 @@ export function AccountEditForm({
         onChange={handleFormChange}
         onInput={handleFormChange}
         onSubmit={(event) => {
-          if (!isDirty || isBusy || hasClientFieldErrors || submissionInProgress.current) {
+          if (
+            !isDirty ||
+            isBusy ||
+            hasClientFieldErrors ||
+            submissionInProgress.current
+          ) {
             event.preventDefault();
           } else {
             // Lock avatar selection before the form action starts its transition.
@@ -224,6 +258,7 @@ export function AccountEditForm({
             id="fullName"
             label="Họ và tên"
             leftIcon={<UserRound size={16} />}
+            maxLength={FULL_NAME_MAX_LENGTH}
             name="fullName"
             placeholder="Chưa cập nhật"
           />
@@ -281,7 +316,10 @@ export function AccountEditForm({
           >
             Hủy
           </Button>
-          <Button disabled={!isDirty || isBusy || hasClientFieldErrors} type="submit">
+          <Button
+            disabled={!isDirty || isBusy || hasClientFieldErrors}
+            type="submit"
+          >
             <Save size={16} />
             {isPending ? "Đang lưu..." : "Lưu"}
           </Button>

@@ -13,10 +13,10 @@ export function ProductDetailSkeleton() {
         <Skeleton className="mb-6 h-4 w-72 max-w-full" />
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:gap-12">
           <div>
-            <Skeleton className="aspect-[16/9] w-full rounded-lg" />
-            <div className="my-3 flex gap-2">
+            <Skeleton className="aspect-[3/2] w-full rounded-lg" />
+            <div className="my-3 flex gap-2 overflow-hidden">
               {Array.from({ length: 4 }, (_, index) => (
-                <Skeleton className="h-16 w-24" key={index} />
+                <Skeleton className="aspect-[16/9] w-32 shrink-0" key={index} />
               ))}
             </div>
             <Skeleton className="mt-7 h-8 w-4/5" />

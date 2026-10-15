@@ -12,6 +12,7 @@ import { PasswordField } from "@/components/forms/password-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FULL_NAME_MAX_LENGTH } from "@/config/profile";
 import { useFirebaseGoogleLogin } from "@/hooks/use-firebase-google-login";
 import {
   registerSchema,
@@ -70,6 +71,7 @@ export function RegisterForm() {
         id="name"
         label="Họ và tên / Tên doanh nghiệp"
         leftIcon={<UserRound size={16} />}
+        maxLength={FULL_NAME_MAX_LENGTH}
         placeholder="Nhập họ và tên hoặc tên doanh nghiệp"
         {...register("name")}
       />

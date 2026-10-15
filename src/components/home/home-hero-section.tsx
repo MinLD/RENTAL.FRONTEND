@@ -61,7 +61,7 @@ export function HomeHeroSection({ promotions, slides }: HomeHeroSectionProps) {
           <Link
             aria-label={promotion.title}
             className="group relative min-h-[145px] overflow-hidden rounded border border-border bg-background shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
-            href="/equipment"
+            href="/products"
             key={promotion.id}
           >
             <Image
