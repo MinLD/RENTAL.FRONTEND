@@ -29,12 +29,14 @@ export function ProductRentalPanel({
   listingId,
   name,
   rentalRate,
+  depositAmount,
   totalQuantity,
   today,
 }: {
   listingId: string;
   name: string;
   rentalRate: EquipmentListingRentalRateResponse | null;
+  depositAmount?: number | null;
   totalQuantity: number;
   today: string;
 }) {
@@ -70,6 +72,10 @@ export function ProductRentalPanel({
     : null;
   const price = (value: number | null | undefined) =>
     formatEquipmentListingRate(value, rentalRate?.currency);
+  const deposit =
+    depositAmount != null && Number.isFinite(depositAmount) && depositAmount >= 0
+      ? formatEquipmentListingRate(depositAmount, rentalRate?.currency ?? "VND")
+      : "Liên hệ";
 
   function changeStart(value: string) {
     setFrom(value);
@@ -95,6 +101,12 @@ export function ProductRentalPanel({
           </span>
         </p>
         <p className="mt-1 text-xs text-muted-foreground">Giá thuê tham khảo</p>
+        <dl className="mt-4 flex justify-between gap-3 text-xs">
+          <dt className="text-muted-foreground">Tiền cọc</dt>
+          <dd className="font-semibold" data-testid="rental-deposit">
+            {deposit}
+          </dd>
+        </dl>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <label className="min-w-0 space-y-2 text-[10px] font-semibold uppercase text-muted-foreground">
@@ -219,8 +231,8 @@ export function ProductRentalPanel({
         </dl>
         <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
           Quy ước {RENTAL_DAYS_PER_MONTH} ngày/tháng, {RENTAL_DAYS_PER_WEEK}{" "}
-          ngày/tuần. Tính cả ngày bắt đầu và kết thúc; chưa gồm vận chuyển và
-          chi phí phát sinh.
+          ngày/tuần. Tính cả ngày bắt đầu và kết thúc; chưa gồm tiền cọc,
+          vận chuyển và chi phí phát sinh.
         </p>
         {!error && !estimate ? (
           <p className="mt-2 text-xs text-error" role="status">
@@ -270,10 +282,14 @@ export function ProductRentalPanel({
               <dd>{quantity} thiết bị</dd>
             </div>
             <div className="flex justify-between gap-3 border-t border-border pt-3">
-              <dt className="font-semibold">Tổng tiền dự kiến</dt>
+              <dt className="font-semibold">Tổng tiền thuê dự kiến</dt>
               <dd className="font-bold text-primary">
                 {price(estimate?.total)}
               </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">Tiền cọc</dt>
+              <dd className="font-semibold">{deposit}</dd>
             </div>
           </dl>
           <p className="text-xs leading-6 text-muted-foreground">

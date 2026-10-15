@@ -42,6 +42,7 @@ export type EquipmentListing = {
   thumbnailMediaId: string | null;
   thumbnailUrl: string | null;
   rentalRate: EquipmentListingRentalRateResponse | null;
+  depositAmount?: number | null;
   status: string | EquipmentListingStatus | null;
   totalQuantity: number;
   createdAt: string;
@@ -82,7 +83,8 @@ export type PublicEquipmentListingListResponse = Omit<
   items: PublicEquipmentListing[];
 };
 
-export type PublicEquipmentListingDetail = PublicEquipmentListing;
+export type PublicEquipmentListingDetail = PublicEquipmentListing &
+  Pick<EquipmentListing, "depositAmount">;
 
 export type EquipmentAvailabilityCheckRequest = {
   startDate: string;
@@ -141,10 +143,12 @@ export type CreateEquipmentListingRequest = {
   schemaVersion: number;
   specValues: Record<string, string | number | boolean>;
   rentalRate: EquipmentListingRentalRate;
+  depositAmount: number;
   thumbnailMediaId: string | null;
 };
 
 export type UpdateEquipmentListingRequest = {
+  depositAmount?: number;
   brandId?: string;
   name?: string;
   description?: string | null;

@@ -20,6 +20,15 @@ const rateInputSchema = z
     "Giá thuê phải là số từ 0 trở lên.",
   );
 
+const depositInputSchema = z
+  .string()
+  .trim()
+  .min(1, "Vui lòng nhập tiền cọc; nhập 0 nếu không yêu cầu tiền cọc.")
+  .refine(
+    (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
+    "Tiền cọc phải là số từ 0 trở lên.",
+  );
+
 const manufactureYearInputSchema = z
   .string()
   .trim()
@@ -46,6 +55,7 @@ export const productCreateFormSchema = z.object({
   dailyRate: rateInputSchema,
   weeklyRate: rateInputSchema,
   monthlyRate: rateInputSchema,
+  depositAmount: depositInputSchema,
   thumbnailMediaId: z.union([uuidSchema, z.literal("")]),
   specInputs: z.array(z.union([z.string(), z.boolean()])),
 });
@@ -90,6 +100,7 @@ export const createEquipmentListingRequestSchema = z.object({
     monthlyRate: z.number().min(0),
     currency: z.literal("VND"),
   }),
+  depositAmount: z.number().min(0, "Tiền cọc phải là số từ 0 trở lên."),
   thumbnailMediaId: uuidSchema.nullable(),
 });
 
@@ -102,6 +113,7 @@ export const productInformationFormSchema = productCreateFormSchema
     manufactureYear: true,
     mediaIds: true,
     thumbnailMediaId: true,
+    depositAmount: true,
   })
   .extend({
     status: z.enum(["1", "2", "3"], {
@@ -158,6 +170,7 @@ export const updateEquipmentListingRequestSchema =
       thumbnailMediaId: true,
       schemaVersion: true,
       specValues: true,
+      depositAmount: true,
     })
     .partial()
     .extend({

@@ -88,6 +88,7 @@ export function ProductCreateDrawer({
       dailyRate: "",
       weeklyRate: "",
       monthlyRate: "",
+      depositAmount: "0",
       thumbnailMediaId: "",
       specInputs: [],
     },
@@ -204,6 +205,7 @@ export function ProductCreateDrawer({
           currency: "VND",
         },
         thumbnailMediaId: values.thumbnailMediaId || null,
+        depositAmount: Number(values.depositAmount),
       });
       if (result && !result.success) {
         setError("root.server", { message: result.error.message });
@@ -237,6 +239,7 @@ export function ProductCreateDrawer({
                 "dailyRate",
                 "weeklyRate",
                 "monthlyRate",
+                "depositAmount",
                 "thumbnailMediaId",
               ] as const
             ).find((key) => key.toLowerCase() === name);
@@ -502,6 +505,24 @@ export function ProductCreateDrawer({
               ))}
             </div>
           </section>
+          <Controller
+            control={control}
+            name="depositAmount"
+            render={({ field, fieldState }) => (
+              <MoneyField
+                {...field}
+                disabled={isBusy}
+                error={fieldState.error?.message}
+                id={`${FORM_ID}-depositAmount`}
+                label="Tiền cọc"
+                placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
+                required
+                rightElement={
+                  <span className="px-2 text-xs text-muted-foreground">VND</span>
+                }
+              />
+            )}
+          />
           {equipmentTypeId ? (
             <SchemaLoadState
               error={schemaError}
