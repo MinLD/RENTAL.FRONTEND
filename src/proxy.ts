@@ -13,6 +13,7 @@ import { getJwtRoles, shouldRefreshJwtToken } from "@/services/auth-token";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { buildBackendApiUrl } from "@/services/backend-api";
 import type { AuthUser } from "@/types/auth";
+import { authPageHref, getSafeReturnTo } from "@/utils/auth-redirect";
 
 const REFRESH_BUFFER_SECONDS = 10;
 const ACCOUNT_ROUTE = "/account";
@@ -113,9 +114,28 @@ function buildAuthenticatedRedirect(
   request: NextRequest,
   authState: RouteAuthState,
 ) {
+  const homePath = getAuthenticatedHomePath(authState);
+  const returnTo = isAuthRoute(request.nextUrl.pathname)
+    ? getSafeReturnTo(request.nextUrl.searchParams.get("returnTo"))
+    : null;
+  let target = homePath;
+  if (returnTo) {
+    const pathname = new URL(returnTo, request.url).pathname;
+    const portal = getPortalRoute(pathname);
+    // Preserve the existing portal policy when honoring a requested destination.
+    const permitted = homePath !== "/"
+      ? isRouteMatch(pathname, homePath)
+      : !portal || hasRouteRole(authState, portal.role);
+    if (permitted) target = returnTo;
+  }
   return NextResponse.redirect(
-    new URL(getAuthenticatedHomePath(authState), request.url),
+    new URL(target, request.url),
   );
+}
+
+function buildLoginRequiredRedirect(request: NextRequest) {
+  const returnTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  return NextResponse.redirect(new URL(authPageHref("/login", returnTo, true), request.url));
 }
 
 function buildRouteAccessRedirect(
@@ -300,7 +320,7 @@ function buildInvalidSessionResponse(request: NextRequest) {
     isAuthRoute(pathname) ||
     (!isPortalRoute(pathname) && !isAuthenticatedRoute(pathname))
       ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", request.url));
+      : buildLoginRequiredRedirect(request);
 
   clearAuthCookies(response);
 
@@ -330,7 +350,7 @@ export async function proxy(request: NextRequest) {
     (isPortalRoute(pathname) || isAuthenticatedRoute(pathname)) &&
     !hasAnyAuthCookie(request)
   ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return buildLoginRequiredRedirect(request);
   }
 
   if (hasAnyAuthCookie(request)) {

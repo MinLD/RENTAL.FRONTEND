@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import styles from "./auth-layout.module.css";
 
@@ -58,6 +60,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                     DP<span>RENTAL</span>
                   </p>
                 </div>
+
+                <Link
+                  className="ml-auto inline-flex min-h-6 shrink-0 items-center gap-1.5 whitespace-nowrap text-xs text-muted-foreground transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-sm"
+                  href="/"
+                >
+                  <ArrowLeft aria-hidden="true" className="size-3.5 sm:size-4" />
+                  Về trang chủ
+                </Link>
 
                 {/* <button className={styles.languageButton} type="button">
                   <span className={styles.languageBadge}>VN</span>

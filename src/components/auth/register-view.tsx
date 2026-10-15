@@ -1,6 +1,6 @@
 import { RegisterForm } from "@/components/auth/register-form";
 
-export function RegisterView() {
+export function RegisterView({ returnTo = "/" }: { returnTo?: string }) {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -10,7 +10,7 @@ export function RegisterView() {
         Tạo tài khoản để thuê thiết bị hoặc đăng bán thiết bị trên DPRENTAL.
       </p> */}
 
-      <RegisterForm />
+      <RegisterForm returnTo={returnTo} />
     </>
   );
 }

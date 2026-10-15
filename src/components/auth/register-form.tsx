@@ -19,11 +19,14 @@ import {
   type RegisterFormValues,
 } from "@/lib/validations/auth";
 import { register as registerAccount } from "@/services/auth-service";
+import { authPageHref, getSafeReturnTo } from "@/utils/auth-redirect";
 
-export function RegisterForm() {
+export function RegisterForm({ returnTo = "/" }: { returnTo?: string }) {
   const router = useRouter();
+  const destination = getSafeReturnTo(returnTo) ?? "/";
+  const loginHref = authPageHref("/login", destination);
   const { handleFirebaseGoogleLogin, isSigningInWithGoogle } =
-    useFirebaseGoogleLogin();
+    useFirebaseGoogleLogin({ returnUrl: destination });
 
   const {
     control,
@@ -46,7 +49,7 @@ export function RegisterForm() {
     try {
       await registerAccount(values);
       toast.success("Đăng ký tài khoản thành công. Vui lòng đăng nhập.");
-      router.replace("/login");
+      router.replace(loginHref);
       router.refresh();
     } catch (error) {
       toast.error(
@@ -160,7 +163,7 @@ export function RegisterForm() {
         Đã có tài khoản?{" "}
         <Link
           className="font-semibold text-foreground transition-colors hover:text-primary"
-          href="/login"
+          href={loginHref}
         >
           Đăng nhập ngay
         </Link>

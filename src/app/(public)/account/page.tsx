@@ -22,13 +22,26 @@ import {
   getAuthUserIdentityNumber,
   getAuthUserRoleLabel,
 } from "@/utils/auth-user";
+import { getSafeReturnTo, type ReturnToSearchParams } from "@/utils/return-to";
 
-export default async function AccountPage() {
-  const [currentUser, sessions, externalLogins] = await Promise.all([
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<ReturnToSearchParams>;
+}) {
+  const [currentUser, sessions, externalLogins, params] = await Promise.all([
     getCurrentUser(),
     getInitialSessions(),
     getInitialExternalLogins(),
+    searchParams,
   ]);
+  const requestedReturnTo = getSafeReturnTo(
+    Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo,
+  );
+  // Returning to the same form would leave an unnecessary continuation URL.
+  const returnTo = requestedReturnTo?.split(/[?#]/)[0] === "/account"
+    ? null
+    : requestedReturnTo;
   const user =
     currentUser ??
     ({
@@ -76,6 +89,7 @@ export default async function AccountPage() {
           initialExternalLogins={externalLogins}
           initialProfile={initialProfile}
           initialSessions={sessions}
+          returnTo={returnTo ?? undefined}
           user={user}
         />
       </Container>

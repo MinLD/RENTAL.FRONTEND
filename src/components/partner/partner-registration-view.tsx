@@ -32,6 +32,7 @@ import { ApiError } from "@/services/api-error";
 import { registerOrganization, updateOrganizationProfile } from "@/services/organization-service";
 import type { MediaDocumentReference } from "@/types/media";
 import type { OrganizationApplication, OrganizationResponse } from "@/types/organization";
+import { withReturnTo } from "@/utils/return-to";
 
 const PROFILE_NOT_COMPLETED_ERROR_CODE = "Profile.NotCompleted";
 
@@ -266,7 +267,10 @@ export function PartnerRegistrationView({
         toast.error(
           "Bạn cần cập nhật CCCD, số điện thoại và ngày sinh trước khi đăng ký tổ chức.",
         );
-        router.push("/account");
+        router.push(withReturnTo(
+          "/account",
+          `${window.location.pathname}${window.location.search}${window.location.hash}`,
+        ));
         return;
       }
 

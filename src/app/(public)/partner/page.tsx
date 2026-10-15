@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
-import {
-  PartnerView,
-  type PartnerProfileCompletion,
-} from "@/components/partner/partner-view";
+import { PartnerView } from "@/components/partner/partner-view";
 import { getMyOrganizationOnServer } from "@/services/organization-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import { serverApiResult } from "@/services/server-api";
+import { getProfileCompletion } from "@/utils/profile-completion";
 
 export const metadata: Metadata = {
   title: "Đăng ký đối tác | DPRENTAL",
@@ -15,7 +13,9 @@ export const metadata: Metadata = {
 
 export default async function PartnerPage() {
   const currentUser = await getCurrentUser();
-  const profileCompletion = getPartnerProfileCompletion(currentUser);
+  const profileCompletion = currentUser
+    ? getProfileCompletion(currentUser)
+    : { isComplete: true, missingFields: [] };
   const result = await serverApiResult(getMyOrganizationOnServer);
   const organization = result.success ? result.data : null;
   return (
@@ -43,35 +43,4 @@ export default async function PartnerPage() {
       </Container>
     </div>
   );
-}
-
-function getPartnerProfileCompletion(
-  user: Awaited<ReturnType<typeof getCurrentUser>>,
-): PartnerProfileCompletion {
-  if (!user) {
-    return { isComplete: true, missingFields: [] };
-  }
-
-  const missingFields: string[] = [];
-
-  if (!user.maskedCitizenId?.trim()) {
-    missingFields.push("CCCD/CMND");
-  }
-
-  if (!user.phoneNumber?.trim()) {
-    missingFields.push("Số điện thoại");
-  }
-
-  if (!user.dateOfBirth?.trim()) {
-    missingFields.push("Ngày sinh");
-  }
-
-  if (!user.isProfileCompleted && missingFields.length === 0) {
-    missingFields.push("Thông tin hồ sơ cá nhân");
-  }
-
-  return {
-    isComplete: user.isProfileCompleted && missingFields.length === 0,
-    missingFields,
-  };
 }

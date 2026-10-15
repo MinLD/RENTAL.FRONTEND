@@ -25,6 +25,7 @@ import {
   updateProfileAction,
   type UpdateProfileActionState,
 } from "@/services/actions/account-actions";
+import { getSafeReturnTo } from "@/utils/return-to";
 
 type AccountEditFormProps = {
   avatarMediaId?: string;
@@ -32,8 +33,10 @@ type AccountEditFormProps = {
   initialProfile: AccountProfileInitialData;
   isAvatarDirty?: boolean;
   isAvatarUploading?: boolean;
+  isProfileComplete?: boolean;
   onCancel?: () => void;
   onSavingChange?: (isSaving: boolean) => void;
+  returnTo?: string;
   userId: string;
 };
 
@@ -49,11 +52,15 @@ export function AccountEditForm({
   initialProfile,
   isAvatarDirty = false,
   isAvatarUploading = false,
+  isProfileComplete = false,
   onCancel,
   onSavingChange,
+  returnTo,
   userId,
 }: AccountEditFormProps) {
   const router = useRouter();
+  const destination = getSafeReturnTo(returnTo);
+  const hasReturned = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
   const [formKey, setFormKey] = useState(0);
   const [isFieldsDirty, setIsFieldsDirty] = useState(false);
@@ -104,7 +111,7 @@ export function AccountEditForm({
         );
       }
 
-      router.refresh();
+      if (!destination || !isProfileComplete) router.refresh();
 
       return;
     }
@@ -112,12 +119,28 @@ export function AccountEditForm({
     toast.error(state.message);
   }, [
     avatarPreviewUrl,
+    destination,
     initialProfile.avatarUrl,
+    isProfileComplete,
     onSavingChange,
     router,
     state,
     userId,
   ]);
+
+  useEffect(() => {
+    // The Server Action refresh supplies the saved profile from the backend.
+    // A successful partial update must stay here until that profile is complete.
+    if (
+      state.success &&
+      isProfileComplete &&
+      destination &&
+      !hasReturned.current
+    ) {
+      hasReturned.current = true;
+      router.replace(destination);
+    }
+  }, [destination, isProfileComplete, router, state.success]);
 
   function handleCancel() {
     if (isBusy || submissionInProgress.current) return;

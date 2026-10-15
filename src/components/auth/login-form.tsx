@@ -5,6 +5,7 @@ import { LockKeyhole, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -15,11 +16,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useFirebaseGoogleLogin } from "@/hooks/use-firebase-google-login";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { login } from "@/services/auth-service";
+import { authPageHref, getSafeReturnTo, LOGIN_REQUIRED_TOAST_ID } from "@/utils/auth-redirect";
 
-export function LoginForm() {
+export function LoginForm({ returnTo = "/", loginRequired = false }: { returnTo?: string; loginRequired?: boolean }) {
   const router = useRouter();
+  const destination = getSafeReturnTo(returnTo) ?? "/";
   const { handleFirebaseGoogleLogin, isSigningInWithGoogle } =
-    useFirebaseGoogleLogin();
+    useFirebaseGoogleLogin({ returnUrl: destination });
+
+  useEffect(() => {
+    if (loginRequired) {
+      toast.info("Vui lòng đăng nhập để tiếp tục.", { id: LOGIN_REQUIRED_TOAST_ID });
+    }
+  }, [loginRequired]);
 
   const {
     control,
@@ -38,8 +47,9 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     try {
       await login(values);
+      toast.dismiss(LOGIN_REQUIRED_TOAST_ID);
       toast.success("Đăng nhập thành công.");
-      router.replace("/");
+      router.replace(destination);
       router.refresh();
     } catch (error) {
       toast.error(
@@ -93,7 +103,7 @@ export function LoginForm() {
 
         <Link
           className="text-xs font-semibold text-primary transition-opacity hover:opacity-80"
-          href="/forgot-password"
+          href={authPageHref("/forgot-password", destination)}
         >
           Quên mật khẩu?
         </Link>
@@ -111,7 +121,7 @@ export function LoginForm() {
         Chưa có tài khoản?{" "}
         <Link
           className="font-semibold text-foreground transition-colors hover:text-primary"
-          href="/register"
+          href={authPageHref("/register", destination)}
         >
           Đăng ký ngay
         </Link>

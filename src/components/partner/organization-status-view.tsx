@@ -1,5 +1,7 @@
 "use client";
 
+import { authPageHref } from "@/utils/auth-redirect";
+
 import {
   Check,
   CircleAlert,
@@ -142,7 +144,7 @@ export function OrganizationStatusView({
       router.refresh();
     } catch {
       toast.error("Phiên đăng nhập cần được cập nhật. Vui lòng đăng nhập lại.");
-      router.push("/login");
+      router.push(authPageHref("/login", "/own"));
     } finally {
       setIsEnteringOw(false);
     }

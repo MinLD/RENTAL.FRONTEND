@@ -29,14 +29,16 @@ import {
   verifyPasswordResetCode,
 } from "@/services/auth-service";
 import { cn } from "@/utils/cn";
+import { authPageHref } from "@/utils/auth-redirect";
 
 const VERIFICATION_CODE_LENGTH = 6;
 const IS_PASSWORD_RESET_TEMPORARILY_DISABLED = true;
 
 type ForgotPasswordStep = "request-code" | "verify-code" | "reset-password";
 
-export function ForgotPasswordFlow() {
+export function ForgotPasswordFlow({ returnTo = "/" }: { returnTo?: string }) {
   const router = useRouter();
+  const loginHref = authPageHref("/login", returnTo);
   const [step, setStep] = useState<ForgotPasswordStep>("request-code");
   const [identifier, setIdentifier] = useState("");
   const [maskedContact, setMaskedContact] = useState("");
@@ -58,7 +60,7 @@ export function ForgotPasswordFlow() {
 
   function handleResetCompleted() {
     toast.success("Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại.");
-    router.replace("/login");
+    router.replace(loginHref);
   }
 
   if (step === "verify-code") {
@@ -75,20 +77,22 @@ export function ForgotPasswordFlow() {
   if (step === "reset-password") {
     return (
       <ResetPasswordStep
+        loginHref={loginHref}
         onCompleted={handleResetCompleted}
         resetToken={resetToken}
       />
     );
   }
 
-  return <RequestCodeStep onRequested={handleCodeRequested} />;
+  return <RequestCodeStep loginHref={loginHref} onRequested={handleCodeRequested} />;
 }
 
 type RequestCodeStepProps = {
+  loginHref: string;
   onRequested: (identifier: string, maskedContact: string) => void;
 };
 
-function RequestCodeStep({ onRequested }: RequestCodeStepProps) {
+function RequestCodeStep({ loginHref, onRequested }: RequestCodeStepProps) {
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -156,7 +160,7 @@ function RequestCodeStep({ onRequested }: RequestCodeStepProps) {
 
       <p className="mt-7 text-center text-sm font-semibold text-muted-foreground">
         Quay lại{" "}
-        <Link className="text-primary hover:opacity-80" href="/login">
+        <Link className="text-primary hover:opacity-80" href={loginHref}>
           đăng nhập
         </Link>
       </p>
@@ -396,11 +400,13 @@ function VerifyCodeStep({
 }
 
 type ResetPasswordStepProps = {
+  loginHref: string;
   onCompleted: () => void;
   resetToken: string;
 };
 
 function ResetPasswordStep({
+  loginHref,
   onCompleted,
   resetToken,
 }: ResetPasswordStepProps) {
@@ -483,7 +489,7 @@ function ResetPasswordStep({
         <span className="h-px flex-1 bg-border" />
         <Link
           className="font-semibold transition-colors hover:text-primary"
-          href="/login"
+          href={loginHref}
         >
           Quay lại <span className="text-primary">đăng nhập</span>
         </Link>
