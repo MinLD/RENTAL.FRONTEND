@@ -70,6 +70,10 @@ export function ProductInformationPanel({
             { label: "Loại thiết bị", value: typeName },
             { label: "Thương hiệu", value: brandName },
             {
+              label: "Tiền cọc",
+              value: formatEquipmentListingRate(product.depositAmount, "VND"),
+            },
+            {
               label: "Trạng thái",
               value: getEquipmentListingStatusLabel(product.status),
             },

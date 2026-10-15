@@ -83,6 +83,7 @@ export function ProductDetailView({
               listingId={product.id}
               name={name}
               rentalRate={product.rentalRate}
+              depositAmount={product.depositAmount}
               totalQuantity={product.totalQuantity}
               today={getTodayRentalDate()}
             />

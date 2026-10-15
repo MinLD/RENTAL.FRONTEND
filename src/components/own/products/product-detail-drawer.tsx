@@ -264,6 +264,7 @@ function ProductDetailForms({
       manufactureYear: initialProduct.manufactureYear?.toString() ?? "",
       mediaIds: initialMedia.map((item) => item.id),
       thumbnailMediaId: initialProduct.thumbnailMediaId ?? "",
+      depositAmount: String(initialProduct.depositAmount ?? 0),
     },
     resolver: zodResolver(productInformationFormSchema),
     shouldFocusError: false,
@@ -292,6 +293,8 @@ function ProductDetailForms({
       request.description = values.description || null;
     if (dirtyFields.status)
       request.status = Number(values.status) as EquipmentListingStatus;
+    if (dirtyFields.depositAmount)
+      request.depositAmount = Number(values.depositAmount);
     if (dirtyFields.manufactureYear)
       request.manufactureYear = values.manufactureYear
         ? Number(values.manufactureYear)
@@ -453,6 +456,24 @@ function ProductDetailForms({
           error={informationForm.formState.errors.description?.message}
           id={`${INFO_FORM_ID}-description`}
           label="Mô tả sản phẩm"
+        />
+        <Controller
+          control={informationForm.control}
+          name="depositAmount"
+          render={({ field, fieldState }) => (
+            <MoneyField
+              {...field}
+              disabled={isBusy}
+              error={fieldState.error?.message}
+              id={`${INFO_FORM_ID}-depositAmount`}
+              label="Tiền cọc"
+              placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
+              required
+              rightElement={
+                <span className="px-2 text-xs text-muted-foreground">VND</span>
+              }
+            />
+          )}
         />
         <Controller
           control={informationForm.control}
