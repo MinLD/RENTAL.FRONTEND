@@ -6,7 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
-import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
+import { BrandLogo } from "@/components/catalog/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -24,7 +24,6 @@ import { HOME_BRANDS_PAGE_SIZE } from "@/config/homepage";
 import { fetchCatalogBrands } from "@/services/catalog-service";
 import type { CatalogBrand, CatalogPagedResult } from "@/types/catalog";
 import { hasCatalogListings } from "@/utils/catalog";
-import { getProductImageSrc } from "@/utils/product-image";
 import { HomeBrandSkeleton } from "./home-brand-skeleton";
 
 type CarouselApi = Parameters<NonNullable<CarouselProps["setApi"]>>[0];
@@ -197,7 +196,6 @@ export function HomeBrandCarousel({
 }
 
 function HomeBrandCard({ brand }: { brand: CatalogBrand }) {
-  const logo = getProductImageSrc(brand.logoUrl);
   return (
     <Link
       aria-label={`Xem thiết bị ${brand.name}`}
@@ -205,23 +203,7 @@ function HomeBrandCard({ brand }: { brand: CatalogBrand }) {
       href={catalogBrowseHref({ brandId: brand.id })}
       prefetch={false}
     >
-      {logo ? (
-        <>
-          <AvatarWithSkeleton
-            alt={brand.name}
-            className="h-14 w-full rounded-none bg-background"
-            fallback={brand.name}
-            fallbackClassName="rounded-none bg-background text-sm font-semibold text-primary"
-            imageClassName="aspect-auto object-contain"
-            loading="lazy"
-            src={logo}
-          />
-        </>
-      ) : (
-        <span className="line-clamp-2 text-sm font-semibold text-primary">
-          {brand.name}
-        </span>
-      )}
+      <BrandLogo className="h-14" name={brand.name} src={brand.logoUrl} />
     </Link>
   );
 }

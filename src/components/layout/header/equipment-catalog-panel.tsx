@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProductImage } from "@/components/products/product-image";
+import { BrandLogo } from "@/components/catalog/brand-logo";
 import { catalogBrowseHref } from "@/config/catalog-navigation";
 import { useCatalogNavigation } from "@/hooks/use-catalog-navigation";
 import type { CatalogNavigationInitialData } from "@/types/catalog-navigation";
@@ -187,13 +187,7 @@ export function EquipmentCatalogPanel({
                   prefetch={false}
                   title={brand.name}
                 >
-                  <div className="relative flex h-8 w-full items-center justify-center overflow-hidden">
-                    {brand.logoUrl ? (
-                      <ProductImage compact imageClassName="object-contain" name={brand.name} sizes="100px" src={brand.logoUrl} />
-                    ) : (
-                      <span className="truncate text-sm font-bold">{brand.code || brand.name}</span>
-                    )}
-                  </div>
+                  <BrandLogo className="h-8" name={brand.name} sizes="100px" src={brand.logoUrl} />
                   <span className="block w-full truncate text-[11px] font-medium">{brand.name}</span>
                 </Link>
               </li>
