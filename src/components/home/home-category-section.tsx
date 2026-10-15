@@ -76,7 +76,8 @@ async function HomeCategoryItems() {
       />
     );
   }
-  const columnCount = Math.ceil(categories.length / 2);
+  // Fill the five desktop columns before starting the second row.
+  const columnCount = Math.max(5, Math.ceil(categories.length / 2));
   const columns = categories.slice(0, columnCount).map((category, index) => [
     category,
     ...categories.slice(index + columnCount, index + columnCount + 1),

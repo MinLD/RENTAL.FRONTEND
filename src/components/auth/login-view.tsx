@@ -1,6 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
 
-export function LoginView() {
+export function LoginView({ returnTo = "/", loginRequired = false }: { returnTo?: string; loginRequired?: boolean }) {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -10,7 +10,7 @@ export function LoginView() {
         Đăng nhập để tiếp tục quản lý tài khoản DPRENTAL.
       </p> */}
 
-      <LoginForm />
+      <LoginForm loginRequired={loginRequired} returnTo={returnTo} />
     </>
   );
 }

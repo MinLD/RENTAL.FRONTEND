@@ -32,7 +32,7 @@ export function AccountProfileSummary({
   const roleLabel = getAuthUserRoleLabel(user);
 
   return (
-    <aside className="self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
+    <aside className="min-w-0 self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
       <div className="flex flex-col items-center text-center">
         <MediaAvatarUpload
           disabled={disabled}
@@ -47,7 +47,10 @@ export function AccountProfileSummary({
           size="lg"
         />
 
-        <h2 className="mt-4 text-lg font-bold text-foreground">
+        <h2
+          className="mt-4 line-clamp-2 w-full break-words text-lg font-bold text-foreground"
+          title={displayName}
+        >
           {displayProfileValue(displayName)}
         </h2>
         <p className="mt-1 max-w-full truncate text-xs text-muted-foreground">

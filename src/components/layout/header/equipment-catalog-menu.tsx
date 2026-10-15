@@ -67,7 +67,7 @@ export function EquipmentCatalogMenu({
           <SheetHeader className="border-b border-border pr-10">
             <SheetTitle>Danh mục thiết bị</SheetTitle>
             <SheetDescription>
-              Chọn danh mục và loại thiết bị để tìm sản phẩm.
+              Tìm sản phẩm theo danh mục, loại thiết bị hoặc thương hiệu.
             </SheetDescription>
           </SheetHeader>
           {panel}

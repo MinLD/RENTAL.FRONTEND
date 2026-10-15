@@ -1,16 +1,24 @@
 import "server-only";
 
-import { catalogNavigationEquipmentParams } from "@/config/catalog-navigation";
+import {
+  CATALOG_NAVIGATION_BRAND_PARAMS,
+  catalogNavigationEquipmentParams,
+} from "@/config/catalog-navigation";
 import {
   getCatalogCategories,
+  getCatalogBrands,
   getCatalogEquipmentTypes,
 } from "@/services/queries/catalog-queries";
 import type { CatalogNavigationInitialData } from "@/types/catalog-navigation";
+import { hasCatalogListings } from "@/utils/catalog";
 
 export async function getCatalogNavigationInitialData(): Promise<CatalogNavigationInitialData> {
-  const categories = await getCatalogCategories();
+  const [categories, brands] = await Promise.all([
+    getCatalogCategories(),
+    getCatalogBrands(CATALOG_NAVIGATION_BRAND_PARAMS),
+  ]);
   const categoryId = categories.success
-    ? (categories.data.data[0]?.id ?? null)
+    ? (categories.data.data.find(hasCatalogListings)?.id ?? null)
     : null;
   const equipmentTypes = categoryId
     ? await getCatalogEquipmentTypes(
@@ -18,6 +26,7 @@ export async function getCatalogNavigationInitialData(): Promise<CatalogNavigati
       )
     : null;
   return {
+    brands,
     categories,
     equipmentTypes,
     categoryId,

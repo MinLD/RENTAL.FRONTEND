@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FULL_NAME_MAX_LENGTH } from "@/config/profile";
 
 export const loginSchema = z.object({
   email: z
@@ -24,7 +25,11 @@ export const registerSchema = z
       .trim()
       .min(1, "Vui lòng nhập email.")
       .email("Email không hợp lệ."),
-    name: z.string().trim().min(1, "Vui lòng nhập họ và tên hoặc tên doanh nghiệp."),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập họ và tên hoặc tên doanh nghiệp.")
+      .max(FULL_NAME_MAX_LENGTH, `Họ và tên hoặc tên doanh nghiệp không được quá ${FULL_NAME_MAX_LENGTH} ký tự.`),
     password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự."),
   })
   .refine((values) => values.password === values.confirmPassword, {

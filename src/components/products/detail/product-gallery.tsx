@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
+import { Expand } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,15 +30,13 @@ export function ProductGallery({
 }) {
   const [index, setIndex] = useState(0);
   const selected = images[index];
-  function move(step: number) {
-    if (images.length) setIndex((index + step + images.length) % images.length);
-  }
   return (
     <section aria-label={`Hình ảnh ${name}`}>
-      <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-border">
+      <div className="relative aspect-[3/2] overflow-hidden rounded-lg border border-border">
         <ProductImage
           src={selected?.url}
           name={name}
+          imageClassName="object-contain"
           sizes={PRODUCT_GALLERY_IMAGE_SIZES}
           loading="eager"
           fetchPriority="high"
@@ -80,22 +78,12 @@ export function ProductGallery({
         ) : null}
       </div>
       {images.length ? (
-        <div className="mt-3 flex items-center gap-2">
-          <Button
-            aria-label="Ảnh trước"
-            disabled={images.length < 2}
-            onClick={() => move(-1)}
-            size="icon"
-            variant="secondary"
-          >
-            <ChevronLeft aria-hidden="true" className="size-4" />
-          </Button>
-          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto py-1">
+        <div className="mt-3 flex w-full min-w-0 gap-2 overflow-x-auto py-1">
             {images.map((image, imageIndex) => (
               <button
                 aria-label={`Xem ảnh ${imageIndex + 1}`}
                 aria-pressed={imageIndex === index}
-                className={`relative aspect-[16/9] w-24 shrink-0 cursor-pointer overflow-hidden rounded border-2 outline-none focus-visible:ring-2 focus-visible:ring-primary ${imageIndex === index ? "border-primary" : "border-transparent"}`}
+                className={`relative aspect-[16/9] w-32 shrink-0 cursor-pointer overflow-hidden rounded border-2 outline-none focus-visible:ring-2 focus-visible:ring-primary ${imageIndex === index ? "border-primary" : "border-transparent"}`}
                 key={`${image.id}-${imageIndex}`}
                 onClick={() => setIndex(imageIndex)}
                 type="button"
@@ -103,20 +91,10 @@ export function ProductGallery({
                 <ProductImage
                   src={image.url}
                   name={`${name} - ảnh ${imageIndex + 1}`}
-                  sizes="96px"
+                  sizes="128px"
                 />
               </button>
             ))}
-          </div>
-          <Button
-            aria-label="Ảnh sau"
-            disabled={images.length < 2}
-            onClick={() => move(1)}
-            size="icon"
-            variant="secondary"
-          >
-            <ChevronRight aria-hidden="true" className="size-4" />
-          </Button>
         </div>
       ) : null}
     </section>

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { loginWithFirebaseIdToken } from "@/services/auth-service";
 import { signInWithFirebaseGoogle } from "@/services/firebase-google-auth-service";
+import { getSafeReturnTo, LOGIN_REQUIRED_TOAST_ID } from "@/utils/auth-redirect";
 
 type FirebaseGoogleLoginOptions = {
   returnUrl?: string;
@@ -28,8 +29,9 @@ export function useFirebaseGoogleLogin({
         idToken: firebaseLogin.idToken,
       });
 
+      toast.dismiss(LOGIN_REQUIRED_TOAST_ID);
       toast.success("Đăng nhập Google thành công.");
-      router.replace(returnUrl);
+      router.replace(getSafeReturnTo(returnUrl) ?? "/");
       router.refresh();
     } catch (error) {
       const message = getFirebaseGoogleLoginErrorMessage(error);

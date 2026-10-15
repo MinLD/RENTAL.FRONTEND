@@ -3,7 +3,6 @@ import { getCatalogNavigationInitialData } from "@/services/catalog-navigation-s
 import { EquipmentCatalogMenu } from "./equipment-catalog-menu";
 import { MainHeader } from "./main-header";
 import { Navigation } from "./navigation";
-import { TopBar } from "./top-bar";
 import { SiteHeader } from "./site-header";
 
 export async function Header() {
@@ -11,7 +10,6 @@ export async function Header() {
   return (
     <QueryProvider>
       <SiteHeader>
-        <TopBar />
         <MainHeader
           catalogMenu={
             <EquipmentCatalogMenu initialData={initialData} mobile />

@@ -102,7 +102,7 @@ export function UserMenu({ user }: UserMenuProps) {
   }
 
   return (
-    <div className="relative w-full" ref={wrapperRef}>
+    <div className="relative w-20 shrink-0 lg:w-[190px]" ref={wrapperRef}>
       <button
         aria-expanded={isOpen}
         className="flex h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded border border-border bg-background px-2 text-left transition-colors hover:border-primary"

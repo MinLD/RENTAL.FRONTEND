@@ -12,6 +12,7 @@ import type {
   ExternalLoginResponse,
   UserSessionResponse,
 } from "@/types/auth";
+import { getProfileCompletion } from "@/utils/profile-completion";
 
 export type { AccountProfileInitialData } from "@/components/account/account-types";
 
@@ -19,6 +20,7 @@ type AccountProfileFormProps = {
   initialExternalLogins: ExternalLoginResponse[];
   initialProfile: AccountProfileInitialData;
   initialSessions: UserSessionResponse[];
+  returnTo?: string;
   user: AuthUser;
 };
 
@@ -31,6 +33,7 @@ export function AccountProfileForm({
   initialExternalLogins,
   initialProfile,
   initialSessions,
+  returnTo,
   user,
 }: AccountProfileFormProps) {
   const [avatarDraft, setAvatarDraft] = useState<AvatarPreview | null>(null);
@@ -74,13 +77,16 @@ export function AccountProfileForm({
 
       <div className="space-y-5">
         <AccountEditForm
+          key={returnTo ?? "account"}
           avatarMediaId={avatarMediaId}
           avatarPreviewUrl={avatarPreviewUrl}
           initialProfile={initialProfile}
           isAvatarDirty={isAvatarDirty}
           isAvatarUploading={isUploadingAvatar}
+          isProfileComplete={getProfileCompletion(user).isComplete}
           onCancel={resetAvatar}
           onSavingChange={setIsSavingProfile}
+          returnTo={returnTo}
           userId={user.id}
         />
         <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />

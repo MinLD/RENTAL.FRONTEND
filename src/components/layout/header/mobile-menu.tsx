@@ -10,17 +10,6 @@ import { MAIN_NAVIGATION, isMainNavigationActive } from "@/config/navigation";
 import { logout } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
 
-const MOBILE_SECONDARY_LINKS = [
-  {
-    label: "Tra cứu đơn hàng",
-    href: "/orders/lookup",
-  },
-  {
-    label: "Trở thành đối tác",
-    href: "/partner",
-  },
-] as const;
-
 type MobileMenuProps = Readonly<{
   user?: AuthUser | null;
 }>;
@@ -163,21 +152,6 @@ export function MobileMenu({ user }: MobileMenuProps) {
               ))}
             </ul>
 
-            <div className="mt-4 border-t border-border pt-4">
-              <ul className="space-y-1">
-                {MOBILE_SECONDARY_LINKS.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      className="flex rounded px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </nav>
 
           <div className="border-t border-border p-4">

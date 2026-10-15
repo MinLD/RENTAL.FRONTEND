@@ -2,7 +2,7 @@
 
 import { CircleAlert, IdCard, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { OrganizationStatusView } from "@/components/partner/organization-status-view";
@@ -18,16 +18,14 @@ import {
   type OrganizationApplication,
   type OrganizationResponse,
 } from "@/types/organization";
-
-export type PartnerProfileCompletion = {
-  isComplete: boolean;
-  missingFields: string[];
-};
+import { authPageHref } from "@/utils/auth-redirect";
+import type { ProfileCompletion } from "@/utils/profile-completion";
+import { withReturnTo } from "@/utils/return-to";
 
 type PartnerViewProps = {
   initialOrganization: OrganizationResponse | null;
   initialError?: string;
-  profileCompletion: PartnerProfileCompletion;
+  profileCompletion: ProfileCompletion;
 };
 
 export function PartnerView({
@@ -36,6 +34,12 @@ export function PartnerView({
   profileCompletion,
 }: PartnerViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const profileUpdateHref = withReturnTo(
+    "/account",
+    `${pathname}${searchParams.size ? `?${searchParams}` : ""}`,
+  );
   const [organization, setOrganization] =
     useState<OrganizationApplication | null>(initialOrganization);
   const [editingOrganization, setEditingOrganization] =
@@ -73,7 +77,7 @@ export function PartnerView({
       }
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        router.replace("/login");
+        router.replace(authPageHref("/login", `${window.location.pathname}${window.location.search}${window.location.hash}`, true));
         return;
       }
       setError(
@@ -105,6 +109,7 @@ export function PartnerView({
     return (
       <PartnerProfileRequiredView
         missingFields={profileCompletion.missingFields}
+        profileUpdateHref={profileUpdateHref}
       />
     );
   }
@@ -156,8 +161,10 @@ export function PartnerView({
 
 function PartnerProfileRequiredView({
   missingFields,
+  profileUpdateHref,
 }: {
   missingFields: string[];
+  profileUpdateHref: string;
 }) {
   return (
     <section className="mx-auto flex min-h-[480px] max-w-lg flex-col items-center justify-center gap-5 text-center">
@@ -184,7 +191,7 @@ function PartnerProfileRequiredView({
         </ul>
       </div>
       <Button asChild>
-        <Link href="/account">Cập nhật hồ sơ</Link>
+        <Link href={profileUpdateHref}>Cập nhật hồ sơ</Link>
       </Button>
     </section>
   );
