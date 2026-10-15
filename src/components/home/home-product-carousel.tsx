@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ChevronRight, LoaderCircle } from "lucide-react";
@@ -9,19 +8,20 @@ import { ChevronRight, LoaderCircle } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/products/product-card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselProps } from "@/components/ui/carousel";
 import { HOME_PRODUCT_IMAGE_SIZES, HOME_PRODUCTS_PAGE_SIZE, HOME_PRODUCTS_STALE_TIME } from "@/config/homepage";
 import { productBrowseHref } from "@/config/product-browse";
 import { fetchPublicEquipmentListings } from "@/services/public-inventory-service";
 import type { CatalogCategoryDetail, CatalogEquipmentTypeListItem } from "@/types/catalog";
-import type { PublicEquipmentListingListResponse } from "@/types/inventory";
 import { HomeProductsSkeleton } from "./home-products-skeleton";
 
 type HomeProductCarouselProps = {
   category: CatalogCategoryDetail;
   equipmentTypes: CatalogEquipmentTypeListItem[];
   equipmentTypesFailed: boolean;
-  initialProducts?: PublicEquipmentListingListResponse;
+  equipmentTypesLoading: boolean;
+  onRetryEquipmentTypes: () => void;
 };
 type CarouselApi = Parameters<NonNullable<CarouselProps["setApi"]>>[0];
 
@@ -44,7 +44,8 @@ function HomeFilteredProductCarousel({
   category,
   equipmentTypes,
   equipmentTypesFailed,
-  initialProducts,
+  equipmentTypesLoading,
+  onRetryEquipmentTypes,
   equipmentTypeId,
   onSelectType,
 }: HomeProductCarouselProps & {
@@ -52,7 +53,6 @@ function HomeFilteredProductCarousel({
   onSelectType: (id: string | undefined) => void;
 }) {
   const titleId = useId();
-  const router = useRouter();
   const [api, setApi] = useState<CarouselApi>();
   const query = useInfiniteQuery({
     queryKey: ["home", "products", category.id, equipmentTypeId],
@@ -64,7 +64,6 @@ function HomeFilteredProductCarousel({
       sort: "created_desc",
     }, signal),
     initialPageParam: 1,
-    initialData: !equipmentTypeId && initialProducts ? { pages: [initialProducts], pageParams: [1] } : undefined,
     getNextPageParam: (lastPage) => lastPage.items.length > 0 && lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     staleTime: HOME_PRODUCTS_STALE_TIME,
     refetchOnWindowFocus: false,
@@ -103,7 +102,7 @@ function HomeFilteredProductCarousel({
             <CarouselNext aria-label={`Sản phẩm tiếp theo trong ${category.name}`} className={ARROW_CLASS_NAME} />
           </div>
         </div>
-        <div aria-label={`Lọc loại thiết bị trong ${category.name}`} className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group">
+        <div aria-busy={equipmentTypesLoading} aria-label={`Lọc loại thiết bị trong ${category.name}`} className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group">
           {[{ id: "", name: "Tất cả" }, ...equipmentTypes].map((type) => (
             <Button
               aria-pressed={(equipmentTypeId ?? "") === type.id}
@@ -115,10 +114,14 @@ function HomeFilteredProductCarousel({
               variant={(equipmentTypeId ?? "") === type.id ? "primary" : "secondary"}
             >{type.name}</Button>
           ))}
+          {equipmentTypesLoading ? <>
+            <Skeleton aria-hidden="true" className="h-8 w-32 shrink-0" />
+            <Skeleton aria-hidden="true" className="h-8 w-32 shrink-0" />
+          </> : null}
         </div>
         {equipmentTypesFailed ? (
           <p className="mb-3 text-xs text-muted-foreground" role="status">
-            Không thể tải bộ lọc loại thiết bị. <button className="cursor-pointer text-primary underline" onClick={() => router.refresh()} type="button">Thử lại</button>
+            Không thể tải bộ lọc loại thiết bị. <button className="cursor-pointer text-primary underline" onClick={onRetryEquipmentTypes} type="button">Thử lại</button>
           </p>
         ) : null}
         {query.isPending ? <HomeProductsSkeleton /> : !products.length ? (

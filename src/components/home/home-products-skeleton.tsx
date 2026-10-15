@@ -1,5 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+export function HomeCategoryProductsSkeleton({ name }: { name?: string }) {
+  return (
+    <section aria-label={name ? `Đang tải ${name}` : "Đang tải sản phẩm theo danh mục"} className="mt-8 sm:mt-10">
+      {name ? <h2 className="mb-4 border-l-3 border-primary pl-2.5 text-xs font-bold uppercase sm:text-sm">{name}</h2> : <Skeleton className="mb-4 h-5 w-48" />}
+      <Skeleton className="mb-4 h-8 w-64 max-w-full" />
+      <HomeProductsSkeleton />
+    </section>
+  );
+}
+
 export function HomeProductsSkeleton() {
   return (
     <div aria-label="Đang tải sản phẩm" role="status">
