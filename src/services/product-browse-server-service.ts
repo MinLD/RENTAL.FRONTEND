@@ -14,6 +14,8 @@ import {
   getCatalogEquipmentTypes,
 } from "@/services/queries/catalog-queries";
 import { getPublicEquipmentListings } from "@/services/queries/inventory-queries";
+import { getStoredPublicArea } from "@/services/public-area-server-service";
+import { publicAreaParams } from "@/lib/locations/public-area";
 import type { ApiResult } from "@/services/api-error";
 import type { CatalogEquipmentTypeDetail, CatalogPagedResult, CatalogSpecField } from "@/types/catalog";
 import { PUBLIC_EQUIPMENT_LISTING_SORTS } from "@/types/inventory";
@@ -71,6 +73,8 @@ async function getSpecificationFields(
 export async function getProductBrowseData(
   params: ProductBrowseSearchParams,
 ): Promise<ProductBrowseData> {
+  const storedArea = publicAreaParams(await getStoredPublicArea());
+  const hasLinkedArea = params.provinceCode !== undefined || params.wardCode !== undefined;
   const requestedPage = Number(getSearchParam(params.page) ?? 1);
   const requestedSize = Number(
     getSearchParam(params.pageSize) ?? PRODUCT_DEFAULT_PAGE_SIZE,
@@ -78,6 +82,8 @@ export async function getProductBrowseData(
   const requestedSort = getSearchParam(params.sort);
   const requestedQuantity = getSearchParam(params.requestedQuantity);
   const filters: ProductBrowseFilters = {
+    provinceCode: hasLinkedArea ? getSearchParam(params.provinceCode) : storedArea.provinceCode,
+    wardCode: hasLinkedArea ? getSearchParam(params.wardCode) : storedArea.wardCode,
     categoryId: getSearchParam(params.categoryId),
     equipmentTypeId: getSearchParam(params.equipmentTypeId),
     brandId: getSearchParam(params.brandId),

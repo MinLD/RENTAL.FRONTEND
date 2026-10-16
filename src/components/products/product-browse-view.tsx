@@ -6,6 +6,7 @@ import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
 import { ProductPagination } from "./product-pagination";
 import { ProductResults } from "./product-results";
+import { ProductAreaSummary } from "./product-area-summary";
 import { ProductBrowseProvider } from "@/providers/product-browse-provider";
 
 export function ProductBrowseView({
@@ -49,6 +50,7 @@ export function ProductBrowseView({
               <h2 className="sr-only" id="product-list-title">
                 Danh sách sản phẩm
               </h2>
+              <ProductAreaSummary filters={filters} />
               <ProductResults>
                 <ProductList
                   equipmentTypes={equipmentTypes}

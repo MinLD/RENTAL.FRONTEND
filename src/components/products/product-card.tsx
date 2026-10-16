@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 
 import { PRODUCT_CARD_IMAGE_SIZES } from "@/config/product-images";
 import type { PublicEquipmentListing } from "@/types/inventory";
@@ -6,6 +7,7 @@ import { getProductThumbnailSrc } from "@/utils/product-image";
 import {
   formatEquipmentListingRate,
   getEquipmentListingName,
+  formatWarehouseArea,
 } from "@/utils/inventory";
 import { ProductImage } from "./product-image";
 
@@ -43,6 +45,10 @@ export function ProductCard({
           <h3 className="mb-3 min-h-10 line-clamp-2 text-sm font-bold leading-5">
             {name}
           </h3>
+          <p className="mb-1 flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground" title={formatWarehouseArea(product.warehouseArea)}>
+            <MapPin aria-hidden="true" className="mt-0.5 size-3 shrink-0 text-primary" />
+            <span className="line-clamp-2">{formatWarehouseArea(product.warehouseArea)}</span>
+          </p>
           <dl className="space-y-2 py-2.5 text-[11px]">
             <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">Model</dt>

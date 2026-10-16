@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiInputError } from "@/services/api-error";
 import { PUBLIC_EQUIPMENT_LISTING_SORTS } from "@/types/inventory";
 import type { PublicEquipmentListingListParams } from "@/types/inventory";
+import { VIETNAM_PROVINCES } from "@/lib/locations/vietnam-divisions";
 
 const specFilterSchema = z
   .object({
@@ -36,6 +37,8 @@ export const publicEquipmentListingListParamsSchema = z
     categoryId: z.uuid().optional(),
     equipmentTypeId: z.uuid().optional(),
     brandId: z.uuid().optional(),
+    provinceCode: z.string().regex(/^\d{2}$/, "Mã tỉnh / thành phố không hợp lệ.").optional(),
+    wardCode: z.string().regex(/^\d{5}$/, "Mã phường / xã không hợp lệ.").optional(),
     q: z
       .string()
       .trim()
@@ -61,6 +64,13 @@ export const publicEquipmentListingListParamsSchema = z
       .default(20),
   })
   .superRefine((params, context) => {
+    const province = VIETNAM_PROVINCES.find((item) => item.code === params.provinceCode);
+    if (params.provinceCode && !province) {
+      context.addIssue({ code: "custom", path: ["provinceCode"], message: "Tỉnh / thành phố không hợp lệ." });
+    }
+    if (params.wardCode && !province?.wards.some((ward) => ward.code === params.wardCode)) {
+      context.addIssue({ code: "custom", path: ["wardCode"], message: "Vui lòng chọn phường / xã thuộc tỉnh / thành phố đã chọn." });
+    }
     if (Boolean(params.from) !== Boolean(params.to)) {
       context.addIssue({
         code: "custom",
