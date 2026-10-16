@@ -32,6 +32,7 @@ export function ProductCard({
         <div className="relative aspect-[16/10] overflow-hidden">
           <ProductImage
             name={name}
+            role="medium"
             src={thumbnail}
             sizes={imageSizes}
             loading={prioritizeImage ? "eager" : "lazy"}

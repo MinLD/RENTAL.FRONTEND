@@ -232,6 +232,7 @@ export function EquipmentSearch() {
                         compact
                         imageClassName="object-contain"
                         name={name}
+                        role="thumbnail"
                         sizes="48px"
                         src={src}
                       />

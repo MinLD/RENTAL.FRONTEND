@@ -15,7 +15,6 @@ export const PRODUCT_IMAGE_REMOTE_PATTERNS =
           hostname: publicApiUrl.hostname,
           port: publicApiUrl.port,
           pathname: `${publicApiUrl.pathname.replace(/\/+$/, "")}/api/v1/media/*/content`,
-          search: "",
         },
       ]
     : [];

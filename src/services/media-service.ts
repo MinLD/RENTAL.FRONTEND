@@ -77,6 +77,7 @@ function normalizeUploadResults(results: MediaUploadResult[]) {
         previewUrlExpiresAtUtc: result.media.previewUrlExpiresAtUtc ?? "",
         sizeBytes: result.media.sizeBytes,
         status: result.media.status ?? "",
+        imageVariants: result.media.imageVariants ?? [],
       } satisfies MediaUploadResponse;
     });
 }
