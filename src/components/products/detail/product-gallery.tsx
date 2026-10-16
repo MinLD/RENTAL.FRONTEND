@@ -36,6 +36,7 @@ export function ProductGallery({
         <ProductImage
           src={selected?.url}
           name={name}
+          role="large"
           imageClassName="object-contain"
           sizes={PRODUCT_GALLERY_IMAGE_SIZES}
           loading="eager"
@@ -63,6 +64,7 @@ export function ProductGallery({
                 <ProductImage
                   src={selected.url}
                   name={name}
+                  role="original"
                   imageClassName="object-contain"
                   sizes={PRODUCT_ZOOM_IMAGE_SIZES}
                   loading="eager"
@@ -91,6 +93,7 @@ export function ProductGallery({
                 <ProductImage
                   src={image.url}
                   name={`${name} - ảnh ${imageIndex + 1}`}
+                  role="thumbnail"
                   sizes="128px"
                 />
               </button>

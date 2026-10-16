@@ -24,6 +24,7 @@ export function BrandLogo({
         imageClassName="object-contain group-hover:scale-100"
         maxRetries={2}
         name={name}
+        role="thumbnail"
         sizes={sizes}
         src={src}
       />
