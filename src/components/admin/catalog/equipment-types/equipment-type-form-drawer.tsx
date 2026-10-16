@@ -857,7 +857,7 @@ function toMediaFormItem(
     displayOrder: index,
     isThumbnail: index === 0,
     mediaId: upload.mediaId,
-    url: upload.previewUrl,
+    url: `/api/v1/media/${upload.mediaId}/content`,
   };
 }
 

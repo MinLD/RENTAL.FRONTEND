@@ -40,6 +40,7 @@ export function ProductDetailTabs({
                 <ProductImage
                   src={thumbnailUrl}
                   name={name}
+                  role="medium"
                   sizes={PRODUCT_DESCRIPTION_IMAGE_SIZES}
                 />
               </div>

@@ -110,6 +110,7 @@ function HomeCategoryCard({ category }: { category: CatalogCategoryDetail }) {
           compact
           imageClassName="object-contain"
           name={category.name}
+          role="medium"
           sizes={CATEGORY_IMAGE_SIZES}
           src={category.imageUrl}
         />
