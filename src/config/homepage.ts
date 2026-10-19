@@ -14,6 +14,15 @@ export const HOME_PRODUCTS_STALE_TIME = 5 * 60 * 1000;
 export const HOME_PRODUCT_IMAGE_SIZES =
   "(min-width: 1280px) 292px, (min-width: 1024px) calc(25vw - 28px), (min-width: 640px) calc(33.33vw - 24px), calc(80vw - 28px)";
 
+export const HOME_LATEST_PRODUCTS_PARAMS = {
+  pageSize: 20,
+  sort: "created_desc",
+} as const;
+export const HOME_LATEST_PRODUCTS_GRID_CLASS_NAME =
+  "grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-4";
+export const HOME_LATEST_PRODUCT_IMAGE_SIZES =
+  "(min-width: 1280px) 230px, (min-width: 1024px) calc(25vw - 28px), (min-width: 768px) calc(33.33vw - 27px), calc(50vw - 22px)";
+
 export type HomeHeroAction = {
   href: string;
   label: string;

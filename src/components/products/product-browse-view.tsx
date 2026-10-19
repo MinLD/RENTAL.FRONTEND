@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { Container } from "@/components/layout/container";
+import { HomeLink } from "@/components/layout/home-link";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
@@ -26,9 +25,9 @@ export function ProductBrowseView({
             aria-label="Đường dẫn trang"
             className="mb-4 text-xs text-muted-foreground"
           >
-            <Link className="hover:text-primary" href="/">
+            <HomeLink className="hover:text-primary">
               Trang chủ
-            </Link>
+            </HomeLink>
             <span className="mx-2" aria-hidden="true">
               /
             </span>

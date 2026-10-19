@@ -7,6 +7,7 @@ import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
 import { MAIN_NAVIGATION, isMainNavigationActive } from "@/config/navigation";
+import { HomeLink } from "@/components/layout/home-link";
 import { logout } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
 
@@ -108,10 +109,9 @@ export function MobileMenu({ user }: MobileMenuProps) {
           role="dialog"
         >
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
-            <Link
+            <HomeLink
               aria-label="DPRENTAL - Trang chủ"
               className="leading-none"
-              href="/"
               onClick={() => setIsOpen(false)}
             >
               <span className="block text-lg font-bold tracking-tight text-foreground">
@@ -120,7 +120,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
               <span className="mt-1 block text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
                 Sàn thiết bị công trường
               </span>
-            </Link>
+            </HomeLink>
 
             <button
               aria-label="Đóng menu"
@@ -134,22 +134,25 @@ export function MobileMenu({ user }: MobileMenuProps) {
 
           <nav aria-label="Điều hướng di động" className="flex-1 px-4 py-3">
             <ul className="space-y-1">
-              {MAIN_NAVIGATION.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    aria-current={
-                      isMainNavigationActive(pathname, item.href) ? "page" : undefined
-                    }
-                    className={`flex rounded px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary/10 hover:text-primary ${
-                      isMainNavigationActive(pathname, item.href) ? "bg-primary/10 text-primary" : ""
-                    }`}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {MAIN_NAVIGATION.map((item) => {
+                const isActive = isMainNavigationActive(pathname, item.href);
+                const linkProps = {
+                  "aria-current": isActive ? "page" as const : undefined,
+                  className: `flex rounded px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary/10 hover:text-primary ${
+                    isActive ? "bg-primary/10 text-primary" : ""
+                  }`,
+                  onClick: () => setIsOpen(false),
+                };
+                return (
+                  <li key={item.href}>
+                    {item.href === "/" ? (
+                      <HomeLink {...linkProps}>{item.label}</HomeLink>
+                    ) : (
+                      <Link {...linkProps} href={item.href}>{item.label}</Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
 
           </nav>

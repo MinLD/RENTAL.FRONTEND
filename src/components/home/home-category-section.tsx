@@ -25,7 +25,7 @@ const CATEGORY_ARROW_CLASS_NAME =
 
 export function HomeCategorySection() {
   return (
-    <section aria-labelledby="home-category-title" className="mt-6 sm:mt-8">
+    <section aria-labelledby="home-category-title" className="mt-8 sm:mt-10">
       <h2
         className="mb-4 border-l-3 border-primary pl-2.5 text-xs font-bold uppercase sm:text-sm"
         id="home-category-title"

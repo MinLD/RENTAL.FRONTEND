@@ -1,30 +1,35 @@
 import { Suspense } from "react";
 
-import { EmptyState } from "@/components/empty-state";
+import { HOME_LATEST_PRODUCTS_PARAMS } from "@/config/homepage";
 import { QueryProvider } from "@/providers/query-provider";
-import { getCatalogCategories } from "@/services/queries/catalog-queries";
-import { hasCatalogListings } from "@/utils/catalog";
-import { HomeCategoryProducts } from "./home-category-products";
-import { HomeCategoryProductsSkeleton } from "./home-products-skeleton";
+import { getPublicEquipmentListings } from "@/services/queries/inventory-queries";
+import { HomeLatestProductsFeed } from "./home-latest-products-feed";
+import { HomeLatestProductsSkeleton } from "./home-products-skeleton";
 
 export function HomeProductsSection() {
   return (
-    <QueryProvider>
-      <Suspense fallback={<HomeCategoryProductsSkeleton />}>
-        <HomeProductCategories />
-      </Suspense>
-    </QueryProvider>
+    <section aria-labelledby="home-latest-products-title" className="mt-4 sm:mt-6">
+      <div className="sticky top-[var(--site-header-height,6rem)] z-20 mb-4 bg-background py-3 sm:py-4">
+        <h2
+          className="border-l-3 border-primary pl-2.5 text-xs font-bold uppercase sm:text-sm"
+          id="home-latest-products-title"
+        >
+          Mới nhất
+        </h2>
+      </div>
+      <QueryProvider>
+        <Suspense fallback={<HomeLatestProductsSkeleton />}>
+          <HomeLatestProducts />
+        </Suspense>
+      </QueryProvider>
+    </section>
   );
 }
 
-async function HomeProductCategories() {
-  const result = await getCatalogCategories();
-  if (!result.success) {
-    return <EmptyState className="mt-10 min-h-40" title="Không thể tải danh mục sản phẩm" description="Vui lòng tải lại trang hoặc thử lại sau." />;
-  }
-  return result.data.data
-    .filter((category) => category.isActive && category.id && hasCatalogListings(category))
-    .map((category) => (
-      <HomeCategoryProducts category={category} key={category.id} />
-    ));
+async function HomeLatestProducts() {
+  const result = await getPublicEquipmentListings({
+    ...HOME_LATEST_PRODUCTS_PARAMS,
+    page: 1,
+  });
+  return <HomeLatestProductsFeed initialPage={result.success ? result.data : undefined} />;
 }
