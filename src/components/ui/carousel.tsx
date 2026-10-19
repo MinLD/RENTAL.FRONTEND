@@ -194,7 +194,7 @@ export const CarouselPrevious = React.forwardRef<
   HTMLButtonElement,
   CarouselButtonProps
 >(({ className, ...props }, ref) => {
-  const { canScrollPrev, scrollPrev } = useCarousel();
+  const { api, canScrollPrev, scrollPrev } = useCarousel();
 
   return (
     <button
@@ -203,7 +203,9 @@ export const CarouselPrevious = React.forwardRef<
         "absolute left-4 top-1/2 z-10 inline-flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-black/25 hover:bg-black text-white shadow-sm backdrop-blur transition  disabled:pointer-events-none disabled:opacity-40",
         className,
       )}
-      disabled={!canScrollPrev}
+      // Embla measures scroll limits after mount; don't lock the SSR trigger
+      // using limits that have not been measured yet.
+      disabled={api !== undefined && !canScrollPrev}
       onClick={scrollPrev}
       ref={ref}
       type="button"
@@ -219,7 +221,7 @@ export const CarouselNext = React.forwardRef<
   HTMLButtonElement,
   CarouselButtonProps
 >(({ className, ...props }, ref) => {
-  const { canScrollNext, scrollNext } = useCarousel();
+  const { api, canScrollNext, scrollNext } = useCarousel();
 
   return (
     <button
@@ -228,7 +230,7 @@ export const CarouselNext = React.forwardRef<
         "absolute right-4 top-1/2 z-10 inline-flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-black/25 text-white shadow-sm backdrop-blur transition hover:bg-black disabled:pointer-events-none disabled:opacity-40",
         className,
       )}
-      disabled={!canScrollNext}
+      disabled={api !== undefined && !canScrollNext}
       onClick={scrollNext}
       ref={ref}
       type="button"

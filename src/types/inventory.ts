@@ -27,6 +27,13 @@ export type EquipmentListingRentalRateResponse = {
 
 export type EquipmentListingMedia = { id: string; url: string | null };
 
+export type WarehouseArea = {
+  provinceCode: string | null;
+  provinceName: string | null;
+  wardCode: string | null;
+  wardName: string | null;
+};
+
 export type EquipmentListing = {
   id: string;
   ownerUserId: string;
@@ -74,6 +81,7 @@ export type PublicEquipmentListing = Pick<
   | "totalQuantity"
 > & {
   availableQuantity: number;
+  warehouseArea?: WarehouseArea | null;
 };
 
 export type PublicEquipmentListingListResponse = Omit<
@@ -120,6 +128,8 @@ export type PublicEquipmentListingListParams = {
   categoryId?: string;
   equipmentTypeId?: string;
   brandId?: string;
+  provinceCode?: string;
+  wardCode?: string;
   q?: string;
   sort?: PublicEquipmentListingSort;
   /** Raw JSON array string. URLSearchParams handles encoding. */

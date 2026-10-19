@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
     remotePatterns: PRODUCT_IMAGE_REMOTE_PATTERNS,
     formats: ["image/webp"],
     qualities: [75],
-    minimumCacheTTL: 14_400,
   },
 };
 

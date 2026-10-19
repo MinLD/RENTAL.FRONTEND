@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Filter } from "lucide-react";
 
 import { ProductFilterSection } from "./product-filter-section";
 import { ProductAdvancedFilters } from "./product-advanced-filters";
+import { ProductResetFiltersButton } from "./product-reset-filters-button";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { hasCatalogListings } from "@/utils/catalog";
@@ -36,13 +36,10 @@ export function ProductFilters({
           <Filter aria-hidden="true" className="size-3.5 text-primary" />
           Bộ lọc tìm kiếm
         </h2>
-        <Link
-          className="hidden text-[10px] uppercase text-muted-foreground hover:text-primary lg:inline"
-          href="/products"
-          prefetch={false}
-        >
-          Xóa bộ lọc
-        </Link>
+        <ProductResetFiltersButton
+          className="hidden h-auto p-0 text-[10px] font-normal uppercase text-muted-foreground hover:text-primary lg:inline-flex"
+          variant="default"
+        />
         <button
           aria-controls="product-filter-controls"
           aria-expanded={isExpanded}

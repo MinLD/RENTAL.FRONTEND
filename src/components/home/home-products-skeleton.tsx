@@ -1,4 +1,27 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { HOME_LATEST_PRODUCTS_GRID_CLASS_NAME } from "@/config/homepage";
+
+export function HomeLatestProductsSkeleton() {
+  return (
+    <div aria-label="Đang tải thiết bị mới nhất" role="status">
+      <span className="sr-only">Đang tải thiết bị mới nhất...</span>
+      <div aria-hidden="true" className={HOME_LATEST_PRODUCTS_GRID_CLASS_NAME}>
+        {Array.from({ length: 10 }, (_, index) => (
+          <div className="overflow-hidden rounded border border-border" key={index}>
+            <Skeleton className="aspect-[16/10] rounded-none" />
+            <div className="space-y-5 p-3.5">
+              <Skeleton className="h-10 w-4/5" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="ml-auto h-6 w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function HomeCategoryProductsSkeleton({ name }: { name?: string }) {
   return (

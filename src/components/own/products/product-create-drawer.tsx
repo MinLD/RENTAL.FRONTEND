@@ -712,7 +712,7 @@ export function ProductImageField({
                   (item) =>
                     [
                       item.mediaId,
-                      { id: item.mediaId, url: item.previewUrl },
+                      { id: item.mediaId, url: `/api/v1/media/${item.mediaId}/content` },
                     ] as const,
                 ),
               ]).values(),

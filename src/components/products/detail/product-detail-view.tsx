@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { CalendarDays, Package, Tag } from "lucide-react";
+import { CalendarDays, MapPin, Package, Tag } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { HomeLink } from "@/components/layout/home-link";
 import { QueryProvider } from "@/providers/query-provider";
 import type { PublicEquipmentListingDetail } from "@/types/inventory";
 import type { CatalogSpecField } from "@/types/catalog";
-import { getEquipmentListingName } from "@/utils/inventory";
+import { formatWarehouseArea, getEquipmentListingName } from "@/utils/inventory";
 import {
   getProductDetailImages,
   getProductSpecifications,
@@ -30,9 +31,9 @@ export function ProductDetailView({
           aria-label="Đường dẫn thiết bị"
           className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground"
         >
-          <Link className="hover:text-primary" href="/">
+          <HomeLink className="hover:text-primary">
             Trang chủ
-          </Link>
+          </HomeLink>
           <span aria-hidden="true">/</span>
           <Link className="hover:text-primary" href="/products">
             Thiết bị cho thuê
@@ -71,6 +72,10 @@ export function ProductDetailView({
                   {product.totalQuantity} thiết bị
                 </span>
               </div>
+              <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{formatWarehouseArea(product.warehouseArea)}</span>
+              </p>
               <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
                 {product.description ||
                   "Thiết bị phục vụ nhu cầu thuê của bạn."}

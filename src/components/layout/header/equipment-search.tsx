@@ -19,9 +19,14 @@ import { EQUIPMENT_SEARCH_MIN_LENGTH } from "@/config/equipment-search";
 import { productBrowseHref } from "@/config/product-browse";
 import { useEquipmentSearch } from "@/hooks/use-equipment-search";
 import { getEquipmentListingName } from "@/utils/inventory";
+import { usePublicArea } from "@/providers/public-area-provider";
+import { publicAreaParams } from "@/lib/locations/public-area";
+import { PublicAreaSelector } from "./public-area-selector";
 
 export function EquipmentSearch() {
   const router = useRouter();
+  const { area } = usePublicArea();
+  const areaParams = publicAreaParams(area);
   const [keyword, setKeyword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -67,7 +72,9 @@ export function EquipmentSearch() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     close();
-    router.push(productBrowseHref({ q: trimmedKeyword || undefined }));
+    router.push(
+      productBrowseHref({ ...areaParams, q: trimmedKeyword || undefined }),
+    );
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -143,14 +150,7 @@ export function EquipmentSearch() {
             value={keyword}
           />
         </div>
-        <button
-          aria-label="Tìm máy"
-          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
-          type="submit"
-        >
-          <span className="hidden sm:inline">Tìm máy</span>
-          <Search aria-hidden="true" className="size-3.5" />
-        </button>
+        <PublicAreaSelector />
       </form>
       {showPanel ? (
         <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-lg border border-border bg-background shadow-lg">
@@ -232,6 +232,7 @@ export function EquipmentSearch() {
                         compact
                         imageClassName="object-contain"
                         name={name}
+                        role="thumbnail"
                         sizes="48px"
                         src={src}
                       />
@@ -252,7 +253,7 @@ export function EquipmentSearch() {
           {search.canSearch ? (
             <Link
               className="block truncate border-t border-border px-3.5 py-3 text-xs font-semibold text-primary hover:bg-primary/5"
-              href={productBrowseHref({ q: trimmedKeyword })}
+              href={productBrowseHref({ ...areaParams, q: trimmedKeyword })}
               onClick={close}
               prefetch={false}
             >

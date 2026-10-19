@@ -1,4 +1,3 @@
-import { HomeBrandSection } from "@/components/home/home-brand-section";
 import { HomeCategorySection } from "@/components/home/home-category-section";
 import { HomeHeroSection } from "@/components/home/home-hero-section";
 import { HomeProductsSection } from "@/components/home/home-products-section";
@@ -17,7 +16,6 @@ export default function HomePage() {
           slides={HOME_HERO_SLIDES}
         />
         <HomeCategorySection />
-        <HomeBrandSection />
         <HomeProductsSection />
       </Container>
     </div>

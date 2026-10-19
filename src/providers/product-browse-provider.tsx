@@ -10,11 +10,13 @@ import { useRouter } from "next/navigation";
 
 import { productBrowseHref } from "@/config/product-browse";
 import type { ProductBrowseFilters } from "@/types/product-browse";
+import { usePublicArea } from "@/providers/public-area-provider";
 
 type ProductBrowseNavigation = {
   isPending: boolean;
   navigate: (changes: Partial<ProductBrowseFilters>) => void;
   refresh: () => void;
+  resetFilters: () => void;
 };
 
 export const ProductBrowseNavigationContext =
@@ -28,6 +30,7 @@ export function ProductBrowseProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const { clearArea } = usePublicArea();
   const [isPending, startTransition] = useTransition();
   function navigate(changes: Partial<ProductBrowseFilters>) {
     startTransition(() =>
@@ -35,6 +38,13 @@ export function ProductBrowseProvider({
         productBrowseHref({ ...filters, ...changes, page: changes.page ?? 1 }),
       ),
     );
+  }
+  function resetFilters() {
+    clearArea();
+    startTransition(() => {
+      if (!window.location.search) router.refresh();
+      else router.push("/products", { scroll: false });
+    });
   }
   function followLink(event: MouseEvent<HTMLDivElement>) {
     if (
@@ -67,6 +77,7 @@ export function ProductBrowseProvider({
       value={{
         isPending,
         navigate,
+        resetFilters,
         refresh: () => startTransition(() => router.refresh()),
       }}
     >
