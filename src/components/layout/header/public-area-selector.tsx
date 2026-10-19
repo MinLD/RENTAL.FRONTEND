@@ -52,8 +52,7 @@ export function PublicAreaSelector() {
       <button
         aria-haspopup="dialog"
         aria-label={`Khu vực: ${label}`}
-        className="inline-flex max-w-40 shrink-0 cursor-pointer items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 sm:px-4"
-        disabled={!isReady}
+        className="inline-flex max-w-40 shrink-0 cursor-pointer items-center gap-1.5 bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
         onClick={openPicker}
         title={label}
         type="button"
@@ -67,7 +66,8 @@ export function PublicAreaSelector() {
           className="hidden size-3 shrink-0 sm:block"
         />
       </button>
-      {isPickerOpen ? (
+      {/* Restore the saved area before initializing the dialog's draft. */}
+      {isPickerOpen && isReady ? (
         <AreaDialog
           initialArea={area}
           onClose={closePicker}

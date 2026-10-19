@@ -32,19 +32,19 @@ test("isMediaServiceUrl identifies relative and absolute MediaService content UR
 test("getProductImageSrc applies role-based variants to MediaService URLs", () => {
   assert.equal(
     getProductImageSrc(RELATIVE_MEDIA_URL, "thumbnail"),
-    `/api/v1/media/${MEDIA_ID}/content?variant=thumbnail`
+    `${ABSOLUTE_MEDIA_URL}?variant=thumbnail`
   );
   assert.equal(
     getProductImageSrc(RELATIVE_MEDIA_URL, "medium"),
-    `/api/v1/media/${MEDIA_ID}/content?variant=medium`
+    `${ABSOLUTE_MEDIA_URL}?variant=medium`
   );
   assert.equal(
     getProductImageSrc(RELATIVE_MEDIA_URL, "large"),
-    `/api/v1/media/${MEDIA_ID}/content?variant=large`
+    `${ABSOLUTE_MEDIA_URL}?variant=large`
   );
   assert.equal(
     getProductImageSrc(RELATIVE_MEDIA_URL, "original"),
-    `/api/v1/media/${MEDIA_ID}/content?variant=original`
+    `${ABSOLUTE_MEDIA_URL}?variant=original`
   );
   assert.equal(
     getProductImageSrc(ABSOLUTE_MEDIA_URL, "thumbnail"),
@@ -61,13 +61,13 @@ test("getProductImageSrc NEVER appends variant to signed, external, or static UR
 test("getProductImageSrc preserves download=true without adding generated variants", () => {
   const downloadUrl = `/api/v1/media/${MEDIA_ID}/content?download=true`;
   const result = getProductImageSrc(downloadUrl, "thumbnail");
-  assert.equal(result, `/api/v1/media/${MEDIA_ID}/content?download=true`);
+  assert.equal(result, `${ABSOLUTE_MEDIA_URL}?download=true`);
 });
 
 test("getMediaOriginalUrl formats MediaService URL with variant=original", () => {
   assert.equal(
     getMediaOriginalUrl(RELATIVE_MEDIA_URL),
-    `/api/v1/media/${MEDIA_ID}/content?variant=original`
+    `${ABSOLUTE_MEDIA_URL}?variant=original`
   );
   assert.equal(getMediaOriginalUrl(EXTERNAL_URL), EXTERNAL_URL);
 });
@@ -79,25 +79,25 @@ test("getProductThumbnailSrc picks thumbnail role by default", () => {
   };
   assert.equal(
     getProductThumbnailSrc(product),
-    `/api/v1/media/${MEDIA_ID}/content?variant=thumbnail`
+    `${ABSOLUTE_MEDIA_URL}?variant=thumbnail`
   );
 });
 
 test("getProductImageSrc strips unsupported query params and retains base path", () => {
   const dirtyUrl = `/api/v1/media/${MEDIA_ID}/content?malicious=attack&foo=bar`;
   const cleanThumb = getProductImageSrc(dirtyUrl, "thumbnail");
-  assert.equal(cleanThumb, `/api/v1/media/${MEDIA_ID}/content?variant=thumbnail`);
+  assert.equal(cleanThumb, `${ABSOLUTE_MEDIA_URL}?variant=thumbnail`);
   assert.doesNotMatch(cleanThumb, /malicious/);
   assert.doesNotMatch(cleanThumb, /foo/);
 });
 
 test("All roles map to exact contract variants", () => {
   // Avatar, logo, table row, search, gallery thumbnail -> thumbnail
-  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "thumbnail"), `/api/v1/media/${MEDIA_ID}/content?variant=thumbnail`);
+  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "thumbnail"), `${ABSOLUTE_MEDIA_URL}?variant=thumbnail`);
   // Card, category, description -> medium
-  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "medium"), `/api/v1/media/${MEDIA_ID}/content?variant=medium`);
+  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "medium"), `${ABSOLUTE_MEDIA_URL}?variant=medium`);
   // Main gallery -> large
-  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "large"), `/api/v1/media/${MEDIA_ID}/content?variant=large`);
+  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "large"), `${ABSOLUTE_MEDIA_URL}?variant=large`);
   // Dialog zoom -> original
-  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "original"), `/api/v1/media/${MEDIA_ID}/content?variant=original`);
+  assert.equal(getProductImageSrc(RELATIVE_MEDIA_URL, "original"), `${ABSOLUTE_MEDIA_URL}?variant=original`);
 });

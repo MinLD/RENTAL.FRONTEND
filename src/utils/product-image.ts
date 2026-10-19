@@ -1,20 +1,16 @@
-function getConfiguredApiOrigin(): { protocol: string; hostname: string; port: string; pathname: string } | null {
+import type { PublicEquipmentListing } from "@/types/inventory";
+
+function getConfiguredApiOrigin(): URL | null {
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!envUrl) return null;
   try {
     const url = new URL(envUrl);
-    if (!["http:", "https:"].includes(url.protocol)) return null;
-    return {
-      protocol: url.protocol,
-      hostname: url.hostname,
-      port: url.port,
-      pathname: url.pathname.replace(/\/+$/, ""),
-    };
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return null;
+    return url;
   } catch {
     return null;
   }
 }
-import type { PublicEquipmentListing } from "@/types/inventory";
 
 export type ProductImageRole = "thumbnail" | "medium" | "large" | "original";
 
@@ -93,7 +89,7 @@ export function getProductImageSrc(
 
   try {
     const isRelative = value.startsWith("/") && !value.startsWith("//");
-    const parsed = isRelative
+    let parsed = isRelative
       ? new URL(value, "https://local.invalid")
       : new URL(value);
 
@@ -112,6 +108,17 @@ export function getProductImageSrc(
       return null;
     }
 
+    // Relative media references belong to the API, not the frontend host.
+    if (isRelative) {
+      const configured = getConfiguredApiOrigin();
+      if (!configured) return null;
+      const basePath = configured.pathname.replace(/\/+$/, "");
+      const contentPath = basePath && parsed.pathname.startsWith(`${basePath}/`)
+        ? parsed.pathname
+        : `${basePath}${parsed.pathname}`;
+      parsed = new URL(`${contentPath}${parsed.search}`, configured.origin);
+    }
+
     parsed.hash = "";
 
     // Nếu URL download=true, giữ nguyên download=true và không gắn variant được tạo
@@ -119,7 +126,7 @@ export function getProductImageSrc(
       const filteredParams = new URLSearchParams();
       filteredParams.set("download", "true");
       parsed.search = filteredParams.toString() ? `?${filteredParams.toString()}` : "";
-      return isRelative ? `${parsed.pathname}${parsed.search}` : parsed.href;
+      return parsed.href;
     }
 
     // Chỉ chấp nhận các query được hỗ trợ: variant và download
@@ -138,7 +145,7 @@ export function getProductImageSrc(
     }
 
     parsed.search = newParams.toString() ? `?${newParams.toString()}` : "";
-    return isRelative ? `${parsed.pathname}${parsed.search}` : parsed.href;
+    return parsed.href;
   } catch {
     return null;
   }
@@ -149,6 +156,12 @@ export function getProductImageSrc(
  */
 export function getMediaOriginalUrl(src?: string | null): string | null {
   return getProductImageSrc(src, "original");
+}
+
+// Remote sources (including signed storage URLs) are delivered directly to the
+// browser. Local static assets can still use Next.js image optimization.
+export function shouldBypassProductImageOptimization(src: string): boolean {
+  return isMediaServiceUrl(src) || /^https?:\/\//i.test(src);
 }
 
 export function getProductThumbnailSrc(

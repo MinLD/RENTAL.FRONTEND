@@ -7,18 +7,10 @@ export const MAIN_NAVIGATION = [
     label: "Thiết bị cho thuê",
     href: "/products",
   },
-  {
-    label: "Đơn thuê của tôi",
-    href: "/rentals",
-  },
   // {
   //   label: "Tra cứu đơn hàng",
   //   href: "/orders/lookup",
   // },
-  {
-    label: "Đăng ký tổ chức",
-    href: "/partner",
-  },
 
   // {
   //   label: "Hỗ trợ",
