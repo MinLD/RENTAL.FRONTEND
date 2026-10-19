@@ -303,6 +303,9 @@ export const API_ENDPOINTS = {
       sessions: "/api/v1/auth/users/sessions",
     },
     inventory: {
+      warehouse: {
+        me: "/api/v1/inventory/warehouse/me",
+      },
       equipmentListings: {
         publicAvailabilityCheck: (id: string) =>
           `/api/v1/inventory/public/equipment-listings/${encodeURIComponent(id)}/availability/check`,
