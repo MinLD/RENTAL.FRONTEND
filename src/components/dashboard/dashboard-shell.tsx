@@ -1,9 +1,9 @@
 "use client";
 
-import { Bell } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import {
   SidebarInset,
   SidebarProvider,
@@ -53,14 +53,7 @@ export function DashboardShell({
             </div>
           </div>
 
-          <button
-            aria-label="Thông báo"
-            className="relative flex size-9 cursor-pointer items-center justify-center rounded border border-border bg-background text-foreground transition-colors hover:border-primary hover:text-primary"
-            type="button"
-          >
-            <Bell className="size-4" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
-          </button>
+          <NotificationDropdown isAuthenticated={Boolean(user)} iconClassName="size-4" />
         </header>
 
         <main className="h-[calc(100svh-4rem)] min-h-0 min-w-0 flex-none overflow-hidden bg-background">

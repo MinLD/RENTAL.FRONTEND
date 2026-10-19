@@ -3,7 +3,12 @@ import {
   type EquipmentListing,
   type EquipmentListingMedia,
   type EquipmentListingStatus,
+  type WarehouseArea,
 } from "@/types/inventory";
+
+export function formatWarehouseArea(area: WarehouseArea | null | undefined) {
+  return [area?.wardName?.trim(), area?.provinceName?.trim()].filter(Boolean).join(", ") || "Chưa cập nhật khu vực";
+}
 
 export function getEquipmentListingMedia(
   product: EquipmentListing,

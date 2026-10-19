@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, Mail } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { HomeLink } from "@/components/layout/home-link";
 
 import {
   FOOTER_LEGAL_LINKS,
@@ -21,12 +22,11 @@ export function Footer() {
             className="min-w-0 md:col-span-2 lg:col-span-1"
           >
             <h2 id="footer-brand-heading">
-              <Link
+              <HomeLink
                 className="inline-block text-2xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-                href="/"
               >
                 DP<span className="text-primary">RENTAL</span>
-              </Link>
+              </HomeLink>
             </h2>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-navy-foreground/50">
               Sàn thiết bị công trường

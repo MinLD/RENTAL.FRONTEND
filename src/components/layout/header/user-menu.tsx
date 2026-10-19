@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { Building2, ChevronDown, ClipboardList, LogOut, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -146,6 +146,22 @@ export function UserMenu({ user }: UserMenuProps) {
           >
             <UserRound size={16} />
             Tài khoản của tôi
+          </Link>
+          <Link
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            href="/rentals"
+            onClick={() => setIsOpen(false)}
+          >
+            <ClipboardList aria-hidden="true" size={16} />
+            Đơn thuê của tôi
+          </Link>
+          <Link
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            href="/partner"
+            onClick={() => setIsOpen(false)}
+          >
+            <Building2 aria-hidden="true" size={16} />
+            Đăng ký tổ chức
           </Link>
           <button
             disabled={isLoggingOut}

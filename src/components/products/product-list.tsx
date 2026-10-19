@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { ProductRefreshButton } from "./product-refresh-button";
-import { Button } from "@/components/ui/button";
+import { ProductResetFiltersButton } from "./product-reset-filters-button";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { ProductCard } from "./product-card";
 
@@ -28,14 +27,8 @@ export function ProductList({
       <EmptyState
         className="min-h-80"
         title="Sản phẩm hiện chưa có"
-        description="Chưa có sản phẩm phù hợp với bộ lọc đã chọn. Bạn có thể thử một loại thiết bị hoặc từ khóa khác."
-        action={
-          <Button asChild variant="secondary">
-            <Link href="/products" prefetch={false}>
-              Xóa bộ lọc
-            </Link>
-          </Button>
-        }
+        description="Chưa có sản phẩm phù hợp với khu vực và bộ lọc đã chọn. Bạn có thể đổi khu vực kho hoặc thử một từ khóa khác."
+        action={<ProductResetFiltersButton />}
       />
     );
   }

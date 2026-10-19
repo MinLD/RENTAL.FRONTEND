@@ -10,8 +10,12 @@ import {
 } from "@/config/equipment-search";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fetchPublicEquipmentListings } from "@/services/public-inventory-service";
+import { usePublicArea } from "@/providers/public-area-provider";
+import { publicAreaParams } from "@/lib/locations/public-area";
 
 export function useEquipmentSearch(keyword: string, isOpen: boolean) {
+  const { area, isReady } = usePublicArea();
+  const areaParams = publicAreaParams(area);
   const trimmedKeyword = keyword.trim();
   const debouncedKeyword = useDebouncedValue(
     trimmedKeyword,
@@ -25,13 +29,15 @@ export function useEquipmentSearch(keyword: string, isOpen: boolean) {
       "public-equipment-listings",
       "suggestions",
       debouncedKeyword,
+      areaParams.provinceCode,
+      areaParams.wardCode,
     ],
     queryFn: ({ signal }) =>
       fetchPublicEquipmentListings(
-        { q: debouncedKeyword, page: 1, pageSize: EQUIPMENT_SEARCH_PAGE_SIZE },
+        { ...areaParams, q: debouncedKeyword, page: 1, pageSize: EQUIPMENT_SEARCH_PAGE_SIZE },
         signal,
       ),
-    enabled: isOpen && canSearch && !isDebouncing,
+    enabled: isReady && isOpen && canSearch && !isDebouncing,
     staleTime: EQUIPMENT_SEARCH_STALE_TIME,
     refetchOnWindowFocus: false,
     retry: false,

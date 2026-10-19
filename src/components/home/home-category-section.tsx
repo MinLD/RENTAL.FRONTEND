@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { ProductImage } from "@/components/products/product-image";
@@ -17,43 +17,37 @@ import { getCatalogCategories } from "@/services/queries/catalog-queries";
 import type { CatalogCategoryDetail } from "@/types/catalog";
 import { hasCatalogListings } from "@/utils/catalog";
 
-const CATEGORY_SLIDE_CLASS_NAME = "basis-1/2 sm:basis-1/3 lg:basis-1/5";
-const CATEGORY_IMAGE_SIZES =
-  "(min-width: 1024px) 208px, (min-width: 640px) 192px, 128px";
+const CATEGORY_SLIDE_CLASS_NAME = "basis-24 grow pl-0 sm:basis-28";
+const CATEGORY_LINK_CLASS_NAME =
+  "group flex h-full flex-col items-center gap-2 rounded-lg px-2 py-1 text-center transition-colors hover:text-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary";
 const CATEGORY_ARROW_CLASS_NAME =
-  "static size-8 translate-y-0 rounded border-border bg-background text-foreground shadow-none backdrop-blur-none hover:bg-primary hover:text-primary-foreground";
+  "size-8 border-border/60 bg-background text-foreground shadow-md backdrop-blur-none hover:border-primary hover:bg-background hover:text-primary disabled:hidden";
 
 export function HomeCategorySection() {
   return (
     <section aria-labelledby="home-category-title" className="mt-8 sm:mt-10">
+      <h2
+        className="mb-4 border-l-3 border-primary pl-2.5 text-xs font-bold uppercase sm:text-sm"
+        id="home-category-title"
+      >
+        Danh mục thiết bị
+      </h2>
       <Carousel
         aria-label="Các danh mục thiết bị"
-        className="w-full select-none"
-        opts={{ align: "start", loop: true }}
+        className="w-full select-none rounded-xl bg-background px-3 py-3 sm:px-4 sm:py-4"
+        opts={{ align: "start", dragFree: true, slidesToScroll: "auto" }}
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2
-            className="border-l-3 border-primary pl-2.5 text-xs font-bold uppercase sm:text-sm"
-            id="home-category-title"
-          >
-            Danh mục thiết bị
-          </h2>
-          <div className="ml-auto flex items-center gap-3">
-            <div className="flex shrink-0 gap-2">
-              <CarouselPrevious
-                aria-label="Danh mục trước"
-                className={CATEGORY_ARROW_CLASS_NAME}
-              />
-              <CarouselNext
-                aria-label="Danh mục tiếp theo"
-                className={CATEGORY_ARROW_CLASS_NAME}
-              />
-            </div>
-          </div>
-        </div>
         <Suspense fallback={<HomeCategorySkeleton />}>
           <HomeCategoryItems />
         </Suspense>
+        <CarouselPrevious
+          aria-label="Danh mục trước"
+          className={`${CATEGORY_ARROW_CLASS_NAME} left-1 sm:left-2`}
+        />
+        <CarouselNext
+          aria-label="Danh mục tiếp theo"
+          className={`${CATEGORY_ARROW_CLASS_NAME} right-1 sm:right-2`}
+        />
       </Carousel>
     </section>
   );
@@ -64,7 +58,7 @@ async function HomeCategoryItems() {
   if (!result.success) {
     return (
       <EmptyState
-        className="min-h-56"
+        className="min-h-28"
         description="Vui lòng tải lại trang hoặc thử lại sau."
         icon={<AlertCircle />}
         role="alert"
@@ -78,19 +72,34 @@ async function HomeCategoryItems() {
   );
   if (!categories.length) {
     return (
-      <EmptyState className="min-h-56" title="Chưa có danh mục thiết bị" />
+      <EmptyState className="min-h-28" title="Chưa có danh mục thiết bị" />
     );
   }
   return (
-    <CarouselContent className="-ml-3">
+    <CarouselContent className="ml-0 items-start">
       {categories.map((category) => (
         <CarouselItem
-          className={`${CATEGORY_SLIDE_CLASS_NAME} pl-3`}
+          className={CATEGORY_SLIDE_CLASS_NAME}
           key={category.id}
         >
           <HomeCategoryCard category={category} />
         </CarouselItem>
       ))}
+      <CarouselItem className={CATEGORY_SLIDE_CLASS_NAME}>
+        <Link className={CATEGORY_LINK_CLASS_NAME} href={catalogBrowseHref()} prefetch={false}>
+          <span aria-hidden="true" className="flex size-12 items-center justify-center">
+            <span className="grid size-7 grid-cols-2 gap-1">
+              <span className="rounded-[3px] bg-border" />
+              <span className="rounded-[3px] bg-border" />
+              <span className="rounded-[3px] bg-border" />
+              <span className="rounded-full bg-primary" />
+            </span>
+          </span>
+          <span className="min-h-8 text-[11px] leading-4 sm:text-xs">
+            Tất cả<br />thiết bị
+          </span>
+        </Link>
+      </CarouselItem>
     </CarouselContent>
   );
 }
@@ -98,23 +107,24 @@ async function HomeCategoryItems() {
 function HomeCategoryCard({ category }: { category: CatalogCategoryDetail }) {
   return (
     <Link
-      className="group flex flex-col items-center gap-1.5 px-1 py-1 text-center focus-visible:outline-2 focus-visible:outline-primary"
+      className={CATEGORY_LINK_CLASS_NAME}
       href={catalogBrowseHref({ categoryId: category.id })}
       prefetch={false}
+      title={category.name}
     >
-      <h3 className="flex h-15 items-center justify-center text-xs font-semibold leading-5 text-primary sm:h-10 sm:text-sm">
-        {category.name}
-      </h3>
-      <div className="relative aspect-square w-full max-w-32 overflow-hidden rounded border border-border bg-background sm:max-w-48 lg:max-w-52">
+      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
         <ProductImage
           compact
-          imageClassName="object-contain"
+          imageClassName="object-contain group-hover:scale-110"
           name={category.name}
-          role="medium"
-          sizes={CATEGORY_IMAGE_SIZES}
+          role="thumbnail"
+          sizes="48px"
           src={category.imageUrl}
         />
       </div>
+      <h3 className="line-clamp-2 min-h-8 text-[11px] leading-4 sm:text-xs">
+        {category.name}
+      </h3>
     </Link>
   );
 }
@@ -124,19 +134,20 @@ function HomeCategorySkeleton() {
     <div
       aria-busy="true"
       aria-label="Đang tải danh mục thiết bị"
-      className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+      className="flex w-full overflow-hidden"
       role="status"
     >
-      {Array.from({ length: 5 }, (_, index) => (
+      {Array.from({ length: 10 }, (_, index) => (
         <div
           aria-hidden="true"
-          className={`flex flex-col items-center gap-1.5 px-1 py-1 ${index === 2 ? "hidden sm:flex" : index >= 3 ? "hidden lg:flex" : ""}`}
+          className="flex shrink-0 grow basis-24 flex-col items-center gap-2 px-2 py-1 sm:basis-28"
           key={index}
         >
-          <div className="flex h-15 w-full items-center justify-center sm:h-10">
-            <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="size-12 rounded-lg" />
+          <div className="flex h-8 flex-col items-center gap-1 pt-1">
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-2.5 w-10" />
           </div>
-          <Skeleton className="aspect-square w-full max-w-32 sm:max-w-48 lg:max-w-52" />
         </div>
       ))}
     </div>

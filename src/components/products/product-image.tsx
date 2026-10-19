@@ -13,6 +13,7 @@ import {
   getMediaOriginalUrl,
   getProductImageSrc,
   isMediaServiceUrl,
+  shouldBypassProductImageOptimization,
   type ProductImageRole,
 } from "@/utils/product-image";
 
@@ -56,10 +57,11 @@ function ProductImageFallback({
   name,
   compact = false,
   fallback,
-}: Pick<ProductImageProps, "name" | "compact" | "fallback">) {
+  failed = false,
+}: Pick<ProductImageProps, "name" | "compact" | "fallback"> & { failed?: boolean }) {
   return (
     <div
-      aria-label={fallback != null ? name : `Chưa có ảnh ${name}`}
+      aria-label={fallback != null ? name : `${failed ? "Không tải được ảnh" : "Chưa có ảnh"} ${name}`}
       className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background text-muted-foreground/50"
       role="img"
     >
@@ -69,7 +71,7 @@ function ProductImageFallback({
             aria-hidden="true"
             className={cn(compact ? "size-6" : "size-12", "stroke-1")}
           />
-          {!compact ? <span className="text-xs">Chưa có hình ảnh</span> : null}
+          {!compact ? <span className="text-xs">{failed ? "Không tải được ảnh" : "Chưa có hình ảnh"}</span> : null}
         </>
       )}
     </div>
@@ -95,7 +97,8 @@ function LoadingProductImage({
 }) {
   const [currentSrc, setCurrentSrc] = useState(primarySrc);
   const [hasAttemptedFallback, setHasAttemptedFallback] = useState(false);
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [useDirectOriginal, setUseDirectOriginal] = useState(false);
+  const [status, setStatus] = useState<"loading" | "slow" | "loaded" | "error">("loading");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -107,7 +110,8 @@ function LoadingProductImage({
   }, []);
 
   const handleImageError = useCallback(() => {
-    // Khi variant lỗi, thử URL gốc một lần rồi hiện fallback hiện có; không lặp request hay fallback giữa nhiều cỡ.
+    // Try the original through Next.js first; if optimization fails, allow one
+    // direct original request before displaying an error.
     if (isMediaService && !hasAttemptedFallback && fallbackSrc && fallbackSrc !== currentSrc) {
       setHasAttemptedFallback(true);
       setCurrentSrc(fallbackSrc);
@@ -115,8 +119,14 @@ function LoadingProductImage({
       return;
     }
 
+    if (hasAttemptedFallback && !useDirectOriginal) {
+      setUseDirectOriginal(true);
+      setStatus("loading");
+      return;
+    }
+
     setStatus("error");
-  }, [currentSrc, fallbackSrc, hasAttemptedFallback, isMediaService]);
+  }, [currentSrc, fallbackSrc, hasAttemptedFallback, isMediaService, useDirectOriginal]);
 
   useEffect(() => {
     if (status !== "loading") return;
@@ -124,7 +134,9 @@ function LoadingProductImage({
     const startTimeout = () => {
       if (!timer) {
         timer = setTimeout(() => {
-          handleImageError();
+          // A slow connection is not an image error. Keep the image mounted so
+          // a response arriving after the timeout can still finish loading.
+          setStatus((current) => current === "loading" ? "slow" : current);
         }, PRODUCT_IMAGE_LOAD_TIMEOUT_MS);
       }
     };
@@ -149,7 +161,7 @@ function LoadingProductImage({
       clearTimeout(timer);
       observer?.disconnect();
     };
-  }, [handleImageError, loading, status]);
+  }, [currentSrc, loading, status, useDirectOriginal]);
 
   useEffect(() => {
     if (status !== "error" || retryAttempt >= maxRetries) return;
@@ -169,17 +181,22 @@ function LoadingProductImage({
       );
     }
     return (
-      <ProductImageFallback name={name} compact={compact} fallback={fallback} />
+      <ProductImageFallback name={name} compact={compact} fallback={fallback} failed />
     );
   }
 
   return (
-    <div aria-busy={status === "loading"} className="absolute inset-0">
-      {status === "loading" ? (
+    <div aria-busy={status === "loading" || status === "slow"} className="absolute inset-0">
+      {status === "loading" || status === "slow" ? (
         <Skeleton aria-hidden="true" className="absolute inset-0 rounded-none" />
       ) : null}
+      {status === "slow" ? (
+        <span className="absolute inset-0 flex items-center justify-center p-3 text-center text-xs text-muted-foreground" role="status">
+          Ảnh đang tải chậm…
+        </span>
+      ) : null}
       <Image
-        key={`${currentSrc}-${retryAttempt}`}
+        key={`${currentSrc}-${retryAttempt}-${useDirectOriginal}`}
         alt={name}
         className={cn(
           "object-cover transition-[opacity,transform,translate,scale,rotate] duration-300 group-hover:scale-105 motion-reduce:transition-none",
@@ -195,7 +212,9 @@ function LoadingProductImage({
         ref={handleImageRef}
         sizes={sizes}
         src={currentSrc}
-        unoptimized={isMediaService}
+        // Missing variants fall back to the original via Next.js optimization,
+        // so cards do not download full-size originals on slow connections.
+        unoptimized={shouldBypassProductImageOptimization(currentSrc) && (!hasAttemptedFallback || useDirectOriginal)}
       />
     </div>
   );
