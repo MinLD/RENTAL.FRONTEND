@@ -89,8 +89,39 @@ function buildQueryEndpoint(
   return queryString ? `${pathname}?${queryString}` : pathname;
 }
 
+const rentalApiBase = process.env.NEXT_PUBLIC_MOCK_RENTAL_API === "true"
+  ? "/api/mock/rental"
+  : "/api/v1/rental";
+
 export const API_ENDPOINTS = {
   backend: {
+    rental: {
+      cart: `${rentalApiBase}/cart`,
+      items: `${rentalApiBase}/cart/items`,
+      item: (id: string) =>
+        `${rentalApiBase}/cart/items/${encodeURIComponent(id)}`,
+      checkout: `${rentalApiBase}/checkout`,
+      checkoutOperation: (id: string) =>
+        `${rentalApiBase}/checkout/operations/${encodeURIComponent(id)}`,
+      orders: `${rentalApiBase}/orders`,
+      order: (id: string) => `${rentalApiBase}/orders/${encodeURIComponent(id)}`,
+      calendar: `${rentalApiBase}/me/calendar`,
+      supplierSubOrders: `${rentalApiBase}/supplier/sub-orders`,
+      supplierSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}`,
+      supplierAcceptSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/accept`,
+      supplierRejectSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/reject`,
+      adminOrders: `${rentalApiBase}/admin/orders`,
+      adminOrder: (id: string) => `${rentalApiBase}/admin/orders/${encodeURIComponent(id)}`,
+      adminDisputes: `${rentalApiBase}/admin/disputes`,
+      itemHandover: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/handover`,
+      itemAcknowledgeReceipt: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/acknowledge-receipt`,
+      itemCancelNotDelivered: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/cancel-not-delivered`,
+      itemReturns: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/returns`,
+      itemDeductions: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions`,
+      itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
+      itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
+      itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+    },
     organizations: {
       register: "/api/v1/auth/organizations/register",
       mine: "/api/v1/auth/organizations/mine",

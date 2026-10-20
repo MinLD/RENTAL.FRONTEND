@@ -1,11 +1,10 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Container } from "@/components/layout/container";
 import { HomeLink } from "@/components/layout/home-link";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import { getCurrentUser } from "@/services/session-service";
-import { ShoppingCart } from "lucide-react";
+import { CartTrigger } from "@/components/cart/cart-trigger";
 import { AuthLinks } from "./auth-links";
 import { EquipmentSearch } from "./equipment-search";
 import { MobileMenu } from "./mobile-menu";
@@ -38,19 +37,7 @@ export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 lg:ml-0">
           <NotificationDropdown isAuthenticated={Boolean(user)} />
 
-          <Link
-            aria-label="Giỏ hàng, 6 sản phẩm"
-            className="relative inline-flex size-9 items-center justify-center rounded border border-border text-foreground transition-colors hover:border-primary hover:text-primary"
-            href="/cart"
-          >
-            <ShoppingCart size="20" />
-            <span
-              aria-hidden="true"
-              className="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 text-primary-foreground"
-            >
-              6
-            </span>
-          </Link>
+          <CartTrigger />
 
           <div className="hidden shrink-0 justify-end sm:flex">
             {user ? <UserMenu user={user} /> : <AuthLinks />}

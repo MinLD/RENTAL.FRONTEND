@@ -36,7 +36,10 @@ const buildAuthenticatedApiUrl = (endpoint: string) => {
     throw new Error("API endpoints must be relative paths.");
   }
 
-  if (endpoint.startsWith(API_ENDPOINT_PREFIXES.internalAuth)) {
+  if (
+    endpoint.startsWith(API_ENDPOINT_PREFIXES.internalAuth) ||
+    endpoint.startsWith(API_ENDPOINT_PREFIXES.internalMock)
+  ) {
     return endpoint;
   }
 
