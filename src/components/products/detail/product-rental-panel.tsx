@@ -24,6 +24,8 @@ import {
 } from "@/utils/rental-pricing";
 import { ProductAvailabilityStatus } from "./product-availability-status";
 import { ProductRentalPriceBreakdown } from "./product-rental-price-breakdown";
+import { useCart } from "@/providers/cart-provider";
+import { addDays, maxStartDate, validateCartItem } from "@/utils/cart";
 
 export function ProductRentalPanel({
   listingId,
@@ -32,6 +34,7 @@ export function ProductRentalPanel({
   depositAmount,
   totalQuantity,
   today,
+  thumbnailUrl,
 }: {
   listingId: string;
   name: string;
@@ -39,11 +42,14 @@ export function ProductRentalPanel({
   depositAmount?: number | null;
   totalQuantity: number;
   today: string;
+  thumbnailUrl: string | null;
 }) {
-  const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(today);
+  const minStart = addDays(today, 3);
+  const [from, setFrom] = useState(minStart);
+  const [to, setTo] = useState(minStart);
   const [quantityInput, setQuantityInput] = useState("1");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const cart = useCart();
   const quantity = Number(quantityInput);
   const maxQuantity = Number.isFinite(totalQuantity)
     ? Math.max(0, Math.floor(totalQuantity))
@@ -54,8 +60,9 @@ export function ProductRentalPanel({
     dailyRate != null && Number.isFinite(dailyRate) && dailyRate >= 0;
   let error: string | null = null;
   if (!from || !to) error = "Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc.";
-  else if (from < today) error = "Ngày bắt đầu thuê không được trước hôm nay.";
-  else if (!days) error = "Ngày kết thúc phải từ ngày bắt đầu thuê trở đi.";
+  else if (from < minStart) error = "Ngày bắt đầu thuê phải cách hôm nay ít nhất 3 ngày.";
+  else if (from > maxStartDate(today)) error = "Ngày bắt đầu thuê không được quá 6 tháng tới.";
+  else if (!days || days > 365) error = "Thời gian thuê phải từ 1 đến 365 ngày.";
   else if (!maxQuantity) error = "Thiết bị hiện chưa có số lượng để thuê.";
   else if (
     !Number.isSafeInteger(quantity) ||
@@ -63,6 +70,7 @@ export function ProductRentalPanel({
     quantity > maxQuantity
   )
     error = `Chọn số lượng từ 1 đến ${maxQuantity} thiết bị.`;
+  else error = validateCartItem({ equipmentListingId: listingId, quantity, expectedStartDate: from, expectedEndDate: to }, today);
   const availabilityCheck = useEquipmentAvailability(
     listingId,
     error ? null : { startDate: from, endDate: to, requestedQuantity: quantity },
@@ -113,7 +121,8 @@ export function ProductRentalPanel({
           <span>Ngày bắt đầu thuê</span>
           <Input
             className="min-w-0 px-2 text-xs md:text-xs"
-            min={today}
+            min={minStart}
+            max={maxStartDate(today)}
             onChange={(event) => changeStart(event.target.value)}
             type="date"
             value={from}
@@ -123,7 +132,7 @@ export function ProductRentalPanel({
           <span>Ngày kết thúc thuê</span>
           <Input
             className="min-w-0 px-2 text-xs md:text-xs"
-            min={from || today}
+            min={from || minStart}
             onChange={(event) => setTo(event.target.value)}
             type="date"
             value={to}
@@ -245,7 +254,7 @@ export function ProductRentalPanel({
         disabled={!estimate || !availabilityCheck.availability?.isAvailable}
         onClick={() => setIsPreviewOpen(true)}
       >
-        Tiếp tục thuê <ArrowRight aria-hidden="true" className="size-4" />
+        Xem và thêm vào giỏ <ArrowRight aria-hidden="true" className="size-4" />
       </Button>
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent>
@@ -300,6 +309,13 @@ export function ProductRentalPanel({
             <Button onClick={() => setIsPreviewOpen(false)} variant="secondary">
               Điều chỉnh
             </Button>
+            <Button disabled={cart.busy || Boolean(error) || !availabilityCheck.availability?.isAvailable} onClick={async () => {
+              const added = await cart.addItem({ equipmentListingId: listingId, quantity, expectedStartDate: from, expectedEndDate: to }, {
+                name, thumbnailUrl, currency: rentalRate?.currency || "VND", dailyRate: rentalRate?.dailyRate ?? null, depositAmount: depositAmount ?? null,
+                availableQuantity: availabilityCheck.availability?.availableQuantity,
+              });
+              if (added) setIsPreviewOpen(false);
+            }}>Thêm vào giỏ hàng</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

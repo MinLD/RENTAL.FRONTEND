@@ -91,6 +91,7 @@ export function ProductDetailView({
               depositAmount={product.depositAmount}
               totalQuantity={product.totalQuantity}
               today={getTodayRentalDate()}
+              thumbnailUrl={product.thumbnailUrl}
             />
           </QueryProvider>
           <div className="min-w-0 lg:col-start-1">
