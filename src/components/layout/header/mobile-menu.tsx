@@ -10,6 +10,7 @@ import { MAIN_NAVIGATION, isMainNavigationActive } from "@/config/navigation";
 import { HomeLink } from "@/components/layout/home-link";
 import { logout } from "@/services/auth-service";
 import type { AuthUser } from "@/types/auth";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 type MobileMenuProps = Readonly<{
   user?: AuthUser | null;
@@ -110,16 +111,11 @@ export function MobileMenu({ user }: MobileMenuProps) {
         >
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <HomeLink
-              aria-label="DPRENTAL - Trang chủ"
-              className="leading-none"
+              aria-label="DPU Rental - Trang chủ"
+              className=""
               onClick={() => setIsOpen(false)}
             >
-              <span className="block text-lg font-bold tracking-tight text-foreground">
-                DPR<span className="text-primary">ENTAL</span>
-              </span>
-              <span className="mt-1 block text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
-                Sàn thiết bị công trường
-              </span>
+              <BrandLogo />
             </HomeLink>
 
             <button

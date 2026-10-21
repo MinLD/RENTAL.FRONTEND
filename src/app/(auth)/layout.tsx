@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import styles from "./auth-layout.module.css";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 type AuthLayoutProps = Readonly<{
   children: ReactNode;
@@ -20,11 +21,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       />
 
       <header className={styles.header}>
-        <Link aria-label="DPRENTAL - Trang chủ" className={styles.brand} href="/">
-          <span className={styles.logo}>
-            DP<span>RENTAL</span>
-          </span>
-          <span className={styles.logoCaption}>Sàn thiết bị công trường</span>
+        <Link aria-label="DPU Rental - Trang chủ" className={styles.brand} href="/">
+          <BrandLogo />
         </Link>
 
         <Link className={styles.backLink} href="/">
@@ -38,7 +36,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       </main>
 
       <footer className={styles.copyright}>
-        © 2026 DPRENTAL. All rights reserved.
+        © 2026 DP UNITY. All rights reserved.
       </footer>
     </div>
   );

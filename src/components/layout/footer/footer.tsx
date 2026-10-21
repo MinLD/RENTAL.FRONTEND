@@ -3,6 +3,7 @@ import { ArrowUpRight, Mail } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { HomeLink } from "@/components/layout/home-link";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 import {
   FOOTER_LEGAL_LINKS,
@@ -25,22 +26,18 @@ export function Footer() {
               <HomeLink
                 className="inline-block text-2xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
               >
-                DP<span className="text-primary">RENTAL</span>
+                <BrandLogo caption={false} className="text-navy-foreground [&>span:first-child]:text-navy-foreground" />
               </HomeLink>
             </h2>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-navy-foreground/50">
-              Sàn thiết bị công trường
+              Nền tảng của DP UNITY
             </p>
             <p className="mt-4 max-w-md text-[13px] leading-6 text-navy-foreground/70">
               Sàn cho thuê thiết bị kết nối người thuê và nhà cung cấp, giúp bạn
               tìm và lựa chọn thiết bị phù hợp với nhu cầu.
             </p>
             <div className="mt-5 space-y-1.5 text-[11px] leading-5 text-navy-foreground/55">
-              <p className="font-medium text-navy-foreground/80">
-                Công ty Cổ Phần Thiết Bị Công Trường DPRENTAL
-              </p>
-              <p>Mã số thuế: 0317892348 do Sở KH&amp;ĐT TP.HCM cấp</p>
-              <p>Giấy phép sàn TMĐT: Số 4829/GP-BCT Cục TMĐT cấp</p>
+              <p className="font-medium text-navy-foreground/80">DPU Rental thuộc DP UNITY</p>
             </div>
           </section>
 
@@ -132,7 +129,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-border/15 py-5 text-[11px] leading-5 text-navy-foreground/55 lg:flex-row lg:items-center lg:justify-between">
-          <p>© {currentYear} DPRENTAL Corp. Giữ toàn quyền.</p>
+          <p>© {currentYear} DP UNITY. Giữ toàn quyền.</p>
           <nav aria-label="Liên kết pháp lý">
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
               {FOOTER_LEGAL_LINKS.map((link) => (

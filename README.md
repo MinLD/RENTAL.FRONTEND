@@ -1,6 +1,6 @@
-# DPRENTAL Frontend
+# DPU Rental Frontend
 
-Ứng dụng web của hệ thống DPRENTAL, xây dựng bằng Next.js App Router với cấu
+Ứng dụng web DPU Rental của DP UNITY, xây dựng bằng Next.js App Router với cấu
 trúc gọn, dễ mở rộng và ưu tiên tái sử dụng component.
 
 ## Cấu trúc
