@@ -35,8 +35,8 @@ export function ProductDetailView({
             Trang chủ
           </HomeLink>
           <span aria-hidden="true">/</span>
-          <Link className="hover:text-primary" href="/products">
-            Thiết bị cho thuê
+          <Link className="hover:text-primary" href="/search">
+            Tìm kiếm thiết bị cho thuê
           </Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page" className="text-primary">

@@ -5,12 +5,10 @@ import { useState } from "react";
 import { AccountEditForm } from "@/components/account/account-edit-form";
 import { AccountExternalLoginCard } from "@/components/account/account-external-login-card";
 import { AccountProfileSummary } from "@/components/account/account-profile-summary";
-import { AccountSessionList } from "@/components/account/account-session-list";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import type {
   AuthUser,
   ExternalLoginResponse,
-  UserSessionResponse,
 } from "@/types/auth";
 import { getProfileCompletion } from "@/utils/profile-completion";
 
@@ -19,7 +17,6 @@ export type { AccountProfileInitialData } from "@/components/account/account-typ
 type AccountProfileFormProps = {
   initialExternalLogins: ExternalLoginResponse[];
   initialProfile: AccountProfileInitialData;
-  initialSessions: UserSessionResponse[];
   returnTo?: string;
   user: AuthUser;
 };
@@ -32,7 +29,6 @@ type AvatarPreview = {
 export function AccountProfileForm({
   initialExternalLogins,
   initialProfile,
-  initialSessions,
   returnTo,
   user,
 }: AccountProfileFormProps) {
@@ -90,7 +86,6 @@ export function AccountProfileForm({
           userId={user.id}
         />
         <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />
-        <AccountSessionList initialSessions={initialSessions} />
       </div>
     </div>
   );

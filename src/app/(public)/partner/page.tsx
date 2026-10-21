@@ -8,7 +8,7 @@ import { serverApiResult } from "@/services/server-api";
 import { getProfileCompletion } from "@/utils/profile-completion";
 
 export const metadata: Metadata = {
-  title: "Đăng ký đối tác | DPRENTAL",
+  title: "Đăng ký đối tác",
 };
 
 export default async function PartnerPage() {

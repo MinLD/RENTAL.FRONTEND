@@ -12,7 +12,7 @@ export default function ProductNotFound() {
         description="Thiết bị hiện không còn được công khai hoặc đường dẫn chưa chính xác."
         action={
           <Button asChild variant="secondary">
-            <Link href="/products">Xem thiết bị khác</Link>
+            <Link href="/search">Xem thiết bị khác</Link>
           </Button>
         }
       />

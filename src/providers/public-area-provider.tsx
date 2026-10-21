@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useTransition, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { PRODUCT_BROWSE_PATH } from "@/config/product-browse";
 
 import {
   deserializePublicArea,
@@ -51,7 +52,7 @@ export function PublicAreaProvider({ initialArea, children }: {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const linkedArea = pathname === "/products" && searchParams.has("provinceCode")
+      const linkedArea = pathname === PRODUCT_BROWSE_PATH && searchParams.has("provinceCode")
         ? parsePublicArea({
             provinceCode: searchParams.get("provinceCode") ?? "",
             wardCode: searchParams.get("wardCode") ?? "",
@@ -70,7 +71,7 @@ export function PublicAreaProvider({ initialArea, children }: {
       setArea(restored);
       setIsReady(true);
       if (restored) persistArea(restored);
-      if (pathname === "/products" && !linkedArea && storedArea && serializePublicArea(storedArea) !== initialValue) {
+      if (pathname === PRODUCT_BROWSE_PATH && !linkedArea && storedArea && serializePublicArea(storedArea) !== initialValue) {
         startTransition(() => router.refresh());
       }
     }, 0);
@@ -82,14 +83,14 @@ export function PublicAreaProvider({ initialArea, children }: {
     if (!validated) return;
     persistArea(validated);
     setArea(validated);
-    if (pathname === "/products") {
+    if (pathname === PRODUCT_BROWSE_PATH) {
       const params = new URLSearchParams(window.location.search);
       for (const [key, value] of Object.entries(validated)) {
         if (value) params.set(key, value);
         else params.delete(key);
       }
       params.delete("page");
-      const href = params.size ? `/products?${params}` : "/products";
+      const href = params.size ? `${PRODUCT_BROWSE_PATH}?${params}` : PRODUCT_BROWSE_PATH;
       startTransition(() => {
         if (href === `${pathname}${window.location.search}`) router.refresh();
         else router.replace(href, { scroll: false });

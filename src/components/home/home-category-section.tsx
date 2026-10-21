@@ -2,8 +2,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
+import {
+  AllEquipmentTileContent,
+  CATEGORY_TILE_CLASS_NAME,
+  CategoryTileContent,
+} from "@/components/catalog/category-tile";
 import { EmptyState } from "@/components/empty-state";
-import { ProductImage } from "@/components/products/product-image";
 import {
   Carousel,
   CarouselContent,
@@ -18,8 +22,6 @@ import type { CatalogCategoryDetail } from "@/types/catalog";
 import { hasCatalogListings } from "@/utils/catalog";
 
 const CATEGORY_SLIDE_CLASS_NAME = "basis-24 grow pl-0 sm:basis-28";
-const CATEGORY_LINK_CLASS_NAME =
-  "group flex h-full flex-col items-center gap-2 rounded-lg px-2 py-1 text-center transition-colors hover:text-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary";
 const CATEGORY_ARROW_CLASS_NAME =
   "size-8 border-border/60 bg-background text-foreground shadow-md backdrop-blur-none hover:border-primary hover:bg-background hover:text-primary disabled:hidden";
 
@@ -86,18 +88,8 @@ async function HomeCategoryItems() {
         </CarouselItem>
       ))}
       <CarouselItem className={CATEGORY_SLIDE_CLASS_NAME}>
-        <Link className={CATEGORY_LINK_CLASS_NAME} href={catalogBrowseHref()} prefetch={false}>
-          <span aria-hidden="true" className="flex size-12 items-center justify-center">
-            <span className="grid size-7 grid-cols-2 gap-1">
-              <span className="rounded-[3px] bg-border" />
-              <span className="rounded-[3px] bg-border" />
-              <span className="rounded-[3px] bg-border" />
-              <span className="rounded-full bg-primary" />
-            </span>
-          </span>
-          <span className="min-h-8 text-[11px] leading-4 sm:text-xs">
-            Tất cả<br />thiết bị
-          </span>
+        <Link className={CATEGORY_TILE_CLASS_NAME} href={catalogBrowseHref()} prefetch={false}>
+          <AllEquipmentTileContent />
         </Link>
       </CarouselItem>
     </CarouselContent>
@@ -107,24 +99,12 @@ async function HomeCategoryItems() {
 function HomeCategoryCard({ category }: { category: CatalogCategoryDetail }) {
   return (
     <Link
-      className={CATEGORY_LINK_CLASS_NAME}
+      className={CATEGORY_TILE_CLASS_NAME}
       href={catalogBrowseHref({ categoryId: category.id })}
       prefetch={false}
       title={category.name}
     >
-      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
-        <ProductImage
-          compact
-          imageClassName="object-contain group-hover:scale-110"
-          name={category.name}
-          role="thumbnail"
-          sizes="48px"
-          src={category.imageUrl}
-        />
-      </div>
-      <h3 className="line-clamp-2 min-h-8 text-[11px] leading-4 sm:text-xs">
-        {category.name}
-      </h3>
+      <CategoryTileContent category={category} heading />
     </Link>
   );
 }

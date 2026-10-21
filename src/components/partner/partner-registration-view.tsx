@@ -53,7 +53,7 @@ const PARTNER_REGISTRATION_STEPS = [
     title: "Địa chỉ & liên hệ",
     heading: "Địa chỉ & thông tin liên hệ",
     description:
-      "Thông tin này giúp DPRENTAL và khách hàng có thể liên hệ với doanh nghiệp khi cần thiết.",
+      "Thông tin này giúp DPU Rental và khách hàng có thể liên hệ với doanh nghiệp khi cần thiết.",
   },
   {
     id: "confirmation",

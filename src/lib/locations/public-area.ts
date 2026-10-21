@@ -9,6 +9,12 @@ export const ALL_PUBLIC_AREAS: PublicAreaSelection = {
   wardCode: "",
 };
 
+export const PUBLIC_FEATURED_PROVINCES = [
+  { code: "79", label: "Hồ Chí Minh", image: "/images/address/hcm.png" },
+  { code: "01", label: "Hà Nội", image: "/images/address/ha-noi.png" },
+  { code: "48", label: "Đà Nẵng", image: "/images/address/da-nang.png" },
+] as const;
+
 export function parsePublicArea(value: unknown): PublicAreaSelection | null {
   if (!value || typeof value !== "object") return null;
   const { provinceCode, wardCode } = value as Partial<PublicAreaSelection>;

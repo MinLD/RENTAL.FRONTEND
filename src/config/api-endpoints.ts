@@ -329,9 +329,6 @@ export const API_ENDPOINTS = {
       me: "/api/v1/auth/users/me",
       organizations: "/api/v1/auth/users/organizations",
       profile: "/api/v1/auth/users/profile",
-      session: (sessionId: string) =>
-        `/api/v1/auth/users/sessions/${encodeURIComponent(sessionId)}`,
-      sessions: "/api/v1/auth/users/sessions",
     },
     inventory: {
       warehouse: {

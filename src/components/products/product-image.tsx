@@ -19,6 +19,7 @@ import {
 
 type ProductImageProps = {
   src?: string | null;
+  previewSrc?: string | null;
   name: string;
   role?: ProductImageRole;
   sizes?: string;
@@ -32,11 +33,15 @@ type ProductImageProps = {
 
 export function ProductImage({
   src,
+  previewSrc,
   role = "medium",
   ...props
 }: ProductImageProps) {
   const primarySrc = getProductImageSrc(src, role);
   if (!primarySrc) return <ProductImageFallback {...props} />;
+  const resolvedPreviewSrc = previewSrc
+    ? getProductImageSrc(previewSrc, "thumbnail")
+    : null;
 
   const isMedia = isMediaServiceUrl(src);
   const fallbackSrc = isMedia ? getMediaOriginalUrl(src) : null;
@@ -48,6 +53,7 @@ export function ProductImage({
       fallbackSrc={fallbackSrc}
       isMediaService={isMedia}
       primarySrc={primarySrc}
+      previewSrc={resolvedPreviewSrc !== primarySrc ? resolvedPreviewSrc : null}
       {...props}
     />
   );
@@ -80,6 +86,7 @@ function ProductImageFallback({
 
 function LoadingProductImage({
   primarySrc,
+  previewSrc,
   fallbackSrc,
   isMediaService,
   name,
@@ -92,6 +99,7 @@ function LoadingProductImage({
   maxRetries = 0,
 }: Omit<ProductImageProps, "src"> & {
   primarySrc: string;
+  previewSrc: string | null;
   fallbackSrc: string | null;
   isMediaService: boolean;
 }) {
@@ -187,13 +195,20 @@ function LoadingProductImage({
 
   return (
     <div aria-busy={status === "loading" || status === "slow"} className="absolute inset-0">
-      {status === "loading" || status === "slow" ? (
+      {(status === "loading" || status === "slow") && !previewSrc ? (
         <Skeleton aria-hidden="true" className="absolute inset-0 rounded-none" />
       ) : null}
-      {status === "slow" ? (
-        <span className="absolute inset-0 flex items-center justify-center p-3 text-center text-xs text-muted-foreground" role="status">
-          Ảnh đang tải chậm…
-        </span>
+      {(status === "loading" || status === "slow") && previewSrc ? (
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="object-contain"
+          fill
+          loading="eager"
+          sizes={sizes}
+          src={previewSrc}
+          unoptimized={shouldBypassProductImageOptimization(previewSrc)}
+        />
       ) : null}
       <Image
         key={`${currentSrc}-${retryAttempt}-${useDirectOriginal}`}

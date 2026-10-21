@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronDown, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { DashboardIcon } from "@/components/dashboard/dashboard-icon";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import {
   Sidebar,
@@ -55,23 +55,11 @@ export function DashboardSidebar({
           href={homeHref}
           className="flex min-w-0 overflow-hidden group-data-[collapsible=icon]:justify-center"
         >
-          <span className="hidden size-9 shrink-0 items-center justify-center overflow-hidden  group-data-[collapsible=icon]:flex">
-            <Image
-              alt="DPRENTAL"
-              className="size-7"
-              height={28}
-              src="/favicon.ico"
-              unoptimized
-              width={28}
-            />
+          <span className="hidden size-9 shrink-0 items-center justify-center overflow-hidden group-data-[collapsible=icon]:flex">
+            <BrandLogo compact />
           </span>
           <span className="min-w-0 whitespace-nowrap opacity-100 transition-opacity delay-150 duration-150 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:delay-0">
-            <span className="block text-xl font-bold tracking-tight text-foreground">
-              DP<span className="text-primary">RENTAL</span>
-            </span>
-            <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-              Sàn thiết bị công trường
-            </span>
+            <BrandLogo className="[&>span:first-child]:text-xl [&>span:last-child]:mt-0.5 [&>span:last-child]:text-[10px] [&>span:last-child]:font-bold [&>span:last-child]:tracking-[0.22em]" />
           </span>
         </Link>
       </SidebarHeader>

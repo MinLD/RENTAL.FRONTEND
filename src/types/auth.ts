@@ -29,17 +29,6 @@ export type CurrentUserCitizenIdResponse = {
   citizenId: string | null;
 };
 
-export type UserSessionResponse = {
-  createdAtUtc: string;
-  deviceName: string | null;
-  expiresAtUtc: string;
-  id: string;
-  ipAddress: string | null;
-  isActive: boolean;
-  isCurrent: boolean;
-  revokedAtUtc?: string | null;
-};
-
 export type ExternalLoginResponse = {
   createdAtUtc?: string | null;
   email?: string | null;

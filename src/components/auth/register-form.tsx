@@ -139,7 +139,7 @@ export function RegisterForm({ returnTo = "/" }: { returnTo?: string }) {
                 >
                   Chính sách bảo mật
                 </Link>{" "}
-                của DPRENTAL.
+                của DPU Rental.
               </span>
             </label>
             {errors.acceptTerms?.message ? (

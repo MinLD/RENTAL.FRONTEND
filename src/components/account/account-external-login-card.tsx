@@ -92,20 +92,25 @@ export function AccountExternalLoginCard({
 
   return (
     <section className="rounded-lg border border-border bg-background p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          {" "}
-          <h2 className="text-xl font-bold text-foreground">Bảo mật</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Liên kết tài khoản của bạn.
-          </p>
-        </div>
-        <ChangePasswordDialog />
+      <div>
+        <h2 className="text-xl font-bold text-foreground">Bảo mật</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Quản lý mật khẩu và phương thức đăng nhập.
+        </p>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
+        <div className="flex flex-col gap-4 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-foreground">Mật khẩu</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Cập nhật mật khẩu đăng nhập của bạn.
+            </p>
+          </div>
+          <ChangePasswordDialog />
+        </div>
         {googleLogin ? (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-4">
               <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background">
                 <Image
@@ -142,14 +147,22 @@ export function AccountExternalLoginCard({
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 rounded-lg p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-foreground">
-                Thêm phương thức đăng nhập
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Có thể bổ sung provider khác khi hệ thống hỗ trợ.
-              </p>
+          <div className="flex flex-col gap-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background">
+                <Image
+                  alt="Google"
+                  height={26}
+                  src="/icons/google-logo.5462b711.svg"
+                  width={26}
+                />
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-bold text-foreground">Google</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Liên kết để đăng nhập bằng Google.
+                </p>
+              </div>
             </div>
             <Button
               disabled={isLinkingGoogle}

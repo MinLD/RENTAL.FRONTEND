@@ -9,6 +9,7 @@ import { AuthLinks } from "./auth-links";
 import { EquipmentSearch } from "./equipment-search";
 import { MobileMenu } from "./mobile-menu";
 import { UserMenu } from "./user-menu";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
   const user = await getCurrentUser();
@@ -17,15 +18,10 @@ export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
     <div className="border-b border-border bg-background">
       <Container className="flex min-h-14 flex-wrap items-center gap-3 py-2 md:gap-4 lg:h-14 lg:flex-nowrap lg:py-0">
         <HomeLink
-          aria-label="DPRENTAL - Trang chủ"
-          className="w-32 shrink-0 leading-none"
+          aria-label="DPU Rental - Trang chủ"
+          className="w-32 shrink-0"
         >
-          <span className="block text-lg font-bold tracking-tight text-foreground">
-            DP<span className="text-primary">RENTAL</span>
-          </span>
-          <span className="mt-1 block text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
-            Sàn thiết bị công trường
-          </span>
+          <BrandLogo />
         </HomeLink>
 
         <div className="order-last flex w-full min-w-0 items-center gap-2 lg:order-none lg:mx-auto lg:max-w-2xl lg:flex-1">

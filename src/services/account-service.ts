@@ -3,7 +3,6 @@ import { authApiClientJson } from "@/services/api-client";
 import type {
   CurrentUserCitizenIdResponse,
   ExternalLoginResponse,
-  UserSessionResponse,
 } from "@/types/auth";
 import {
   type ApiValueResult,
@@ -53,23 +52,6 @@ export function linkGoogleExternalLogin(idToken: string) {
         idToken,
       },
       method: "POST",
-    },
-  );
-}
-
-export function getUserSessions() {
-  return authApiClientJson<
-    ApiValueResult<UserSessionResponse[]> | UserSessionResponse[]
-  >(API_ENDPOINTS.backend.currentUser.sessions).then((response) =>
-    unwrapApiValue<UserSessionResponse[]>(response),
-  );
-}
-
-export function revokeUserSession(sessionId: string) {
-  return authApiClientJson<void>(
-    API_ENDPOINTS.backend.currentUser.session(sessionId),
-    {
-      method: "DELETE",
     },
   );
 }

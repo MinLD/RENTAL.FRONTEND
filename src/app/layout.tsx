@@ -13,8 +13,18 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "DPRENTAL Frontend",
-  description: "DPRENTAL frontend application",
+  title: {
+    default: "DPU Rental",
+    template: "%s | DPU Rental",
+  },
+  description: "Nền tảng cho thuê thiết bị công trường của DP Unity.",
+  applicationName: "DPU Rental",
+  openGraph: {
+    title: "DPU Rental",
+    description: "Nền tảng cho thuê thiết bị công trường của DP Unity.",
+    siteName: "DPU Rental",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -11,7 +11,6 @@ import { getCurrentUser } from "@/services/session-service";
 import type {
   CurrentUserResponse,
   ExternalLoginResponse,
-  UserSessionResponse,
 } from "@/types/auth";
 import {
   type ApiValueResult,
@@ -29,9 +28,8 @@ export default async function AccountPage({
 }: {
   searchParams: Promise<ReturnToSearchParams>;
 }) {
-  const [currentUser, sessions, externalLogins, params] = await Promise.all([
+  const [currentUser, externalLogins, params] = await Promise.all([
     getCurrentUser(),
-    getInitialSessions(),
     getInitialExternalLogins(),
     searchParams,
   ]);
@@ -88,33 +86,12 @@ export default async function AccountPage({
         <AccountProfileForm
           initialExternalLogins={externalLogins}
           initialProfile={initialProfile}
-          initialSessions={sessions}
           returnTo={returnTo ?? undefined}
           user={user}
         />
       </Container>
     </div>
   );
-}
-
-async function getInitialSessions() {
-  try {
-    const response = await serverApi(
-      API_ENDPOINTS.backend.currentUser.sessions,
-    );
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const responseBody = (await response.json()) as
-      | ApiValueResult<UserSessionResponse[]>
-      | UserSessionResponse[];
-
-    return unwrapApiValue<UserSessionResponse[]>(responseBody);
-  } catch {
-    return [];
-  }
 }
 
 async function getInitialExternalLogins() {

@@ -38,7 +38,7 @@ const STATUS_CONTENT = {
     title: "Đã gửi hồ sơ",
     subtitle: "Hồ sơ của bạn đang được xét duyệt",
     description:
-      "DPRENTAL sẽ kiểm tra thông tin doanh nghiệp và giấy phép kinh doanh trước khi kích hoạt tài khoản nhà cung cấp.",
+      "DPU Rental sẽ kiểm tra thông tin doanh nghiệp và giấy phép kinh doanh trước khi kích hoạt tài khoản nhà cung cấp.",
     color: "text-primary",
   },
   active: {

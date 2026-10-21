@@ -163,7 +163,7 @@ export function ConfirmationStep({
           </label>
         </div>
         <p className="ml-7 mt-2 text-xs leading-5 text-muted-foreground" id={hintId}>
-          Sau khi gửi, hồ sơ sẽ được DPRENTAL xét duyệt trước khi doanh nghiệp có thể đăng thiết bị cho thuê.
+          Sau khi gửi, hồ sơ sẽ được DPU Rental xét duyệt trước khi doanh nghiệp có thể đăng thiết bị cho thuê.
         </p>
       </div>
       {submissionError ? (

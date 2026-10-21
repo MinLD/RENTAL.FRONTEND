@@ -52,20 +52,3 @@ export function formatDate(value?: string | null) {
     dateStyle: "short",
   }).format(date);
 }
-
-export function formatDateTime(value?: string | null) {
-  if (!value) {
-    return EMPTY_PROFILE_LABEL;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-}

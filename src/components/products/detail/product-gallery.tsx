@@ -57,18 +57,41 @@ export function ProductGallery({
               <DialogHeader>
                 <DialogTitle>{name}</DialogTitle>
                 <DialogDescription className="sr-only">
-                  Ảnh phóng to của {name}.
+                  Chọn ảnh trong danh sách để xem ảnh phóng to của {name}.
                 </DialogDescription>
               </DialogHeader>
-              <div className="relative aspect-[16/9] overflow-hidden rounded">
-                <ProductImage
-                  src={selected.url}
-                  name={name}
-                  role="original"
-                  imageClassName="object-contain"
-                  sizes={PRODUCT_ZOOM_IMAGE_SIZES}
-                  loading="eager"
-                />
+              <div className="grid h-[min(68vh,680px)] min-h-[240px] min-w-0 grid-cols-1 grid-rows-[minmax(0,1fr)_64px] gap-3 sm:grid-cols-[76px_minmax(0,1fr)] sm:grid-rows-1 sm:gap-4">
+                <div aria-label="Danh sách ảnh sản phẩm" className="order-2 flex min-h-0 flex-row gap-2 overflow-x-auto overflow-y-hidden pr-1 sm:order-1 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto">
+                  {images.map((image, imageIndex) => (
+                    <button
+                      aria-label={`Xem ảnh ${imageIndex + 1}`}
+                      aria-pressed={imageIndex === index}
+                      className={`relative h-14 w-14 shrink-0 overflow-hidden rounded border-2 bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:aspect-square sm:h-auto sm:w-full ${imageIndex === index ? "border-primary" : "border-transparent"}`}
+                      key={`${image.id}-zoom-${imageIndex}`}
+                      onClick={() => setIndex(imageIndex)}
+                      type="button"
+                    >
+                      <ProductImage
+                        src={image.url}
+                        name={`${name} - ảnh ${imageIndex + 1}`}
+                        role="thumbnail"
+                        imageClassName="object-contain group-hover:scale-100"
+                        sizes="76px"
+                      />
+                    </button>
+                  ))}
+                </div>
+                <div className="relative order-1 min-h-0 min-w-0 overflow-hidden rounded bg-muted/20 sm:order-2">
+                  <ProductImage
+                    src={selected.url}
+                    previewSrc={selected.url}
+                    name={`${name} - ảnh ${index + 1}`}
+                    role="large"
+                    imageClassName="object-contain"
+                    sizes={PRODUCT_ZOOM_IMAGE_SIZES}
+                    loading="eager"
+                  />
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -85,7 +108,7 @@ export function ProductGallery({
               <button
                 aria-label={`Xem ảnh ${imageIndex + 1}`}
                 aria-pressed={imageIndex === index}
-                className={`relative aspect-[16/9] w-32 shrink-0 cursor-pointer overflow-hidden rounded border-2 outline-none focus-visible:ring-2 focus-visible:ring-primary ${imageIndex === index ? "border-primary" : "border-transparent"}`}
+                className={`relative aspect-[16/9] w-32 shrink-0 cursor-pointer overflow-hidden rounded border-2 bg-muted/30 outline-none focus-visible:ring-2 focus-visible:ring-primary ${imageIndex === index ? "border-primary" : "border-transparent"}`}
                 key={`${image.id}-${imageIndex}`}
                 onClick={() => setIndex(imageIndex)}
                 type="button"
@@ -94,6 +117,7 @@ export function ProductGallery({
                   src={image.url}
                   name={`${name} - ảnh ${imageIndex + 1}`}
                   role="thumbnail"
+                  imageClassName="object-contain group-hover:scale-100"
                   sizes="128px"
                 />
               </button>

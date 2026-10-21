@@ -18,7 +18,6 @@ import { getStoredPublicArea } from "@/services/public-area-server-service";
 import { publicAreaParams } from "@/lib/locations/public-area";
 import type { ApiResult } from "@/services/api-error";
 import type { CatalogEquipmentTypeDetail, CatalogPagedResult, CatalogSpecField } from "@/types/catalog";
-import { PUBLIC_EQUIPMENT_LISTING_SORTS } from "@/types/inventory";
 import type {
   ProductBrowseData,
   ProductBrowseFilters,
@@ -79,7 +78,6 @@ export async function getProductBrowseData(
   const requestedSize = Number(
     getSearchParam(params.pageSize) ?? PRODUCT_DEFAULT_PAGE_SIZE,
   );
-  const requestedSort = getSearchParam(params.sort);
   const requestedQuantity = getSearchParam(params.requestedQuantity);
   const filters: ProductBrowseFilters = {
     provinceCode: hasLinkedArea ? getSearchParam(params.provinceCode) : storedArea.provinceCode,
@@ -88,7 +86,7 @@ export async function getProductBrowseData(
     equipmentTypeId: getSearchParam(params.equipmentTypeId),
     brandId: getSearchParam(params.brandId),
     q: getSearchParam(params.q),
-    sort: PUBLIC_EQUIPMENT_LISTING_SORTS.find((sort) => sort === requestedSort),
+    view: getSearchParam(params.view) === "list" ? "list" : undefined,
     filters: getSearchParam(params.filters),
     from: getSearchParam(params.from),
     to: getSearchParam(params.to),
@@ -107,7 +105,6 @@ export async function getProductBrowseData(
     getCatalogCategories(),
     getAllFilterOptions((page) =>
       getCatalogEquipmentTypes({
-        categoryId: filters.categoryId,
         page,
         pageSize: 100,
         sort: "name_asc",
@@ -116,7 +113,7 @@ export async function getProductBrowseData(
     getAllFilterOptions((page) =>
       getCatalogBrands({ page, pageSize: 100, sort: "name_asc" }),
     ),
-    getPublicEquipmentListings(filters),
+    getPublicEquipmentListings({ ...filters, sort: "created_desc" }),
     filters.equipmentTypeId ? getCatalogEquipmentType(filters.equipmentTypeId) : null,
   ]);
   // Retain a linked type even if it is outside the current category's options.
