@@ -18,7 +18,7 @@ export function ProductCategoryPopover({ filters, categories, equipmentTypes }: 
   const [showMobileTypes, setShowMobileTypes] = useState(false);
   const [submenuTop, setSubmenuTop] = useState(0);
   const categoryItems = categories.success
-    ? categories.data.data.filter(hasCatalogListings)
+    ? categories.data.data.filter((category) => category.isActive && hasCatalogListings(category))
     : [];
   const typeItems = equipmentTypes.success
     ? equipmentTypes.data.data.filter(hasCatalogListings)

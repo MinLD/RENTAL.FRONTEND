@@ -7,9 +7,8 @@ import { AlertCircle } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/products/product-card";
 import { Button } from "@/components/ui/button";
+import { PRODUCT_FEED_GRID_CLASS_NAME, PRODUCT_FEED_IMAGE_SIZES } from "@/config/product-images";
 import {
-  HOME_LATEST_PRODUCT_IMAGE_SIZES,
-  HOME_LATEST_PRODUCTS_GRID_CLASS_NAME,
   HOME_LATEST_PRODUCTS_PARAMS,
   HOME_PRODUCTS_STALE_TIME,
 } from "@/config/homepage";
@@ -111,13 +110,13 @@ export function HomeLatestProductsFeed({
     <>
       <ul
         aria-label="Thiết bị mới nhất"
-        className={HOME_LATEST_PRODUCTS_GRID_CLASS_NAME}
+        className={PRODUCT_FEED_GRID_CLASS_NAME}
       >
         {products.map((product) => (
           <li key={product.id}>
             <ProductCard
               product={product}
-              imageSizes={HOME_LATEST_PRODUCT_IMAGE_SIZES}
+              imageSizes={PRODUCT_FEED_IMAGE_SIZES}
             />
           </li>
         ))}

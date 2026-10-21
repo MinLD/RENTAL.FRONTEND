@@ -18,11 +18,6 @@ export const HOME_LATEST_PRODUCTS_PARAMS = {
   pageSize: 20,
   sort: "created_desc",
 } as const;
-export const HOME_LATEST_PRODUCTS_GRID_CLASS_NAME =
-  "grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-2";
-export const HOME_LATEST_PRODUCT_IMAGE_SIZES =
-  "(min-width: 1280px) 230px, (min-width: 1024px) calc(25vw - 28px), (min-width: 768px) calc(33.33vw - 27px), calc(50vw - 22px)";
-
 export type HomeHeroAction = {
   href: string;
   label: string;
@@ -45,7 +40,7 @@ export type HomePromoBanner = {
 export const HOME_HERO_SLIDES: HomeHeroSlide[] = [
   {
     cta: {
-      href: "/products",
+      href: "/search",
       label: "Xem thiết bị công trường",
     },
 
@@ -55,7 +50,7 @@ export const HOME_HERO_SLIDES: HomeHeroSlide[] = [
   },
   {
     cta: {
-      href: "/products",
+      href: "/search",
       label: "Khám phá các thiết bị cho thuê",
     },
 
@@ -65,7 +60,7 @@ export const HOME_HERO_SLIDES: HomeHeroSlide[] = [
   },
   {
     cta: {
-      href: "/products",
+      href: "/search",
       label: "Tìm thiết bị phù hợp",
     },
     id: "cost-optimization",
@@ -74,7 +69,7 @@ export const HOME_HERO_SLIDES: HomeHeroSlide[] = [
   },
   {
     cta: {
-      href: "/products",
+      href: "/search",
       label: "Xem thiết bị chính hãng",
     },
     id: "genuine-equipment",

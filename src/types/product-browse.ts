@@ -14,6 +14,7 @@ import type {
 export type ProductBrowseFilters = PublicEquipmentListingListParams & {
   page: number;
   pageSize: number;
+  view?: "list";
 };
 
 export type ProductBrowseData = {

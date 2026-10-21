@@ -42,7 +42,7 @@ export function EmptyTitle({ className, ...props }: ComponentProps<"h3">) {
   return (
     <h3
       data-slot="empty-title"
-      className={cn("text-lg font-semibold text-foreground", className)}
+      className={cn("text-lg font-semibold text-foreground [overflow-wrap:anywhere]", className)}
       {...props}
     />
   );

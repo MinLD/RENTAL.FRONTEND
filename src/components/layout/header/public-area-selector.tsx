@@ -16,17 +16,12 @@ import {
 import {
   ALL_PUBLIC_AREAS,
   getPublicAreaLabel,
+  PUBLIC_FEATURED_PROVINCES,
   type PublicAreaSelection,
 } from "@/lib/locations/public-area";
 import { VIETNAM_PROVINCES } from "@/lib/locations/vietnam-divisions";
 import { usePublicArea } from "@/providers/public-area-provider";
 import { cn } from "@/utils/cn";
-
-const POPULAR_PROVINCES = [
-  { code: "79", label: "Hồ Chí Minh", image: "/images/address/hcm.png" },
-  { code: "01", label: "Hà Nội", image: "/images/address/ha-noi.png" },
-  { code: "48", label: "Đà Nẵng", image: "/images/address/da-nang.png" },
-];
 
 function normalizeSearch(value: string) {
   return value
@@ -104,7 +99,7 @@ function AreaDialog({
     ...VIETNAM_PROVINCES.filter(
       (item) =>
         query.trim() ||
-        !POPULAR_PROVINCES.some((popular) => popular.code === item.code),
+        !PUBLIC_FEATURED_PROVINCES.some((popular) => popular.code === item.code),
     ),
   ].filter((item) =>
     searchTokens.every((token) => normalizeSearch(item.name).includes(token)),
@@ -149,7 +144,7 @@ function AreaDialog({
           className="grid shrink-0 grid-cols-3 gap-5 px-2 sm:gap-8 sm:px-3"
           role="group"
         >
-          {POPULAR_PROVINCES.map((item) => (
+          {PUBLIC_FEATURED_PROVINCES.map((item) => (
             <button
               aria-pressed={draft?.provinceCode === item.code}
               className={cn(

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import { productBrowseHref } from "@/config/product-browse";
+import { PRODUCT_BROWSE_PATH, productBrowseHref } from "@/config/product-browse";
 import type { ProductBrowseFilters } from "@/types/product-browse";
 import { usePublicArea } from "@/providers/public-area-provider";
 
@@ -43,7 +43,7 @@ export function ProductBrowseProvider({
     clearArea();
     startTransition(() => {
       if (!window.location.search) router.refresh();
-      else router.push("/products", { scroll: false });
+      else router.push(productBrowseHref({ view: filters.view }), { scroll: false });
     });
   }
   function followLink(event: MouseEvent<HTMLDivElement>) {
@@ -65,7 +65,7 @@ export function ProductBrowseProvider({
     )
       return;
     const url = new URL(anchor.href);
-    if (url.origin !== window.location.origin || url.pathname !== "/products")
+    if (url.origin !== window.location.origin || url.pathname !== PRODUCT_BROWSE_PATH)
       return;
     event.preventDefault();
     startTransition(() =>

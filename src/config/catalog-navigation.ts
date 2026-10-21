@@ -1,3 +1,5 @@
+import { PRODUCT_BROWSE_PATH } from "@/config/product-browse";
+
 export const CATALOG_NAVIGATION_STALE_TIME = 5 * 60 * 1000;
 export const CATALOG_NAVIGATION_HOVER_DELAY = 180;
 
@@ -23,5 +25,5 @@ export function catalogBrowseHref(
     if (value) params.set(key, value);
   }
   const query = params.toString();
-  return query ? `/products?${query}` : "/products";
+  return query ? `${PRODUCT_BROWSE_PATH}?${query}` : PRODUCT_BROWSE_PATH;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useEffect,
   useId,
@@ -10,13 +10,13 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 import { ProductImage } from "@/components/products/product-image";
 import { getProductThumbnailSrc } from "@/utils/product-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EQUIPMENT_SEARCH_MIN_LENGTH } from "@/config/equipment-search";
-import { productBrowseHref } from "@/config/product-browse";
+import { PRODUCT_BROWSE_PATH, productBrowseHref } from "@/config/product-browse";
 import { useEquipmentSearch } from "@/hooks/use-equipment-search";
 import { getEquipmentListingName } from "@/utils/inventory";
 import { usePublicArea } from "@/providers/public-area-provider";
@@ -25,9 +25,14 @@ import { PublicAreaSelector } from "./public-area-selector";
 
 export function EquipmentSearch() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { area } = usePublicArea();
   const areaParams = publicAreaParams(area);
-  const [keyword, setKeyword] = useState("");
+  const routeKey = `${pathname}?${searchParams.toString()}`;
+  const routeKeyword = pathname === PRODUCT_BROWSE_PATH ? searchParams.get("q") ?? "" : "";
+  const [draft, setDraft] = useState({ routeKey, value: routeKeyword });
+  const keyword = draft.routeKey === routeKey ? draft.value : routeKeyword;
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,6 +47,14 @@ export function EquipmentSearch() {
   function close() {
     setIsOpen(false);
     setActiveIndex(-1);
+  }
+
+  function clearKeyword() {
+    setDraft({ routeKey, value: "" });
+    close();
+    if (pathname === PRODUCT_BROWSE_PATH && routeKeyword) {
+      router.push(productBrowseHref(areaParams));
+    }
   }
 
   useEffect(() => {
@@ -111,7 +124,7 @@ export function EquipmentSearch() {
       }}
     >
       <form
-        action="/products"
+        action={PRODUCT_BROWSE_PATH}
         aria-label="Tìm kiếm thiết bị"
         className="flex h-9 min-w-0 overflow-hidden rounded border border-primary"
         method="get"
@@ -121,7 +134,13 @@ export function EquipmentSearch() {
           Tìm kiếm thiết bị
         </label>
         <div className="flex min-w-0 flex-1 items-center gap-2 px-3 text-muted-foreground focus-within:text-primary">
-          <Search aria-hidden="true" className="size-4 shrink-0" />
+          <button
+            aria-label="Xem kết quả tìm kiếm thiết bị"
+            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            type="submit"
+          >
+            <Search aria-hidden="true" className="size-4" />
+          </button>
           <input
             aria-activedescendant={
               showPanel && activeSuggestion
@@ -133,22 +152,38 @@ export function EquipmentSearch() {
             aria-expanded={showPanel}
             aria-haspopup="listbox"
             autoComplete="off"
+            data-equipment-search-input
             className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm"
             id={id}
             maxLength={200}
             name="q"
             onChange={(event) => {
-              setKeyword(event.target.value);
+              const nextKeyword = event.target.value;
+              if (!nextKeyword) {
+                clearKeyword();
+                return;
+              }
+              setDraft({ routeKey, value: nextKeyword });
               setActiveIndex(-1);
-              setIsOpen(Boolean(event.target.value.trim()));
+              setIsOpen(Boolean(nextKeyword.trim()));
             }}
             onFocus={() => setIsOpen(Boolean(trimmedKeyword))}
             onKeyDown={handleKeyDown}
             placeholder="Bạn cần thuê thiết bị gì?"
             role="combobox"
-            type="search"
+            type="text"
             value={keyword}
           />
+          {keyword ? (
+            <button
+              aria-label="Xóa từ khóa tìm kiếm"
+              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={clearKeyword}
+              type="button"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          ) : null}
         </div>
         <PublicAreaSelector />
       </form>
