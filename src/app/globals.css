@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+.location-picker-leaflet:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

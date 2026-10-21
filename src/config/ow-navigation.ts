@@ -11,4 +11,9 @@ export const OW_NAVIGATION: DashboardNavigationItem[] = [
     icon: "package",
     label: "Quản lý sản phẩm",
   },
+  {
+    href: "/own/warehouse",
+    icon: "building",
+    label: "Quản lý địa chỉ kho",
+  },
 ];
