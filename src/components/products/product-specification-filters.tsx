@@ -38,8 +38,9 @@ function readFilters(serialized?: string): PublicEquipmentListingSpecFilter[] {
 
 export function ProductSpecificationFilters({
   filters,
+  onApplied,
   specificationFields,
-}: Pick<ProductBrowseData, "filters" | "specificationFields">) {
+}: Pick<ProductBrowseData, "filters" | "specificationFields"> & { onApplied?: () => void }) {
   const { isPending, navigate } = useProductBrowseNavigation();
   const id = useId();
   const fields = specificationFields?.success
@@ -92,6 +93,7 @@ export function ProductSpecificationFilters({
       });
       setError("");
       navigate({ filters: next.filters });
+      onApplied?.();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Vui lòng kiểm tra lại bộ lọc.");
     }

@@ -25,45 +25,41 @@ export function ProductBrowseView({
             aria-label="Đường dẫn trang"
             className="mb-4 text-xs text-muted-foreground"
           >
-            <HomeLink className="hover:text-primary">
-              Trang chủ
-            </HomeLink>
+            <HomeLink className="hover:text-primary">Trang chủ</HomeLink>
             <span className="mx-2" aria-hidden="true">
               /
             </span>
-            <span className="text-foreground">Thiết bị cho thuê</span>
+            <span className="text-foreground">Tìm kiếm thiết bị cho thuê</span>
           </nav>
-          <h1 className="sr-only">Thiết bị cho thuê</h1>
-          <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-            <ProductFilters
-              categories={categories}
-              equipmentTypes={equipmentTypes}
-              brands={brands}
-              filters={filters}
-              specificationFields={specificationFields}
-            />
-            <section
-              aria-labelledby="product-list-title"
-              className="min-w-0 space-y-4"
-            >
-              <h2 className="sr-only" id="product-list-title">
-                Danh sách sản phẩm
-              </h2>
-              <ProductAreaSummary filters={filters} />
-              <ProductResults>
-                <ProductList
-                  equipmentTypes={equipmentTypes}
-                  products={products}
-                />
-              </ProductResults>
-              {result && result.items.length > 0 ? (
-                <ProductPagination
-                  filters={filters}
-                  totalPages={result.totalPages}
-                />
-              ) : null}
-            </section>
-          </div>
+
+          <ProductFilters
+            categories={categories}
+            equipmentTypes={equipmentTypes}
+            brands={brands}
+            filters={filters}
+            specificationFields={specificationFields}
+          />
+          <section
+            aria-labelledby="product-list-title"
+            className="min-w-0 space-y-4 pt-4"
+          >
+            <h2 className="sr-only" id="product-list-title">
+              Danh sách sản phẩm
+            </h2>
+            <ProductAreaSummary filters={filters} />
+            <ProductResults>
+              <ProductList
+                equipmentTypes={equipmentTypes}
+                products={products}
+              />
+            </ProductResults>
+            {result && result.items.length > 0 ? (
+              <ProductPagination
+                filters={filters}
+                totalPages={result.totalPages}
+              />
+            ) : null}
+          </section>
         </Container>
       </div>
     </ProductBrowseProvider>

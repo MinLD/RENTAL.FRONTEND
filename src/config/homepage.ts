@@ -19,7 +19,7 @@ export const HOME_LATEST_PRODUCTS_PARAMS = {
   sort: "created_desc",
 } as const;
 export const HOME_LATEST_PRODUCTS_GRID_CLASS_NAME =
-  "grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-4";
+  "grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-2";
 export const HOME_LATEST_PRODUCT_IMAGE_SIZES =
   "(min-width: 1280px) 230px, (min-width: 1024px) calc(25vw - 28px), (min-width: 768px) calc(33.33vw - 27px), calc(50vw - 22px)";
 

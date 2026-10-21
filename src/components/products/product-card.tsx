@@ -40,15 +40,22 @@ export function ProductCard({
             loading={prioritizeImage ? "eager" : "lazy"}
             fetchPriority={prioritizeImage ? "high" : undefined}
           />
-
         </div>
         <div className="flex flex-1 flex-col p-3.5">
           <h3 className="mb-3 min-h-10 line-clamp-2 text-sm font-bold leading-5">
             {name}
           </h3>
-          <p className="mb-1 flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground" title={formatWarehouseArea(product.warehouseArea)}>
-            <MapPin aria-hidden="true" className="mt-0.5 size-3 shrink-0 text-primary" />
-            <span className="line-clamp-2">{formatWarehouseArea(product.warehouseArea)}</span>
+          <p
+            className="mb-1 flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground"
+            title={formatWarehouseArea(product.warehouseArea)}
+          >
+            <MapPin
+              aria-hidden="true"
+              className="mt-0.5 size-3 shrink-0 text-primary"
+            />
+            <span className="line-clamp-2">
+              {formatWarehouseArea(product.warehouseArea)}
+            </span>
           </p>
           <dl className="space-y-2 py-2.5 text-[11px]">
             <div className="flex justify-between gap-3">
@@ -70,10 +77,10 @@ export function ProductCard({
               </dd>
             </div>
           </dl>
-          <div className="mt-auto pt-3.5">
+          <div className="mt-auto">
             <div className="flex flex-wrap items-end justify-between gap-1 pt-3">
               <span className="text-[10px] uppercase text-muted-foreground">
-                Giá thuê
+                Giá thuê:
               </span>
               <span className="text-base font-bold text-primary">
                 {product.rentalRate?.dailyRate != null

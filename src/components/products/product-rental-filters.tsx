@@ -10,7 +10,8 @@ import type { ProductBrowseData } from "@/types/product-browse";
 
 export function ProductRentalFilters({
   filters,
-}: Pick<ProductBrowseData, "filters">) {
+  onApplied,
+}: Pick<ProductBrowseData, "filters"> & { onApplied?: () => void }) {
   const { isPending, navigate } = useProductBrowseNavigation();
   const id = useId();
   const [from, setFrom] = useState(filters.from ?? "");
@@ -35,6 +36,7 @@ export function ProductRentalFilters({
         to: next.to,
         requestedQuantity: next.requestedQuantity,
       });
+      onApplied?.();
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -46,7 +48,7 @@ export function ProductRentalFilters({
 
   return (
     <form
-      className="space-y-3 border-t border-border pt-4"
+      className="space-y-3"
       noValidate
       onSubmit={apply}
     >

@@ -33,25 +33,13 @@ export function ProductBrowseSkeleton() {
     <div aria-busy="true" className="flex-1 bg-background py-5 sm:py-6">
       <Container>
         <Skeleton className="mb-4 h-4 w-44" />
-        <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <div className="rounded border border-border p-3">
-            <Skeleton className="h-6 w-full" />
-            <div className="mt-5 hidden space-y-4 lg:block">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div className="space-y-3" key={index}>
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <ProductGridSkeleton />
-          </div>
+        <Skeleton className="mb-4 h-6 w-52" />
+        <div className="mb-4 flex gap-2 rounded border border-border p-3">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-40" />
         </div>
+        <ProductGridSkeleton />
       </Container>
     </div>
   );

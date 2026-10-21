@@ -107,7 +107,6 @@ export async function getProductBrowseData(
     getCatalogCategories(),
     getAllFilterOptions((page) =>
       getCatalogEquipmentTypes({
-        categoryId: filters.categoryId,
         page,
         pageSize: 100,
         sort: "name_asc",

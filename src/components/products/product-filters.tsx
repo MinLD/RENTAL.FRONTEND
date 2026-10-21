@@ -1,15 +1,81 @@
 "use client";
 
-import { useState } from "react";
-import { Filter } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import {
+  CalendarDays,
+  ChevronDown,
+  Filter,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Popover } from "radix-ui";
 
-import { ProductFilterSection } from "./product-filter-section";
+import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
+import type { ProductBrowseData } from "@/types/product-browse";
+import { ProductBrandPopover } from "./product-brand-popover";
+import { ProductCategoryPopover } from "./product-category-popover";
+import { ProductMobileFilters } from "./product-mobile-filters";
 import { ProductRentalFilters } from "./product-rental-filters";
 import { ProductResetFiltersButton } from "./product-reset-filters-button";
 import { ProductSpecificationFilters } from "./product-specification-filters";
-import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
-import type { ProductBrowseData } from "@/types/product-browse";
-import { hasCatalogListings } from "@/utils/catalog";
+
+const filterButtonClass =
+  "inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#eadfd8] bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary data-[state=open]:border-primary data-[state=open]:text-primary";
+
+function FilterPopover({
+  active,
+  children,
+  clearable = false,
+  icon,
+  label,
+}: {
+  active: boolean;
+  children: (close: () => void) => ReactNode;
+  clearable?: boolean;
+  icon: ReactNode;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const { isPending, resetFilters } = useProductBrowseNavigation();
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button
+          className={`${filterButtonClass} ${active ? "border-primary bg-primary/5 text-primary" : ""}`}
+          type="button"
+        >
+          {icon}
+          {label}
+          <ChevronDown aria-hidden="true" className="size-3.5" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="start"
+          className="z-50 max-h-[min(70dvh,var(--radix-popover-content-available-height))] w-[min(320px,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-[#eadfd8] bg-background p-4 text-foreground shadow-xl outline-none"
+          collisionPadding={12}
+          sideOffset={8}
+        >
+          {children(() => setOpen(false))}
+          {clearable ? (
+            <div className="mt-3 border-t border-[#f0e8e2] pt-3">
+              <button
+                className="h-10 w-full cursor-pointer rounded-lg border border-[#eadfd8] text-sm font-semibold transition-colors hover:bg-[#fff4ed] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isPending}
+                onClick={() => {
+                  resetFilters();
+                  setOpen(false);
+                }}
+                type="button"
+              >
+                Xóa lọc
+              </button>
+            </div>
+          ) : null}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
 
 export function ProductFilters({
   filters,
@@ -21,110 +87,82 @@ export function ProductFilters({
   ProductBrowseData,
   "filters" | "categories" | "equipmentTypes" | "brands" | "specificationFields"
 >) {
-  const { isPending, navigate } = useProductBrowseNavigation();
-  const [isExpanded, setIsExpanded] = useState(false);
   return (
-    <aside
-      aria-busy={isPending}
-      aria-labelledby="product-filter-title"
-      className="min-w-0 self-start rounded border border-border bg-background"
+    <div
+      aria-label="Bộ lọc thiết bị"
+      className="sticky top-[var(--site-header-height,6rem)] z-30 -mx-4 bg-background/95 px-4 py-2.5 "
+      role="group"
     >
-      <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3">
-        <h2
-          className="flex items-center gap-1.5 text-[11px] font-bold uppercase"
-          id="product-filter-title"
-        >
-          <Filter aria-hidden="true" className="size-3.5 text-primary" />
-          Bộ lọc tìm kiếm
-        </h2>
-        <ProductResetFiltersButton
-          className="hidden h-auto p-0 text-[10px] font-normal uppercase text-muted-foreground hover:text-primary lg:inline-flex"
-          variant="default"
-        />
-        <button
-          aria-controls="product-filter-controls"
-          aria-expanded={isExpanded}
-          className="cursor-pointer text-xs font-semibold text-primary lg:hidden"
-          onClick={() => setIsExpanded((current) => !current)}
-          type="button"
-        >
-          {isExpanded ? "Thu gọn" : "Mở bộ lọc"}
-        </button>
-      </div>
-      <div
-        className={`${isExpanded ? "block" : "hidden"} space-y-5 px-3 py-3.5 lg:block`}
-        id="product-filter-controls"
-      >
-        <section aria-labelledby="product-category-filter-title" className="space-y-4">
-          <h3 className="text-[11px] font-bold uppercase" id="product-category-filter-title">
-            Danh mục thiết bị
-          </h3>
-          <ProductFilterSection
-            allLabel="Tất cả danh mục"
-            defaultExpanded
-            disabled={isPending}
-            emptyMessage="Chưa có danh mục thiết bị."
-            errorMessage="Không thể tải danh mục."
-            name="categoryId"
-            onChange={(categoryId) =>
-              navigate({ categoryId, equipmentTypeId: undefined, filters: undefined })
-            }
-            options={categories.success ? categories.data.data.filter(hasCatalogListings) : null}
-            placeholder="Tìm danh mục..."
-            title="1. Danh mục"
-            value={filters.categoryId}
-          />
-
-          {filters.categoryId ? (
-            <div className="ml-2 space-y-4 border-l-2 border-primary/20 pl-3">
-              <ProductFilterSection
-                allLabel="Tất cả loại thiết bị"
-                defaultExpanded
-                disabled={isPending}
-                emptyMessage="Danh mục chưa có loại thiết bị."
-                errorMessage="Không thể tải loại thiết bị."
-                key={filters.categoryId}
-                name="equipmentTypeId"
-                onChange={(equipmentTypeId) => navigate({ equipmentTypeId, filters: undefined })}
-                options={equipmentTypes.success ? equipmentTypes.data.data.filter(hasCatalogListings) : null}
-                placeholder="Tìm loại thiết bị..."
-                title="2. Loại thiết bị"
-                value={filters.equipmentTypeId}
-              />
-
-              {filters.equipmentTypeId ? (
-                <div className="ml-2 border-l-2 border-border pl-3">
-                  <ProductSpecificationFilters
-                    key={JSON.stringify([filters.equipmentTypeId, filters.filters, specificationFields])}
-                    filters={filters}
-                    specificationFields={specificationFields}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-
-        <div className="border-t border-border pt-4">
-          <ProductFilterSection
-            allLabel="Tất cả thương hiệu"
-            disabled={isPending}
-            emptyMessage="Chưa có thương hiệu."
-            errorMessage="Không thể tải thương hiệu."
-            name="brandId"
-            onChange={(brandId) => navigate({ brandId })}
-            options={brands.success ? brands.data.data.filter(hasCatalogListings) : null}
-            placeholder="Tìm thương hiệu..."
-            title="Thương hiệu"
-            value={filters.brandId}
-          />
-        </div>
-
-        <ProductRentalFilters
-          key={JSON.stringify([filters.from, filters.to, filters.requestedQuantity])}
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+        <span className="mr-1 hidden shrink-0 items-center gap-1.5 text-xs font-bold text-foreground lg:inline-flex">
+          <Filter aria-hidden="true" className="size-4 text-primary" />
+          Bộ lọc
+        </span>
+        <ProductCategoryPopover
+          categories={categories}
+          equipmentTypes={equipmentTypes}
           filters={filters}
         />
+        <ProductMobileFilters
+          brands={brands}
+          filters={filters}
+          specificationFields={specificationFields}
+        />
+        <div className="hidden sm:block">
+          <ProductBrandPopover brands={brands} filters={filters} />
+        </div>
+        <div className="hidden sm:block">
+          <FilterPopover
+            active={Boolean(
+              filters.from || filters.to || filters.requestedQuantity,
+            )}
+            clearable
+            icon={<CalendarDays aria-hidden="true" className="size-3.5" />}
+            label="Lịch thuê & số lượng"
+          >
+            {(close) => (
+              <ProductRentalFilters
+                key={JSON.stringify([
+                  filters.from,
+                  filters.to,
+                  filters.requestedQuantity,
+                ])}
+                filters={filters}
+                onApplied={close}
+              />
+            )}
+          </FilterPopover>
+        </div>
+        {filters.equipmentTypeId ? (
+          <div className="hidden sm:block">
+            <FilterPopover
+              active={Boolean(filters.filters)}
+              icon={
+                <SlidersHorizontal aria-hidden="true" className="size-3.5" />
+              }
+              label="Thông số kỹ thuật"
+            >
+              {(close) => (
+                <ProductSpecificationFilters
+                  key={JSON.stringify([
+                    filters.equipmentTypeId,
+                    filters.filters,
+                    specificationFields,
+                  ])}
+                  filters={filters}
+                  onApplied={close}
+                  specificationFields={specificationFields}
+                />
+              )}
+            </FilterPopover>
+          </div>
+        ) : null}
+        <ProductResetFiltersButton
+          className="ml-auto hidden h-9 shrink-0 whitespace-nowrap px-3 text-xs sm:inline-flex"
+          size="sm"
+          variant="secondary"
+        />
       </div>
-    </aside>
+    </div>
   );
 }
