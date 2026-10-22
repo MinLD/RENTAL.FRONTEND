@@ -2,9 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
-
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { ProductCard } from "@/components/products/product-card";
 import { Button } from "@/components/ui/button";
 import { PRODUCT_FEED_GRID_CLASS_NAME, PRODUCT_FEED_IMAGE_SIZES } from "@/config/product-images";
@@ -17,8 +16,10 @@ import type { PublicEquipmentListingListResponse } from "@/types/inventory";
 import { HomeLatestProductsSkeleton } from "./home-products-skeleton";
 
 export function HomeLatestProductsFeed({
+  initialLoadFailed = false,
   initialPage,
 }: {
+  initialLoadFailed?: boolean;
   initialPage?: PublicEquipmentListingListResponse;
 }) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -36,6 +37,7 @@ export function HomeLatestProductsFeed({
     initialData: initialPage
       ? { pages: [initialPage], pageParams: [1] }
       : undefined,
+    enabled: !initialLoadFailed,
     getNextPageParam: (lastPage) =>
       lastPage.items.length > 0 && lastPage.page < lastPage.totalPages
         ? lastPage.page + 1
@@ -69,24 +71,22 @@ export function HomeLatestProductsFeed({
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
 
-  if (query.isPending) return <HomeLatestProductsSkeleton />;
-
-  if (query.isError && !query.data) {
+  if ((initialLoadFailed || query.isError) && !query.data) {
     return (
-      <EmptyState
+      <ErrorState
         className="min-h-64"
         title="Không thể tải thiết bị mới nhất"
         description="Vui lòng thử tải lại danh sách thiết bị."
-        icon={<AlertCircle />}
-        role="alert"
         action={
-          <Button onClick={() => void query.refetch()} size="sm">
-            Thử lại
+          <Button disabled={query.isFetching} onClick={() => void query.refetch()} size="sm">
+            {query.isFetching ? "Đang thử lại..." : "Thử lại"}
           </Button>
         }
       />
     );
   }
+
+  if (query.isPending) return <HomeLatestProductsSkeleton />;
 
   const products = Array.from(
     new Map(

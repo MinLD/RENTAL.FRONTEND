@@ -5,10 +5,10 @@ import { MapPin, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { AddressErrorIllustration } from "@/components/account/address-error-illustration";
 import { AddressCreateDialog } from "@/components/account/address-create-dialog";
 import { AddressDeleteDialog } from "@/components/account/address-delete-dialog";
 import { AddressEditDialog } from "@/components/account/address-edit-dialog";
+import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { getRenterAddresses, setDefaultRenterAddress } from "@/services/renter-address-service";
 import type { RenterAddress } from "@/types/renter-address";
@@ -83,21 +83,20 @@ export function AccountAddressBook({
       </div>
 
       {loadError ? (
-        <div className="flex flex-1 flex-col items-center justify-center pb-4 text-center" role="alert">
-          <div className="w-48 max-w-full"><AddressErrorIllustration /></div>
-          <h2 className="mt-2 text-lg font-semibold text-foreground">Không tải được sổ địa chỉ</h2>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Địa chỉ của bạn đang tạm thời không hiển thị. Vui lòng thử lại.
-          </p>
-          <Button
-            className="mt-5"
-            disabled={addressesQuery.isFetching}
-            onClick={() => void addressesQuery.refetch()}
-            type="button"
-          >
-            {addressesQuery.isFetching ? "Đang thử lại..." : "Thử lại"}
-          </Button>
-        </div>
+        <ErrorState
+          action={
+            <Button
+              disabled={addressesQuery.isFetching}
+              onClick={() => void addressesQuery.refetch()}
+              type="button"
+            >
+              {addressesQuery.isFetching ? "Đang thử lại..." : "Thử lại"}
+            </Button>
+          }
+          className="flex-1 pb-4"
+          description="Địa chỉ của bạn đang tạm thời không hiển thị. Vui lòng thử lại."
+          title="Không tải được sổ địa chỉ"
+        />
       ) : addresses?.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <MapPin aria-hidden="true" className="text-primary" size={27} />

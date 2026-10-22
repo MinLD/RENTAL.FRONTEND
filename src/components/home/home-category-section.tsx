@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
 
 import {
   AllEquipmentTileContent,
@@ -8,6 +7,7 @@ import {
   CategoryTileContent,
 } from "@/components/catalog/category-tile";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import {
   Carousel,
   CarouselContent,
@@ -59,11 +59,9 @@ async function HomeCategoryItems() {
   const result = await getCatalogCategories();
   if (!result.success) {
     return (
-      <EmptyState
+      <ErrorState
         className="min-h-28"
         description="Vui lòng tải lại trang hoặc thử lại sau."
-        icon={<AlertCircle />}
-        role="alert"
         title="Không thể tải danh mục thiết bị"
       />
     );

@@ -35,7 +35,7 @@ type CartContextValue = {
   items: CartItem[];
   loading: boolean;
   busy: boolean;
-  error: string | null;
+  hasLoadError: boolean;
   addItem: (item: AddCartItem, snapshot: CartItemSnapshot) => Promise<boolean>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
   updateDates: (id: string, start: string, end: string) => Promise<void>;
@@ -131,7 +131,7 @@ export function CartProvider({
   const [items, setItems] = useState<CartItem[]>(initialItems ?? []);
   const [loading, setLoading] = useState(initialItems === undefined);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const operation = useRef(false);
   const refreshId = useRef(0);
   const hasLoaded = useRef(initialItems !== undefined);
@@ -139,7 +139,6 @@ export function CartProvider({
   const refresh = useCallback(async () => {
     const id = ++refreshId.current;
     try {
-      setError(null);
       if (!hasLoaded.current) setLoading(true);
       const failures = userId ? await mergeGuestCart(userId) : [];
       const next = userId ? await getRentalCart() : readGuestCart();
@@ -160,15 +159,15 @@ export function CartProvider({
         : [];
       if (id === refreshId.current) {
         setItems([...next, ...pending]);
-        if (failures.length)
-          setError(
-            `${failures.length} thiết bị chưa đồng bộ được. ${failures[0].reason}`,
-          );
+        setHasLoadError(false);
+        if (failures.length) {
+          toast.error(`${failures.length} thiết bị chưa đồng bộ được. ${failures[0].reason}`);
+        }
       }
       return null;
     } catch (cause) {
       const message = errorMessage(cause);
-      if (id === refreshId.current) setError(message);
+      if (id === refreshId.current) setHasLoadError(true);
       return message;
     } finally {
       if (id === refreshId.current) {
@@ -202,13 +201,11 @@ export function CartProvider({
     if (operation.current) return false;
     operation.current = true;
     setBusy(true);
-    setError(null);
     try {
       await action();
       return true;
     } catch (cause) {
       const message = errorMessage(cause);
-      setError(message);
       toast.error(message);
       return false;
     } finally {
@@ -437,7 +434,7 @@ export function CartProvider({
         items,
         loading,
         busy,
-        error,
+        hasLoadError,
         addItem,
         updateQuantity,
         updateDates,

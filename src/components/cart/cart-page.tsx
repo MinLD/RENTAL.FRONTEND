@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { HomeLink } from "@/components/layout/home-link";
+import { ErrorState } from "@/components/error-state";
 import { ProductImage } from "@/components/products/product-image";
-import { EmptyCartIllustration } from "@/components/cart/empty-cart-illustration";
+import { Button } from "@/components/ui/button";
+import { EmptyCartIllustration } from "@/components/illustrations/empty-cart-illustration";
 import { useCart } from "@/providers/cart-provider";
 import type { CartItem } from "@/types/cart";
 import { addDays, validateCartItem } from "@/utils/cart";
@@ -68,7 +70,7 @@ function CartRow({ item, selected, onSelect }: { item: CartItem; selected: boole
 }
 
 export function CartPage() {
-  const { items, loading, busy, error, clear, refresh } = useCart();
+  const { items, loading, busy, hasLoadError, clear, refresh } = useCart();
   const [excluded, setExcluded] = useState<string[]>([]);
   const selected = items.filter((item) => !excluded.includes(item.cartItemId));
   const selectedAll = selected.length === items.length;
@@ -78,8 +80,13 @@ export function CartPage() {
   return <div className="flex-1 bg-background py-6">
     <Container>
       <nav aria-label="Đường dẫn giỏ hàng" className="mb-7 flex gap-2 text-xs text-muted-foreground"><HomeLink className="hover:text-primary">Trang chủ</HomeLink><span>/</span><span aria-current="page" className="text-foreground">Giỏ hàng</span></nav>
-      {error && <div className="mb-4 flex flex-wrap items-center gap-3 rounded border border-error/30 bg-error/5 p-3 text-sm text-error" role="alert"><span>{error}</span><button className="font-semibold underline" onClick={() => void refresh()} type="button">Thử lại</button></div>}
-      {loading ? <p className="py-20 text-center text-muted-foreground">Đang tải giỏ hàng...</p> : items.length === 0 ?
+      {loading ? <p className="py-20 text-center text-muted-foreground">Đang tải giỏ hàng...</p> : hasLoadError && items.length === 0 ?
+        <ErrorState
+          action={<Button onClick={() => void refresh()} type="button">Thử lại</Button>}
+          className="min-h-[400px]"
+          description="Giỏ hàng đang tạm thời không hiển thị. Vui lòng thử lại."
+          title="Không thể tải giỏ hàng"
+        /> : items.length === 0 ?
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-7 py-10 sm:flex-row sm:py-16">
           <div className="w-full sm:w-1/2"><EmptyCartIllustration /></div>
           <div className="text-center sm:text-left"><h1 className="text-xl font-bold">Giỏ hàng của bạn đang rỗng!</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Hãy chọn thiết bị phù hợp và thêm vào giỏ hàng để lên kế hoạch thuê.</p><Link className="mt-5 inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90" href="/search">Xem thiết bị cho thuê <ArrowRight className="size-4" /></Link></div>

@@ -1,7 +1,6 @@
-import { AlertCircle } from "lucide-react";
-
 import { EmptyState } from "@/components/empty-state";
-import { NoResultsIllustration } from "@/components/no-results-illustration";
+import { ErrorState } from "@/components/error-state";
+import { NoResultsIllustration } from "@/components/illustrations/no-results-illustration";
 import { PRODUCT_FEED_GRID_CLASS_NAME, PRODUCT_FEED_IMAGE_SIZES } from "@/config/product-images";
 import { ProductRefreshButton } from "./product-refresh-button";
 import { ProductResetFiltersButton } from "./product-reset-filters-button";
@@ -19,12 +18,10 @@ export function ProductList({
 }: Pick<ProductBrowseData, "products" | "filters" | "equipmentTypes" | "brands"> & { view?: "list" }) {
   if (!products.success) {
     return (
-      <EmptyState
+      <ErrorState
         className="min-h-80"
         title="Không thể tải sản phẩm"
         description={products.error.message}
-        icon={<AlertCircle />}
-        role="alert"
         action={<ProductRefreshButton />}
       />
     );

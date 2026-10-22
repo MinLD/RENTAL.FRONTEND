@@ -37,7 +37,6 @@ export function AddressCreateDialog({
   const [firstAddress] = useState(isFirstAddress);
   const [draft, setDraft] = useState<SaveRenterAddressRequest>(emptyAddress);
   const [fieldErrors, setFieldErrors] = useState<AddressFieldErrors>({});
-  const [formError, setFormError] = useState("");
   const [makeDefault, setMakeDefault] = useState(firstAddress);
   const createMutation = useMutation({ mutationFn: createRenterAddress });
   const defaultMutation = useMutation({ mutationFn: setDefaultRenterAddress });
@@ -46,7 +45,6 @@ export function AddressCreateDialog({
   function updateDraft(field: AddressField, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
-    setFormError("");
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -59,12 +57,11 @@ export function AddressCreateDialog({
       return;
     }
 
-    setFormError("");
     let created;
     try {
       created = await createMutation.mutateAsync(parsed.data);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Không thể thêm địa chỉ.");
+      toast.error(error instanceof Error ? error.message : "Không thể thêm địa chỉ.");
       return;
     }
 
@@ -108,7 +105,6 @@ export function AddressCreateDialog({
               {firstAddress && <p className="mt-1 text-xs text-muted-foreground">Địa chỉ đầu tiên sẽ là địa chỉ mặc định.</p>}
             </div>
           </div>
-          {formError && <p className="text-sm text-error" role="alert">{formError}</p>}
           <DialogFooter className="pt-2">
             <Button disabled={isSaving} onClick={onClose} type="button" variant="secondary">Hủy</Button>
             <Button disabled={isSaving} type="submit">{isSaving ? "Đang lưu..." : "Lưu địa chỉ"}</Button>

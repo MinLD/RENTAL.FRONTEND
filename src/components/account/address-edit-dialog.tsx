@@ -39,7 +39,6 @@ export function AddressEditDialog({
     recipientPhone: address.recipientPhone ?? "",
   });
   const [fieldErrors, setFieldErrors] = useState<AddressFieldErrors>({});
-  const [formError, setFormError] = useState("");
   const mutation = useMutation({
     mutationFn: (nextAddress: SaveRenterAddressRequest) => updateRenterAddress(address.id, nextAddress),
   });
@@ -47,7 +46,6 @@ export function AddressEditDialog({
   function updateDraft(field: AddressField, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
-    setFormError("");
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -60,14 +58,13 @@ export function AddressEditDialog({
       return;
     }
 
-    setFormError("");
     try {
       await mutation.mutateAsync(parsed.data);
       await onChanged();
       onClose();
       toast.success("Đã cập nhật địa chỉ.");
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Không thể cập nhật địa chỉ.");
+      toast.error(error instanceof Error ? error.message : "Không thể cập nhật địa chỉ.");
     }
   }
 
@@ -80,7 +77,6 @@ export function AddressEditDialog({
         </DialogHeader>
         <form className="space-y-4" onSubmit={(event) => void submit(event)}>
           <AddressFormFields disabled={mutation.isPending} draft={draft} errors={fieldErrors} idPrefix="edit-address" onChange={updateDraft} />
-          {formError && <p className="text-sm text-error" role="alert">{formError}</p>}
           <DialogFooter className="pt-2">
             <Button disabled={mutation.isPending} onClick={onClose} type="button" variant="secondary">Hủy</Button>
             <Button disabled={mutation.isPending} type="submit">{mutation.isPending ? "Đang lưu..." : "Lưu thay đổi"}</Button>

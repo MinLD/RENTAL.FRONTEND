@@ -6,6 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { BrandLogo } from "@/components/catalog/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -127,7 +128,7 @@ export function HomeBrandCarousel({
       {query.isPending ? (
         <HomeBrandSkeleton />
       ) : query.isError && !query.data ? (
-        <EmptyState
+        <ErrorState
           action={
             <Button
               onClick={() => void query.refetch()}
@@ -138,7 +139,6 @@ export function HomeBrandCarousel({
             </Button>
           }
           className="min-h-28"
-          role="alert"
           title="Không thể tải thương hiệu"
         />
       ) : !brands.length && !hasNextPage ? (
