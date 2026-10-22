@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export function ProductRentalPanel({
   const [quantityInput, setQuantityInput] = useState("1");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const cart = useCart();
+  const router = useRouter();
   const quantity = Number(quantityInput);
   const maxQuantity = Number.isFinite(totalQuantity)
     ? Math.max(0, Math.floor(totalQuantity))
@@ -249,13 +251,29 @@ export function ProductRentalPanel({
           </p>
         ) : null}
       </div>
-      <Button
-        className="mt-5 w-full"
-        disabled={!estimate || !availabilityCheck.availability?.isAvailable}
-        onClick={() => setIsPreviewOpen(true)}
-      >
-        Xem và thêm vào giỏ <ArrowRight aria-hidden="true" className="size-4" />
-      </Button>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <Button
+          disabled={!estimate || !availabilityCheck.availability?.isAvailable}
+          onClick={() => setIsPreviewOpen(true)}
+          variant="secondary"
+        >
+          Thêm vào giỏ
+        </Button>
+        <Button
+          disabled={!estimate || !availabilityCheck.availability?.isAvailable || depositAmount == null}
+          onClick={() => {
+            const search = new URLSearchParams({
+              listingId,
+              quantity: String(quantity),
+              from,
+              to,
+            });
+            router.push(`/checkout?${search}`);
+          }}
+        >
+          Thuê ngay <ArrowRight aria-hidden="true" className="size-4" />
+        </Button>
+      </div>
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent>
           <DialogHeader>

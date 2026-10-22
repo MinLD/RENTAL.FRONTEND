@@ -149,7 +149,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </Link>
           <Link
             className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-            href="/rentals"
+            href="/orders"
             onClick={() => setIsOpen(false)}
           >
             <ClipboardList aria-hidden="true" size={16} />

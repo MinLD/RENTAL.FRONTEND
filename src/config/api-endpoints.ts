@@ -105,11 +105,12 @@ export const API_ENDPOINTS = {
       items: `${rentalApiBase}/cart/items`,
       item: (id: string) =>
         `${rentalApiBase}/cart/items/${encodeURIComponent(id)}`,
-      checkout: `${rentalApiBase}/checkout`,
+      checkout: "/api/v1/rental/checkout",
       checkoutOperation: (id: string) =>
-        `${rentalApiBase}/checkout/operations/${encodeURIComponent(id)}`,
-      orders: `${rentalApiBase}/orders`,
-      order: (id: string) => `${rentalApiBase}/orders/${encodeURIComponent(id)}`,
+        `/api/v1/rental/checkout/operations/${encodeURIComponent(id)}`,
+      orders: "/api/v1/rental/orders",
+      order: (id: string) => `/api/v1/rental/orders/${encodeURIComponent(id)}`,
+      cancelOrder: (id: string) => `/api/v1/rental/orders/${encodeURIComponent(id)}/cancel`,
       calendar: `${rentalApiBase}/me/calendar`,
       supplierSubOrders: `${rentalApiBase}/supplier/sub-orders`,
       supplierSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}`,
@@ -126,6 +127,12 @@ export const API_ENDPOINTS = {
       itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
       itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
       itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+    },
+    payment: {
+      invoice: (invoiceRef: string) =>
+        `/api/v1/invoices/${encodeURIComponent(invoiceRef)}`,
+      invoiceStatus: (invoiceRef: string) =>
+        `/api/v1/invoices/${encodeURIComponent(invoiceRef)}/status`,
     },
     organizations: {
       register: "/api/v1/auth/organizations/register",
