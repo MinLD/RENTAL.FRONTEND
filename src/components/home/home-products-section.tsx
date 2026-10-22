@@ -31,5 +31,10 @@ async function HomeLatestProducts() {
     ...HOME_LATEST_PRODUCTS_PARAMS,
     page: 1,
   });
-  return <HomeLatestProductsFeed initialPage={result.success ? result.data : undefined} />;
+  return (
+    <HomeLatestProductsFeed
+      initialLoadFailed={!result.success}
+      initialPage={result.success ? result.data : undefined}
+    />
+  );
 }

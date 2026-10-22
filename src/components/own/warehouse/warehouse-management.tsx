@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AlertCircle,
   CheckCircle2,
   LoaderCircle,
   MapPin,
@@ -15,6 +14,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { SearchableSelectField } from "@/components/forms/searchable-select-field";
+import { ErrorState } from "@/components/error-state";
 import { TextField } from "@/components/forms/text-field";
 import { TextareaField } from "@/components/forms/textarea-field";
 import { LocationPicker } from "@/components/maps/location-picker";
@@ -96,26 +96,16 @@ export function WarehouseManagement({
             <span className="sr-only">Đang tải địa chỉ kho...</span>
           </div>
         ) : error ? (
-          <div
-            className="space-y-4 rounded-lg border border-error/30 bg-error/5 p-5"
-            role="alert"
-          >
-            <p className="flex items-start gap-2 text-sm text-error">
-              <AlertCircle
-                aria-hidden="true"
-                className="mt-0.5 size-4 shrink-0"
-              />
-              {error}
-            </p>
-            <Button
-              onClick={() => void refresh()}
-              type="button"
-              variant="secondary"
-            >
-              <RefreshCw aria-hidden="true" className="size-4" />
-              Thử lại
-            </Button>
-          </div>
+          <ErrorState
+            action={
+              <Button onClick={() => void refresh()} type="button" variant="secondary">
+                <RefreshCw aria-hidden="true" className="size-4" />
+                Thử lại
+              </Button>
+            }
+            description="Địa chỉ kho đang tạm thời không hiển thị. Vui lòng thử lại."
+            title="Không thể tải địa chỉ kho"
+          />
         ) : (
           <WarehouseAddressForm
             key={warehouse ? `warehouse-${warehouse.version}` : "new-warehouse"}

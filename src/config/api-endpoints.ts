@@ -96,6 +96,11 @@ const rentalApiBase = process.env.NEXT_PUBLIC_MOCK_RENTAL_API === "true"
 export const API_ENDPOINTS = {
   backend: {
     rental: {
+      addresses: "/api/v1/rental/me/addresses",
+      address: (id: string) =>
+        `/api/v1/rental/me/addresses/${encodeURIComponent(id)}`,
+      defaultAddress: (id: string) =>
+        `/api/v1/rental/me/addresses/${encodeURIComponent(id)}/default`,
       cart: `${rentalApiBase}/cart`,
       items: `${rentalApiBase}/cart/items`,
       item: (id: string) =>

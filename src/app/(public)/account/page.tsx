@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import {
   AccountProfileForm,
+  type AccountSection,
   type AccountProfileInitialData,
 } from "@/components/account/account-profile-form";
 import { Container } from "@/components/layout/container";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
+import { getRenterAddressesForServer } from "@/services/renter-address-server-service";
 import { serverApi } from "@/services/server-api";
 import { getCurrentUser } from "@/services/session-service";
 import type {
@@ -28,11 +30,7 @@ export default async function AccountPage({
 }: {
   searchParams: Promise<ReturnToSearchParams>;
 }) {
-  const [currentUser, externalLogins, params] = await Promise.all([
-    getCurrentUser(),
-    getInitialExternalLogins(),
-    searchParams,
-  ]);
+  const params = await searchParams;
   const requestedReturnTo = getSafeReturnTo(
     Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo,
   );
@@ -40,6 +38,17 @@ export default async function AccountPage({
   const returnTo = requestedReturnTo?.split(/[?#]/)[0] === "/account"
     ? null
     : requestedReturnTo;
+  const requestedSection = Array.isArray(params.section) ? params.section[0] : params.section;
+  const initialSection: AccountSection = requestedSection === "security" || requestedSection === "addresses"
+    ? requestedSection
+    : "profile";
+  const [currentUser, externalLogins, initialAddresses] = await Promise.all([
+    getCurrentUser(),
+    initialSection === "security" ? getInitialExternalLogins() : Promise.resolve([]),
+    initialSection === "addresses"
+      ? getRenterAddressesForServer()
+      : Promise.resolve({ addresses: [], error: null }),
+  ]);
   const user =
     currentUser ??
     ({
@@ -84,8 +93,10 @@ export default async function AccountPage({
         </nav>
 
         <AccountProfileForm
+          initialAddresses={initialAddresses}
           initialExternalLogins={externalLogins}
           initialProfile={initialProfile}
+          initialSection={initialSection}
           returnTo={returnTo ?? undefined}
           user={user}
         />

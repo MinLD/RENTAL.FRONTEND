@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import {
   displayProfileValue,
@@ -12,18 +14,22 @@ import {
 
 type AccountProfileSummaryProps = {
   avatarPreviewUrl?: string;
+  children?: ReactNode;
   disabled?: boolean;
   initialProfile: AccountProfileInitialData;
   onAvatarChange?: (mediaId: string, previewUrl: string) => void;
+  onAvatarButtonClick?: () => void;
   onAvatarUploadingChange?: (isUploading: boolean) => void;
   user: AuthUser;
 };
 
 export function AccountProfileSummary({
   avatarPreviewUrl,
+  children,
   disabled,
   initialProfile,
   onAvatarChange,
+  onAvatarButtonClick,
   onAvatarUploadingChange,
   user,
 }: AccountProfileSummaryProps) {
@@ -35,6 +41,7 @@ export function AccountProfileSummary({
     <aside className="min-w-0 self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
       <div className="flex flex-col items-center text-center">
         <MediaAvatarUpload
+          avatarButtonLabel={onAvatarButtonClick ? "Đến thông tin tài khoản để cập nhật ảnh" : "Cập nhật ảnh"}
           disabled={disabled}
           fallbackText={getUserInitials(displayName)}
           onChange={(mediaId, upload) => {
@@ -42,6 +49,7 @@ export function AccountProfileSummary({
               onAvatarChange?.(mediaId, upload.previewUrl);
             }
           }}
+          onAvatarButtonClick={onAvatarButtonClick}
           onUploadingChange={onAvatarUploadingChange}
           previewUrl={visibleAvatarUrl}
           size="lg"
@@ -60,6 +68,7 @@ export function AccountProfileSummary({
         {displayProfileValue(roleLabel)}
       </p>
       </div>
+      {children}
     </aside>
   );
 }

@@ -19,6 +19,8 @@ type MediaAvatarUploadProps = {
   fallbackText?: string;
   fieldName?: string;
   mode?: MediaUploadMode;
+  onAvatarButtonClick?: () => void;
+  avatarButtonLabel?: string;
   onChange?: (
     mediaId: string | string[],
     upload: MediaUploadResponse | MediaUploadResponse[],
@@ -54,6 +56,8 @@ export function MediaAvatarUpload({
   fallbackText = "DP",
   fieldName,
   mode = "single",
+  onAvatarButtonClick,
+  avatarButtonLabel = "Cập nhật ảnh",
   onChange,
   onUploadingChange,
   previewAlt,
@@ -141,7 +145,7 @@ export function MediaAvatarUpload({
               : "Chọn ảnh đại diện"
         }
         className="sr-only"
-        disabled={disabled || isUploading}
+        disabled={disabled || isUploading || Boolean(onAvatarButtonClick)}
         id={inputId}
         multiple={isMultiple}
         onChange={(event) => {
@@ -213,13 +217,16 @@ export function MediaAvatarUpload({
 
       {variant === "avatar" ? (
         <button
-          aria-label="Cập nhật ảnh"
+          aria-label={avatarButtonLabel}
           className={cn(
             "relative z-20 -ml-10 mt-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover",
             "disabled:cursor-not-allowed disabled:opacity-70",
           )}
           disabled={disabled || isUploading}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (onAvatarButtonClick) onAvatarButtonClick();
+            else fileInputRef.current?.click();
+          }}
           type="button"
         >
           {isUploading ? (

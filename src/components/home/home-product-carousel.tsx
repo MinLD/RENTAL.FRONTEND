@@ -6,6 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { ChevronRight, LoaderCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { ProductCard } from "@/components/products/product-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -124,13 +125,18 @@ function HomeFilteredProductCarousel({
             Không thể tải bộ lọc loại thiết bị. <button className="cursor-pointer text-primary underline" onClick={onRetryEquipmentTypes} type="button">Thử lại</button>
           </p>
         ) : null}
-        {query.isPending ? <HomeProductsSkeleton /> : !products.length ? (
+        {query.isPending ? <HomeProductsSkeleton /> : query.isError && !products.length ? (
+          <ErrorState
+            action={<Button onClick={() => void query.refetch()} size="sm" variant="secondary">Thử lại</Button>}
+            className="min-h-56"
+            description="Vui lòng thử tải lại sản phẩm."
+            title="Không thể tải sản phẩm"
+          />
+        ) : !products.length ? (
           <EmptyState
             className="min-h-56"
-            title={query.isError ? "Không thể tải sản phẩm" : "Chưa có sản phẩm"}
-            description={query.isError ? "Vui lòng thử tải lại sản phẩm." : "Loại thiết bị này hiện chưa có sản phẩm."}
-            role={query.isError ? "alert" : "status"}
-            action={query.isError ? <Button onClick={() => void query.refetch()} size="sm" variant="secondary">Thử lại</Button> : undefined}
+            title="Chưa có sản phẩm"
+            description="Loại thiết bị này hiện chưa có sản phẩm."
           />
         ) : (
           <CarouselContent>

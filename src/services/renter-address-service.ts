@@ -1,0 +1,33 @@
+import { API_ENDPOINTS } from "@/config/api-endpoints";
+import { authApiClient, authApiClientJson } from "@/services/api-client";
+import type { RenterAddress, SaveRenterAddressRequest } from "@/types/renter-address";
+
+const endpoints = API_ENDPOINTS.backend.rental;
+
+export function getRenterAddresses() {
+  return authApiClientJson<RenterAddress[]>(endpoints.addresses, { cache: "no-store" });
+}
+
+export function createRenterAddress(address: SaveRenterAddressRequest) {
+  return authApiClientJson<RenterAddress>(endpoints.addresses, {
+    method: "POST",
+    json: address,
+  });
+}
+
+export function updateRenterAddress(id: string, address: SaveRenterAddressRequest) {
+  return authApiClientJson<RenterAddress>(endpoints.address(id), {
+    method: "PATCH",
+    json: address,
+  });
+}
+
+export function deleteRenterAddress(id: string) {
+  return authApiClient(endpoints.address(id), { method: "DELETE" });
+}
+
+export function setDefaultRenterAddress(id: string) {
+  return authApiClientJson<RenterAddress>(endpoints.defaultAddress(id), {
+    method: "POST",
+  });
+}
