@@ -1,22 +1,33 @@
 "use client";
 
+import Link from "next/link";
+import { LockKeyhole, MapPin, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AccountAddressBook } from "@/components/account/account-address-book";
 import { AccountEditForm } from "@/components/account/account-edit-form";
 import { AccountExternalLoginCard } from "@/components/account/account-external-login-card";
 import { AccountProfileSummary } from "@/components/account/account-profile-summary";
+import { QueryProvider } from "@/providers/query-provider";
+import type { InitialRenterAddresses } from "@/services/renter-address-server-service";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import type {
   AuthUser,
   ExternalLoginResponse,
 } from "@/types/auth";
 import { getProfileCompletion } from "@/utils/profile-completion";
+import { withReturnTo } from "@/utils/return-to";
+import { cn } from "@/utils/cn";
 
 export type { AccountProfileInitialData } from "@/components/account/account-types";
+export type AccountSection = "profile" | "security" | "addresses";
 
 type AccountProfileFormProps = {
+  initialAddresses: InitialRenterAddresses;
   initialExternalLogins: ExternalLoginResponse[];
   initialProfile: AccountProfileInitialData;
+  initialSection: AccountSection;
   returnTo?: string;
   user: AuthUser;
 };
@@ -27,11 +38,14 @@ type AvatarPreview = {
 };
 
 export function AccountProfileForm({
+  initialAddresses,
   initialExternalLogins,
   initialProfile,
+  initialSection,
   returnTo,
   user,
 }: AccountProfileFormProps) {
+  const router = useRouter();
   const [avatarDraft, setAvatarDraft] = useState<AvatarPreview | null>(null);
   const [savedAvatarPreview, setSavedAvatarPreview] =
     useState<AvatarPreview | null>(null);
@@ -58,8 +72,14 @@ export function AccountProfileForm({
     setAvatarDraft(null);
   }
 
+  const menu = [
+    { section: "profile", label: "Thông tin tài khoản", icon: UserRound },
+    { section: "security", label: "Bảo mật", icon: LockKeyhole },
+    { section: "addresses", label: "Sổ địa chỉ", icon: MapPin },
+  ] as const;
+
   return (
-    <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
       <AccountProfileSummary
         avatarPreviewUrl={avatarPreviewUrl}
         disabled={isSavingProfile}
@@ -68,24 +88,53 @@ export function AccountProfileForm({
           setAvatarDraft({ mediaId, previewUrl });
         }}
         onAvatarUploadingChange={setIsUploadingAvatar}
+        onAvatarButtonClick={initialSection === "profile" ? undefined : () => router.push(withReturnTo("/account", returnTo))}
         user={user}
-      />
+      >
+        <nav aria-label="Quản lý tài khoản" className="mt-6 space-y-1 border-t border-border pt-4">
+          {menu.map(({ section, label, icon: Icon }) => (
+            <Link
+              aria-current={initialSection === section ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors hover:text-primary",
+                initialSection === section ? "font-semibold text-primary" : "text-foreground",
+              )}
+              href={withReturnTo(section === "profile" ? "/account" : `/account?section=${section}`, returnTo)}
+              key={section}
+            >
+              <Icon aria-hidden="true" size={18} />
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </AccountProfileSummary>
 
-      <div className="space-y-5">
-        <AccountEditForm
-          key={returnTo ?? "account"}
-          avatarMediaId={avatarMediaId}
-          avatarPreviewUrl={avatarPreviewUrl}
-          initialProfile={initialProfile}
-          isAvatarDirty={isAvatarDirty}
-          isAvatarUploading={isUploadingAvatar}
-          isProfileComplete={getProfileCompletion(user).isComplete}
-          onCancel={resetAvatar}
-          onSavingChange={setIsSavingProfile}
-          returnTo={returnTo}
-          userId={user.id}
-        />
-        <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />
+      <div className="min-w-0">
+        {initialSection === "profile" && (
+          <AccountEditForm
+            key={returnTo ?? "account"}
+            avatarMediaId={avatarMediaId}
+            avatarPreviewUrl={avatarPreviewUrl}
+            initialProfile={initialProfile}
+            isAvatarDirty={isAvatarDirty}
+            isAvatarUploading={isUploadingAvatar}
+            isProfileComplete={getProfileCompletion(user).isComplete}
+            onCancel={resetAvatar}
+            onSavingChange={setIsSavingProfile}
+            returnTo={returnTo}
+            userId={user.id}
+          />
+        )}
+        {initialSection === "security" && <AccountExternalLoginCard initialExternalLogins={initialExternalLogins} />}
+        {initialSection === "addresses" && (
+          <QueryProvider>
+            <AccountAddressBook
+              initialAddresses={initialAddresses.addresses}
+              initialError={initialAddresses.error}
+              userId={user.id}
+            />
+          </QueryProvider>
+        )}
       </div>
     </div>
   );
