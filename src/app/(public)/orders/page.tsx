@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/error-state";
 import { EmptyState } from "@/components/empty-state";
 import { NoResultsIllustration } from "@/components/illustrations/no-results-illustration";
 import { OrderCancelAction } from "@/components/orders/order-cancel-action";
+import { OrderPaymentUpdates } from "@/components/orders/order-payment-updates";
 import { Container } from "@/components/layout/container";
 import { ProductImage } from "@/components/products/product-image";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { withReturnTo } from "@/utils/return-to";
 
 const ORDER_STATUSES = [
   { value: "PENDING_PAYMENT", label: "Chờ thanh toán" },
+  { value: "PAID", label: "Chờ xác nhận" },
   { value: "AWAITING_HANDOVER", label: "Chờ bàn giao" },
   { value: "IN_RENTAL", label: "Đang thuê" },
   { value: "PENDING_SETTLEMENT", label: "Chờ quyết toán" },
@@ -24,7 +26,6 @@ const ORDER_STATUSES = [
   { value: "REJECTED", label: "Đã từ chối" },
   { value: "EXPIRED", label: "Hết hạn" },
   { value: "CANCELLED", label: "Đã hủy" },
-  { value: "PAID", label: "Đã thanh toán" },
 ] as const;
 
 const PAGE_SIZE = 20;
@@ -93,6 +94,7 @@ export default async function RenterOrdersPage({
 
   return (
     <div className="flex-1 bg-[#f5f7fa] py-6 sm:py-8">
+      <OrderPaymentUpdates />
       <Container className="max-w-5xl">
         <nav aria-label="Đường dẫn đơn thuê" className="mb-5 text-xs text-muted-foreground">
           <Link className="hover:text-primary" href="/">Trang chủ</Link> / <span className="text-foreground">Đơn thuê của tôi</span>

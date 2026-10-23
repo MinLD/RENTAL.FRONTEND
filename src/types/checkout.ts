@@ -74,6 +74,8 @@ export type RenterOrderPayment = {
   currency: string | null;
 };
 
+export type OrderPaymentSnapshot = RenterOrderPayment & { paidAt: string | null };
+
 export type RenterOrderSummary = {
   orderId: string;
   orderCode: string | null;

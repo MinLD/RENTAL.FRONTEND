@@ -397,5 +397,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  // The Hub authenticates its own JWT; page role redirects must not intercept negotiate/upgrade.
+  matcher: ["/((?!api|hubs/payments|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

@@ -5,9 +5,11 @@ import { Header } from "@/components/layout/header";
 import { PartnerHistoryRefresh } from "@/components/partner/partner-history-refresh";
 import { PublicAreaProvider } from "@/providers/public-area-provider";
 import { CartProvider } from "@/providers/cart-provider";
+import { PaymentHubProvider } from "@/providers/payment-hub-provider";
 import { getStoredPublicArea } from "@/services/public-area-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import { getRentalCartForServer } from "@/services/rental-cart-server-service";
+import { CART_ENABLED } from "@/config/features";
 
 type SiteLayoutProps = Readonly<{
   children: ReactNode;
@@ -15,20 +17,23 @@ type SiteLayoutProps = Readonly<{
 
 export default async function SiteLayout({ children }: SiteLayoutProps) {
   const [initialArea, user] = await Promise.all([getStoredPublicArea(), getCurrentUser()]);
-  const initialCart = user ? await getRentalCartForServer() : undefined;
+  const initialCart = CART_ENABLED && user ? await getRentalCartForServer() : undefined;
   return (
     <PublicAreaProvider initialArea={initialArea}>
       <CartProvider
+        enabled={CART_ENABLED}
         key={user?.id ?? "guest"}
         initialItems={initialCart ?? undefined}
         userId={user?.id ?? null}
       >
-      <div className="flex min-h-screen flex-col">
-        <PartnerHistoryRefresh />
-        <Header />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <Footer />
-      </div>
+        <PaymentHubProvider enabled={Boolean(user)}>
+          <div className="flex min-h-screen flex-col">
+            <PartnerHistoryRefresh />
+            <Header />
+            <main className="flex flex-1 flex-col">{children}</main>
+            <Footer />
+          </div>
+        </PaymentHubProvider>
       </CartProvider>
     </PublicAreaProvider>
   );

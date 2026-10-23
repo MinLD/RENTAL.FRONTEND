@@ -1,22 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Copy, LoaderCircle } from "lucide-react";
+import { Copy, CreditCard, LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import { QueryProvider } from "@/providers/query-provider";
 import { Button } from "@/components/ui/button";
-import { getInvoice, getInvoiceStatus } from "@/services/checkout-service";
-import { getRenterOrderPayment } from "@/services/renter-order-service";
-import type { Invoice, RenterOrderPayment } from "@/types/checkout";
+import { useOrderPayment } from "@/providers/order-payment-provider";
 import { formatEquipmentListingRate } from "@/utils/inventory";
-
-function normalized(value: string | null | undefined) {
-  return value?.toUpperCase().replaceAll("-", "_") ?? "";
-}
+import { normalizeOrderStatus } from "@/utils/order-payment";
 
 async function copy(value: string, label: string) {
   try {
@@ -27,120 +20,33 @@ async function copy(value: string, label: string) {
   }
 }
 
-export function OrderPaymentPanel(props: {
-  invoiceRef: string | null;
-  initialOrder: RenterOrderPayment;
-  initialInvoice: Invoice | null;
-  initialPaymentState: string;
-  paymentDeadline: string;
-  totalAmount: number;
-  currency: string;
-}) {
-  return (
-    <QueryProvider>
-      <OrderPaymentPanelContent {...props} />
-    </QueryProvider>
-  );
-}
-
-function OrderPaymentPanelContent({
-  invoiceRef,
-  initialOrder,
-  initialInvoice,
-  initialPaymentState,
-  paymentDeadline,
-  totalAmount,
-  currency,
-}: {
-  invoiceRef: string | null;
-  initialOrder: RenterOrderPayment;
-  initialInvoice: Invoice | null;
-  initialPaymentState: string;
-  paymentDeadline: string;
-  totalAmount: number;
-  currency: string;
-}) {
+export function OrderPaymentPanel() {
   const router = useRouter();
-  const [now, setNow] = useState(0);
-  const orderQuery = useQuery({
-    queryKey: ["order-payment-summary", initialOrder.orderId],
-    queryFn: () => getRenterOrderPayment(initialOrder.orderId),
-    enabled: !invoiceRef,
-    initialData: initialOrder,
-    refetchInterval: (query) => (query.state.data?.invoiceRef ? false : 3_000),
-    retry: 1,
-  });
-  const activeInvoiceRef = invoiceRef ?? orderQuery.data?.invoiceRef ?? null;
-  const invoiceQuery = useQuery({
-    queryKey: ["order-invoice", activeInvoiceRef],
-    queryFn: () => getInvoice(activeInvoiceRef!),
-    enabled: Boolean(activeInvoiceRef),
-    initialData:
-      initialInvoice?.invoiceRef === activeInvoiceRef
-        ? initialInvoice
-        : undefined,
-    retry: 1,
-    staleTime: Infinity,
-  });
-  const invoice = invoiceQuery.data;
-  const statusQuery = useQuery({
-    queryKey: ["order-invoice-status", activeInvoiceRef],
-    queryFn: () => getInvoiceStatus(activeInvoiceRef!),
-    enabled: Boolean(activeInvoiceRef),
-    refetchInterval: (query) =>
-      ["PAID", "EXPIRED", "CANCELLED", "LATE_PAYMENT_REFUND"].includes(
-        normalized(query.state.data?.status),
-      )
-        ? false
-        : 5_000,
-    retry: 1,
-  });
-  const paymentStatus = normalized(
-    statusQuery.data?.status ??
-      invoice?.status ??
-      orderQuery.data?.paymentState ??
-      initialPaymentState,
-  );
-  const isPaid = paymentStatus === "PAID";
-  const isExpired = ["EXPIRED", "CANCELLED", "LATE_PAYMENT_REFUND"].includes(
-    paymentStatus,
-  );
-  const deadline =
-    invoice?.paymentDeadline ??
-    orderQuery.data?.paymentDeadline ??
-    paymentDeadline;
-  const deadlineMs = new Date(deadline).getTime();
-  const remainingMs =
-    now && Number.isFinite(deadlineMs) ? Math.max(0, deadlineMs - now) : null;
-  const remainingSeconds =
-    remainingMs === null ? null : Math.floor(remainingMs / 1_000);
-  const countdown =
-    remainingSeconds === null
-      ? "--:--"
-      : `${String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
-
+  const {
+    order, invoice, isPaid, isExpired, remainingSeconds,
+    orderQuery, invoiceQuery, statusQuery, amount, currency,
+  } = useOrderPayment();
+  const startedAwaitingPayment = useRef(normalizeOrderStatus(order.status) === "PENDING_PAYMENT");
   useEffect(() => {
-    const initialTick = window.setTimeout(() => setNow(Date.now()), 0);
-    const interval = window.setInterval(() => setNow(Date.now()), 1_000);
-    return () => {
-      window.clearTimeout(initialTick);
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isPaid) router.refresh();
-  }, [isPaid, router]);
-
+    if (isPaid && startedAwaitingPayment.current) {
+      router.replace(`/orders/${encodeURIComponent(order.orderId)}/success`);
+    }
+  }, [isPaid, order.orderId, router]);
+  if (normalizeOrderStatus(order.status) !== "PENDING_PAYMENT" || isPaid) return null;
+  const countdown = remainingSeconds === null
+    ? "--:--"
+    : `${String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
   const qrUrl = invoice?.qrUrl;
   const bank = invoice?.bank;
   const account = invoice?.account;
   const transferContent = invoice?.transferContent;
-  const amount = invoice?.totalAmount ?? totalAmount;
-  const invoiceCurrency = invoice?.currency ?? currency;
 
   return (
-    <div className="mt-5 pt-2" id="payment-qr">
+    <section className="mb-5 rounded-lg border border-border bg-background p-5 shadow-sm sm:p-6" id="payment-qr">
+      <div className="mb-5 flex items-center gap-2">
+        <CreditCard aria-hidden="true" className="size-5 text-primary" />
+        <h2 className="text-lg font-semibold">Thanh toán đơn thuê</h2>
+      </div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">Quét mã QR để thanh toán</h3>
@@ -161,17 +67,7 @@ function OrderPaymentPanelContent({
         )}
       </div>
 
-      {isPaid ? (
-        <div
-          className="flex items-center gap-3 border-t border-border py-4 text-sm"
-          role="status"
-        >
-          <CheckCircle2 aria-hidden="true" className="size-5 text-primary" />
-          <span className="font-medium">
-            Đã nhận được thanh toán cho hóa đơn này.
-          </span>
-        </div>
-      ) : isExpired || remainingSeconds === 0 ? (
+      {isExpired || remainingSeconds === 0 ? (
         <p
           className="border-t border-border py-4 text-sm text-muted-foreground"
           role="status"
@@ -275,7 +171,7 @@ function OrderPaymentPanelContent({
               <div className="flex justify-between gap-3 pt-3 font-semibold">
                 <dt>Số tiền</dt>
                 <dd className="text-primary">
-                  {formatEquipmentListingRate(amount, invoiceCurrency)}
+                  {formatEquipmentListingRate(amount, currency)}
                 </dd>
               </div>
             </dl>
@@ -307,6 +203,6 @@ function OrderPaymentPanelContent({
             : "Đang chờ hệ thống tạo hóa đơn..."}
         </div>
       )}
-    </div>
+    </section>
   );
 }
