@@ -23,22 +23,21 @@ export function Footer() {
             className="min-w-0 md:col-span-2 lg:col-span-1"
           >
             <h2 id="footer-brand-heading">
-              <HomeLink
-                className="inline-block text-2xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-              >
-                <BrandLogo caption={false} className="text-navy-foreground [&>span:first-child]:text-navy-foreground" />
+              <HomeLink className="inline-block text-2xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                <BrandLogo
+                  caption={false}
+                  className="text-navy-foreground [&>span:first-child]:text-navy-foreground"
+                />
               </HomeLink>
             </h2>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-navy-foreground/50">
-              Nền tảng của DP UNITY
+              SÀN THIẾT BỊ CÔNG TRƯỜNG 
             </p>
             <p className="mt-4 max-w-md text-[13px] leading-6 text-navy-foreground/70">
               Sàn cho thuê thiết bị kết nối người thuê và nhà cung cấp, giúp bạn
               tìm và lựa chọn thiết bị phù hợp với nhu cầu.
             </p>
-            <div className="mt-5 space-y-1.5 text-[11px] leading-5 text-navy-foreground/55">
-              <p className="font-medium text-navy-foreground/80">DPU Rental thuộc DP UNITY</p>
-            </div>
+            <div className="mt-5 space-y-1.5 text-[11px] leading-5 text-navy-foreground/55"></div>
           </section>
 
           <nav aria-labelledby="footer-support-heading" className="min-w-0">
