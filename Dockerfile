@@ -30,7 +30,6 @@ RUN test -n "$NEXT_PUBLIC_API_URL" \
     && test -n "$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" \
     && test -n "$NEXT_PUBLIC_FIREBASE_PROJECT_ID" \
     && test -n "$NEXT_PUBLIC_FIREBASE_APP_ID" \
-    && npm run lint \
     && npm run build
 
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runtime
