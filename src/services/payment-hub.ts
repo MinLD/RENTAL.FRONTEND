@@ -112,8 +112,18 @@ export function createPaymentHubConnection(hubUrl: string, options: PaymentHubCo
         // Cleanup intentionally stops the old connection. Its pending start may
         // reject afterward; SignalR logs that rejection before our catch runs.
         if (options.isDisposed?.() || level < LogLevel.Warning || level === LogLevel.None) return;
-        const formatted = `[${new Date().toISOString()}] [PaymentHub] ${LogLevel[level]}: ${message}`;
-        if (level === LogLevel.Warning) console.warn(formatted);
+        // SignalR reports transport failures at Error level even when recovery
+        // is handled by reconnect/REST polling. Keep diagnostics without making
+        // Next.js treat a network interruption as an application crash.
+        const isConnectionFailure = level === LogLevel.Error && (
+          message.startsWith("Connection disconnected with error ") ||
+          message.startsWith("Failed to start the connection: ") ||
+          message.startsWith("Failed to start the transport '") ||
+          message.startsWith("Failed to complete negotiation with the server: ")
+        );
+        const outputLevel = isConnectionFailure ? LogLevel.Warning : level;
+        const formatted = `[${new Date().toISOString()}] [PaymentHub] ${LogLevel[outputLevel]}: ${message}`;
+        if (level === LogLevel.Warning || isConnectionFailure) console.warn(formatted);
         else console.error(formatted);
       },
     })
