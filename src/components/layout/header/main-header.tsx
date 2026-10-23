@@ -5,6 +5,7 @@ import { HomeLink } from "@/components/layout/home-link";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import { getCurrentUser } from "@/services/session-service";
 import { CartTrigger } from "@/components/cart/cart-trigger";
+import { CART_ENABLED } from "@/config/features";
 import { AuthLinks } from "./auth-links";
 import { EquipmentSearch } from "./equipment-search";
 import { MobileMenu } from "./mobile-menu";
@@ -27,13 +28,13 @@ export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
         <div className="order-last flex w-full min-w-0 items-center gap-2 lg:order-none lg:mx-auto lg:max-w-2xl lg:flex-1">
           {catalogMenu}
 
-          <EquipmentSearch />
+          <EquipmentSearch key={user?.id ?? "guest"} userId={user?.id ?? null} />
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 lg:ml-0">
           <NotificationDropdown isAuthenticated={Boolean(user)} />
 
-          <CartTrigger />
+          {CART_ENABLED && <CartTrigger />}
 
           <div className="hidden shrink-0 justify-end sm:flex">
             {user ? <UserMenu user={user} /> : <AuthLinks />}

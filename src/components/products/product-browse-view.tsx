@@ -10,6 +10,7 @@ import { ProductPagination } from "./product-pagination";
 import { ProductResults } from "./product-results";
 import { ProductDiscoveryFilters } from "./product-discovery-filters";
 import { ProductResultsToolbar } from "./product-results-toolbar";
+import { ProductRecommendations } from "./product-recommendations";
 import { ProductBrowseProvider } from "@/providers/product-browse-provider";
 
 export function ProductBrowseView({
@@ -101,6 +102,7 @@ export function ProductBrowseView({
                 equipmentTypes={equipmentTypes}
                 brands={brands}
               />
+              {result && result.items.length === 0 ? <ProductRecommendations /> : null}
             </ProductResults>
             {result && result.items.length > 0 ? (
               <ProductPagination

@@ -50,6 +50,8 @@ export async function fetchPublicEquipmentListings(
   signal?: AbortSignal,
 ): Promise<PublicEquipmentListingListResponse> {
   const request = parsePublicEquipmentListingListParams(params);
+  // This public endpoint accepts optional authentication for recommendations.
+  // The BFF forwards the HttpOnly session cookie when present; guests need no token.
   const response = await authApiClient(
     API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
     { signal },

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LoginRequiredPopover } from "@/components/auth/login-required-popover";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CART_ENABLED } from "@/config/features";
 import { useEquipmentAvailability } from "@/hooks/use-equipment-availability";
 import type { EquipmentListingRentalRateResponse } from "@/types/inventory";
 import { formatEquipmentListingRate } from "@/utils/inventory";
@@ -28,6 +31,7 @@ import { useCart } from "@/providers/cart-provider";
 import { addDays, maxStartDate, validateCartItem } from "@/utils/cart";
 
 export function ProductRentalPanel({
+  isAuthenticated,
   listingId,
   name,
   rentalRate,
@@ -36,6 +40,7 @@ export function ProductRentalPanel({
   today,
   thumbnailUrl,
 }: {
+  isAuthenticated: boolean;
   listingId: string;
   name: string;
   rentalRate: EquipmentListingRentalRateResponse | null;
@@ -50,6 +55,7 @@ export function ProductRentalPanel({
   const [quantityInput, setQuantityInput] = useState("1");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const cart = useCart();
+  const router = useRouter();
   const quantity = Number(quantityInput);
   const maxQuantity = Number.isFinite(totalQuantity)
     ? Math.max(0, Math.floor(totalQuantity))
@@ -249,14 +255,33 @@ export function ProductRentalPanel({
           </p>
         ) : null}
       </div>
-      <Button
-        className="mt-5 w-full"
-        disabled={!estimate || !availabilityCheck.availability?.isAvailable}
-        onClick={() => setIsPreviewOpen(true)}
-      >
-        Xem và thêm vào giỏ <ArrowRight aria-hidden="true" className="size-4" />
-      </Button>
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+      <div className={`mt-5 grid gap-2 ${CART_ENABLED ? "sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : ""}`}>
+        {CART_ENABLED && <Button
+          disabled={!estimate || !availabilityCheck.availability?.isAvailable}
+          onClick={() => setIsPreviewOpen(true)}
+          variant="secondary"
+        >
+          Thêm vào giỏ
+        </Button>}
+        <LoginRequiredPopover isAuthenticated={isAuthenticated} message="Đăng nhập để tiếp tục thuê thiết bị">
+          <Button
+            disabled={!estimate || !availabilityCheck.availability?.isAvailable || depositAmount == null}
+            onClick={() => {
+              const search = new URLSearchParams({
+                listingId,
+                quantity: String(quantity),
+                from,
+                to,
+              });
+              router.push(`/checkout?${search}`);
+            }}
+            type="button"
+          >
+            Thuê ngay <ArrowRight aria-hidden="true" className="size-4" />
+          </Button>
+        </LoginRequiredPopover>
+      </div>
+      {CART_ENABLED && <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Thông tin thuê dự kiến</DialogTitle>
@@ -318,7 +343,7 @@ export function ProductRentalPanel({
             }}>Thêm vào giỏ hàng</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </aside>
   );
 }

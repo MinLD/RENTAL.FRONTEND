@@ -1,10 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PRODUCT_FEED_GRID_CLASS_NAME } from "@/config/product-images";
 
-export function HomeLatestProductsSkeleton() {
+export function HomeProductsFeedSkeleton() {
   return (
-    <div aria-label="Đang tải thiết bị mới nhất" role="status">
-      <span className="sr-only">Đang tải thiết bị mới nhất...</span>
+    <div aria-label="Đang tải thiết bị" role="status">
+      <span className="sr-only">Đang tải thiết bị...</span>
       <div aria-hidden="true" className={PRODUCT_FEED_GRID_CLASS_NAME}>
         {Array.from({ length: 10 }, (_, index) => (
           <div className="overflow-hidden rounded border border-border" key={index}>

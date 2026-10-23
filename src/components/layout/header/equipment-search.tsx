@@ -18,12 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EQUIPMENT_SEARCH_MIN_LENGTH } from "@/config/equipment-search";
 import { PRODUCT_BROWSE_PATH, productBrowseHref } from "@/config/product-browse";
 import { useEquipmentSearch } from "@/hooks/use-equipment-search";
+import { useEquipmentRecommendations } from "@/hooks/use-equipment-recommendations";
 import { getEquipmentListingName } from "@/utils/inventory";
 import { usePublicArea } from "@/providers/public-area-provider";
 import { publicAreaParams } from "@/lib/locations/public-area";
 import { PublicAreaSelector } from "./public-area-selector";
 
-export function EquipmentSearch() {
+export function EquipmentSearch({ userId }: { userId: string | null }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,13 +37,22 @@ export function EquipmentSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const id = useId();
   const listId = `${id}-suggestions`;
   const search = useEquipmentSearch(keyword, isOpen);
   const trimmedKeyword = keyword.trim();
-  const showPanel = isOpen && Boolean(trimmedKeyword);
-  const activeSuggestion = search.suggestions[activeIndex];
+  const isRecommended = !trimmedKeyword;
+  const recommendations = useEquipmentRecommendations(userId, isOpen && isRecommended);
+  const suggestions = isRecommended
+    ? recommendations.data?.items ?? []
+    : search.suggestions;
+  const isLoading = isRecommended ? recommendations.isPending : search.isLoadingSuggestions;
+  const isError = isRecommended ? recommendations.isError : search.isError;
+  const showPanel = isOpen;
+  const activeSuggestion = suggestions[activeIndex];
+  const panelTitle = isRecommended ? "Gợi ý cho bạn" : "Gợi ý thiết bị";
 
   function close() {
     setIsOpen(false);
@@ -51,7 +61,9 @@ export function EquipmentSearch() {
 
   function clearKeyword() {
     setDraft({ routeKey, value: "" });
-    close();
+    setActiveIndex(-1);
+    setIsOpen(true);
+    inputRef.current?.focus();
     if (pathname === PRODUCT_BROWSE_PATH && routeKeyword) {
       router.push(productBrowseHref(areaParams));
     }
@@ -96,10 +108,9 @@ export function EquipmentSearch() {
       event.preventDefault();
       close();
     } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (!trimmedKeyword) return;
       event.preventDefault();
       setIsOpen(true);
-      const count = search.suggestions.length;
+      const count = suggestions.length;
       if (!count) return;
       setActiveIndex((current) =>
         event.key === "ArrowDown"
@@ -165,12 +176,14 @@ export function EquipmentSearch() {
               }
               setDraft({ routeKey, value: nextKeyword });
               setActiveIndex(-1);
-              setIsOpen(Boolean(nextKeyword.trim()));
+              setIsOpen(true);
             }}
-            onFocus={() => setIsOpen(Boolean(trimmedKeyword))}
+            onClick={() => setIsOpen(true)}
+            onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}
             placeholder="Bạn cần thuê thiết bị gì?"
             role="combobox"
+            ref={inputRef}
             type="text"
             value={keyword}
           />
@@ -190,18 +203,18 @@ export function EquipmentSearch() {
       {showPanel ? (
         <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-lg border border-border bg-background shadow-lg">
           <div className="px-3.5 py-2.5 text-xs font-semibold">
-            Gợi ý thiết bị
+            {panelTitle}
           </div>
-          {!search.canSearch ? (
+          {!isRecommended && !search.canSearch ? (
             <p
               className="px-3.5 pb-3 text-xs text-muted-foreground"
               role="status"
             >
               Nhập ít nhất {EQUIPMENT_SEARCH_MIN_LENGTH} ký tự để tìm thiết bị.
             </p>
-          ) : search.isLoadingSuggestions ? (
+          ) : isLoading ? (
             <div
-              aria-label="Đang tìm thiết bị"
+              aria-label={isRecommended ? "Đang tải gợi ý cho bạn" : "Đang tìm thiết bị"}
               className="space-y-3 px-3.5 pb-3"
               role="status"
             >
@@ -215,34 +228,34 @@ export function EquipmentSearch() {
                 </div>
               ))}
             </div>
-          ) : search.isError ? (
+          ) : isError ? (
             <div className="space-y-2 px-3.5 pb-3 text-xs" role="alert">
               <p className="text-muted-foreground">
                 Không thể tải gợi ý thiết bị.
               </p>
               <button
                 className="cursor-pointer font-semibold text-primary"
-                onClick={() => void search.refetch()}
+                onClick={() => void (isRecommended ? recommendations.refetch() : search.refetch())}
                 type="button"
               >
                 Thử lại
               </button>
             </div>
-          ) : !search.suggestions.length ? (
+          ) : !suggestions.length ? (
             <p
               className="px-3.5 pb-3 text-xs text-muted-foreground"
               role="status"
             >
-              Không tìm thấy thiết bị phù hợp.
+              {isRecommended ? "Chưa có gợi ý dành cho bạn." : "Không tìm thấy thiết bị phù hợp."}
             </p>
           ) : null}
           <ul
-            aria-label="Gợi ý thiết bị"
-            className="max-h-[min(22rem,calc(100dvh-14rem))] overflow-y-auto"
+            aria-label={panelTitle}
+            className={`max-h-[min(22rem,calc(100dvh-14rem))] overflow-y-auto ${isRecommended ? "grid sm:grid-cols-2" : ""}`}
             id={listId}
             role="listbox"
           >
-            {search.suggestions.map((product, index) => {
+            {suggestions.map((product, index) => {
               const name = getEquipmentListingName(product);
               const src = getProductThumbnailSrc(product);
               return (
@@ -285,7 +298,7 @@ export function EquipmentSearch() {
               );
             })}
           </ul>
-          {search.canSearch ? (
+          {!isRecommended && search.canSearch ? (
             <Link
               className="block truncate border-t border-border px-3.5 py-3 text-xs font-semibold text-primary hover:bg-primary/5"
               href={productBrowseHref({ ...areaParams, q: trimmedKeyword })}

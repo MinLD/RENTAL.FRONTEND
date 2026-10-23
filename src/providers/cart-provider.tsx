@@ -121,15 +121,17 @@ async function mergeGuestCart(userId: string) {
 
 export function CartProvider({
   children,
+  enabled = true,
   userId,
   initialItems,
 }: {
   children: ReactNode;
+  enabled?: boolean;
   userId: string | null;
   initialItems?: CartItem[];
 }) {
   const [items, setItems] = useState<CartItem[]>(initialItems ?? []);
-  const [loading, setLoading] = useState(initialItems === undefined);
+  const [loading, setLoading] = useState(enabled && initialItems === undefined);
   const [busy, setBusy] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
   const operation = useRef(false);
@@ -137,6 +139,7 @@ export function CartProvider({
   const hasLoaded = useRef(initialItems !== undefined);
 
   const refresh = useCallback(async () => {
+    if (!enabled) return null;
     const id = ++refreshId.current;
     try {
       if (!hasLoaded.current) setLoading(true);
@@ -175,9 +178,10 @@ export function CartProvider({
         setLoading(false);
       }
     }
-  }, [userId]);
+  }, [userId, enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     const version = refreshId;
     queueMicrotask(() => {
@@ -195,7 +199,7 @@ export function CartProvider({
       version.current++;
       window.removeEventListener("storage", onStorage);
     };
-  }, [userId, refresh]);
+  }, [userId, refresh, enabled]);
 
   const run = useCallback(async (action: () => Promise<void>) => {
     if (operation.current) return false;

@@ -14,10 +14,16 @@ export const HOME_PRODUCTS_STALE_TIME = 5 * 60 * 1000;
 export const HOME_PRODUCT_IMAGE_SIZES =
   "(min-width: 1280px) 292px, (min-width: 1024px) calc(25vw - 28px), (min-width: 640px) calc(33.33vw - 24px), calc(80vw - 28px)";
 
-export const HOME_LATEST_PRODUCTS_PARAMS = {
+export const HOME_PRODUCTS_FEED_PARAMS = {
   pageSize: 20,
-  sort: "created_desc",
 } as const;
+
+export const HOME_PRODUCTS_TABS = [
+  { value: "created_desc", label: "Mới nhất" },
+  { value: "recommended", label: "Dành cho bạn" },
+] as const;
+
+export type HomeProductsSort = (typeof HOME_PRODUCTS_TABS)[number]["value"];
 export type HomeHeroAction = {
   href: string;
   label: string;

@@ -8,27 +8,34 @@ import { ProductCard } from "@/components/products/product-card";
 import { Button } from "@/components/ui/button";
 import { PRODUCT_FEED_GRID_CLASS_NAME, PRODUCT_FEED_IMAGE_SIZES } from "@/config/product-images";
 import {
-  HOME_LATEST_PRODUCTS_PARAMS,
+  HOME_PRODUCTS_FEED_PARAMS,
   HOME_PRODUCTS_STALE_TIME,
+  type HomeProductsSort,
 } from "@/config/homepage";
 import { fetchPublicEquipmentListings } from "@/services/public-inventory-service";
 import type { PublicEquipmentListingListResponse } from "@/types/inventory";
-import { HomeLatestProductsSkeleton } from "./home-products-skeleton";
+import { HomeProductsFeedSkeleton } from "./home-products-skeleton";
 
-export function HomeLatestProductsFeed({
+export function HomeProductsFeed({
+  sort,
+  userId,
   initialLoadFailed = false,
   initialPage,
 }: {
+  sort: HomeProductsSort;
+  userId: string | null;
   initialLoadFailed?: boolean;
   initialPage?: PublicEquipmentListingListResponse;
 }) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const params = { ...HOME_PRODUCTS_FEED_PARAMS, sort };
+  const isRecommended = sort === "recommended";
   const query = useInfiniteQuery({
-    queryKey: ["home", "latest-products", HOME_LATEST_PRODUCTS_PARAMS],
+    queryKey: ["home", "products", userId, params],
     queryFn: ({ pageParam, signal }) =>
       fetchPublicEquipmentListings(
         {
-          ...HOME_LATEST_PRODUCTS_PARAMS,
+          ...params,
           page: pageParam,
         },
         signal,
@@ -75,7 +82,7 @@ export function HomeLatestProductsFeed({
     return (
       <ErrorState
         className="min-h-64"
-        title="Không thể tải thiết bị mới nhất"
+        title={isRecommended ? "Không thể tải thiết bị dành cho bạn" : "Không thể tải thiết bị mới nhất"}
         description="Vui lòng thử tải lại danh sách thiết bị."
         action={
           <Button disabled={query.isFetching} onClick={() => void query.refetch()} size="sm">
@@ -86,7 +93,7 @@ export function HomeLatestProductsFeed({
     );
   }
 
-  if (query.isPending) return <HomeLatestProductsSkeleton />;
+  if (query.isPending) return <HomeProductsFeedSkeleton />;
 
   const products = Array.from(
     new Map(
@@ -100,8 +107,8 @@ export function HomeLatestProductsFeed({
     return (
       <EmptyState
         className="min-h-64"
-        title="Chưa có thiết bị cho thuê"
-        description="Các thiết bị mới sẽ được hiển thị tại đây."
+        title={isRecommended ? "Chưa có gợi ý dành cho bạn" : "Chưa có thiết bị cho thuê"}
+        description={isRecommended ? "Các thiết bị phù hợp sẽ được hiển thị tại đây." : "Các thiết bị mới sẽ được hiển thị tại đây."}
       />
     );
   }
@@ -109,7 +116,7 @@ export function HomeLatestProductsFeed({
   return (
     <>
       <ul
-        aria-label="Thiết bị mới nhất"
+        aria-label={isRecommended ? "Thiết bị dành cho bạn" : "Thiết bị mới nhất"}
         className={PRODUCT_FEED_GRID_CLASS_NAME}
       >
         {products.map((product) => (
@@ -128,7 +135,7 @@ export function HomeLatestProductsFeed({
         ref={loadMoreRef}
       >
         {query.isFetchingNextPage ? (
-          <HomeLatestProductsSkeleton />
+          <HomeProductsFeedSkeleton />
         ) : isFetchNextPageError ? (
           <div
             className="flex flex-col items-center gap-3 text-center"

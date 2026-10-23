@@ -113,6 +113,7 @@ export const PUBLIC_EQUIPMENT_LISTING_SORTS = [
   "model_desc",
   "model_asc",
   "relevance",
+  "recommended",
 ] as const;
 
 export type PublicEquipmentListingSort =
