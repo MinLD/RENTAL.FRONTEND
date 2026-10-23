@@ -28,7 +28,7 @@ export async function MainHeader({ catalogMenu }: { catalogMenu: ReactNode }) {
         <div className="order-last flex w-full min-w-0 items-center gap-2 lg:order-none lg:mx-auto lg:max-w-2xl lg:flex-1">
           {catalogMenu}
 
-          <EquipmentSearch />
+          <EquipmentSearch key={user?.id ?? "guest"} userId={user?.id ?? null} />
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 lg:ml-0">
