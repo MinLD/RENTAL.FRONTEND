@@ -24,18 +24,6 @@ require_file() {
   [ -f "$1" ] || fail "không tìm thấy file bắt buộc: $1"
 }
 
-image_repository() {
-  local image="$1"
-
-  if [[ "$image" == *@* ]]; then
-    printf '%s\n' "${image%%@*}"
-  elif [[ "$image" == *:* ]]; then
-    printf '%s\n' "${image%:*}"
-  else
-    printf '%s\n' "$image"
-  fi
-}
-
 read_release_value() {
   local variable_name="$1"
   local line
@@ -52,35 +40,6 @@ read_environment_value() {
   line="$(grep -E "^${variable_name}=" "$ENVIRONMENT_FILE" | tail -n 1)" || \
     fail ".env chưa có ${variable_name}."
   printf '%s\n' "${line#*=}"
-}
-
-update_release_image() {
-  local frontend_image="$1"
-  local temporary_file
-
-  temporary_file="$(mktemp "$DEPLOY_DIRECTORY/.release.env.XXXXXX")" || \
-    fail 'không thể tạo file release tạm thời.'
-  trap 'rm -f "$temporary_file"' RETURN
-
-  awk \
-    -v frontend_image="$frontend_image" \
-    '
-      /^FRONTEND_IMAGE=/ {
-        print "FRONTEND_IMAGE=" frontend_image
-        frontend_found = 1
-        next
-      }
-      { print }
-      END {
-        if (!frontend_found) {
-          exit 42
-        }
-      }
-    ' "$RELEASE_FILE" > "$temporary_file" || fail 'release.env thiếu image Frontend.'
-
-  chmod 0600 "$temporary_file"
-  mv "$temporary_file" "$RELEASE_FILE"
-  trap - RETURN
 }
 
 wait_for_frontend_health() {
@@ -110,41 +69,38 @@ wait_for_frontend_health() {
 smoke_test_public_frontend() {
   local domain="$1"
 
-  curl --fail --silent --show-error --max-time "$HTTP_TIMEOUT_SECONDS" \
+  public_curl --fail --silent --show-error --max-time "$HTTP_TIMEOUT_SECONDS" \
     "https://${domain}/" >/dev/null || \
     fail 'Frontend công khai qua Caddy/Cloudflare thất bại; không tự rollback image.'
 }
 
+# shellcheck source=scripts/deploy-common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/deploy-common.sh"
+
 [ "$#" -le 1 ] || usage
 release_sha="${1:-${GITHUB_SHA:-}}"
 [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]] || fail 'release SHA phải là commit SHA gồm đúng 40 ký tự hex thường.'
-
 require_file "$ENVIRONMENT_FILE"
 require_file "$RELEASE_FILE"
 require_file "$COMPOSE_FILE"
+begin_deployment frontend
 
-[ -n "${GHCR_USERNAME:-}" ] || fail 'thiếu GitHub username để pull image private.'
-[ -n "${GHCR_TOKEN:-}" ] || fail 'thiếu GitHub token để pull image private.'
-docker_config_dir="$(mktemp -d)" || fail 'không thể tạo Docker config tạm thời.'
-trap 'rm -rf "$docker_config_dir"' EXIT
-export DOCKER_CONFIG="$docker_config_dir"
-docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin <<< "$GHCR_TOKEN" >/dev/null
-unset GHCR_TOKEN
-
-readonly -a compose_command=(docker compose --project-directory "$DEPLOY_DIRECTORY" --file "$COMPOSE_FILE" --env-file "$ENVIRONMENT_FILE" --env-file "$RELEASE_FILE")
-
-current_frontend_image="$(read_release_value FRONTEND_IMAGE)"
-frontend_image="$(image_repository "$current_frontend_image"):$release_sha"
 frontend_domain="$(read_environment_value DEV_APP_DOMAIN)"
 
 printf 'Đang phát hành Frontend revision %s...\n' "$release_sha"
-update_release_image "$frontend_image"
-
-"${compose_command[@]}" config --quiet
+prepare_release FRONTEND_IMAGE=dprental-frontend
 "${compose_command[@]}" pull frontend
-"${compose_command[@]}" up -d --no-deps --force-recreate frontend
+require_dependencies gateway
+deployment_phase runtime
+"${compose_command[@]}" up -d --no-deps --force-recreate --pull never --no-build frontend
 
+deployment_phase health
 wait_for_frontend_health
+"${compose_command[@]}" exec -T frontend node -e \
+  'fetch("http://127.0.0.1:3000/").then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))' || \
+  fail 'Frontend internal HTTP failed; inspect application logs.'
+deployment_phase public-smoke
 smoke_test_public_frontend "$frontend_domain"
+commit_release
 
 printf 'Frontend revision %s đã healthy; smoke test công khai đã pass.\n' "$release_sha"

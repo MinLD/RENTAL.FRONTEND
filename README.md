@@ -78,60 +78,16 @@ docker run --rm -p 3000:3000 \
   dprental-frontend:local
 ```
 
-Workflow `.github/workflows/frontend-dev.yml` chỉ chạy khi có push vào
-`develop-ci-cd`; nó không chạy cho pull request và không kiểm tra branch nền.
-Job publish build và đẩy Docker image lên GHCR một lần bằng full Git SHA, sau
-đó job deploy chạy trên VPS. Để kiểm tra lint thủ công trên máy phát triển, chạy
-`npm run lint`.
+Workflow `.github/workflows/frontend-dev.yml` chạy khi push `develop-ci-cd`.
+Build/Buildx và publish GHCR chạy trên `ubuntu-24.04`, giữ nguyên Dockerfile,
+build arguments và image `ghcr.io/huutawn/dprental-frontend:<full-git-sha>`.
+Deploy chạy trên runner `[self-hosted, linux, x64, dprental-frontend-deploy]`
+của Ubuntu VM. Hướng dẫn quyền, approval và recovery ở [DEPLOYMENT.md](DEPLOYMENT.md).
 
-Mỗi push sẽ publish image GHCR bất biến bằng full Git SHA:
+Giữ bốn environment secrets `dev`: `NEXT_PUBLIC_FIREBASE_API_KEY`,
+`NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`,
+`NEXT_PUBLIC_FIREBASE_APP_ID`; giữ các build variables SignalR/Payment hiện có.
+Repository variable `DEV_DEPLOY_ENABLED=true` bật deploy, `false` ngừng nhận deploy mới.
+Các SSH/VPS secrets không còn được workflow dùng; chưa xóa secret trên GitHub.
 
-```text
-ghcr.io/huutawn/dprental-frontend:<git-sha>
-```
-
-Trước khi push, tạo bốn **environment secrets** trong GitHub Environment `dev`
-với tên `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`,
-`NEXT_PUBLIC_FIREBASE_PROJECT_ID` và `NEXT_PUBLIC_FIREBASE_APP_ID`. Cấu hình
-API browser dùng `NEXT_PUBLIC_API_URL` định nghĩa trong workflow
-(`https://dev-api.lazyops.cloud`). Kiểm tra các biến bắt buộc này được thực hiện
-trong Dockerfile lúc build image; nếu thiếu giá trị, quá trình build sẽ dừng ngay
-lập tức. Các biến trong Compose trên VPS được truyền lúc container chạy nên không
-thay thế được giá trị cần thiết lúc build.
-
-Job publish chỉ có quyền ghi package; job deploy có quyền đọc package và truy
-cập SSH secrets của GitHub Environment
-`dev`: `DEV_VPS_SSH_PRIVATE_KEY`,
-`DEV_VPS_KNOWN_HOSTS`, `DEV_VPS_HOST`, `DEV_VPS_USER`, và tùy chọn
-`DEV_VPS_PORT`.
-
-Workflow nạp deploy key vào `ssh-agent` qua stdin và kiểm tra host key đã lưu
-trong `DEV_VPS_KNOWN_HOSTS`. Nó truyền `GITHUB_TOKEN` cùng deploy script qua
-stdin của kết nối SSH, không đặt token trong câu lệnh SSH. Trên VPS, script
-đăng nhập GHCR bằng Docker config tạm rồi thực thi
-[deploy-frontend.sh](scripts/deploy-frontend.sh) từ commit đang phát hành.
-Docker credential tạm bị xóa ngay khi script kết thúc (cả khi thành công và
-thất bại); user SSH của workflow cần quyền đọc `.env` và ghi `release.env`.
-
-Script cập nhật **chỉ duy nhất biến `FRONTEND_IMAGE`** trong
-`/opt/dprental/dev/release.env` bằng image tag full Git SHA (thay thế trực tiếp
-image đang dùng digest trong lần deploy đầu tiên), bảo toàn nguyên vẹn mọi image
-khác trong `release.env`. Sau đó script chạy `docker compose pull frontend` rồi
-`docker compose up -d --no-deps --force-recreate frontend`, chờ container
-Frontend đạt trạng thái healthy theo giới hạn thiết lập
-(`FRONTEND_DEPLOY_HEALTH_ATTEMPTS=18`,
-`FRONTEND_DEPLOY_HEALTH_INTERVAL_SECONDS=5`), và thực hiện một cuộc gọi kiểm tra
-(smoke test) đến `https://${DEV_APP_DOMAIN}/` với timeout
-(`FRONTEND_DEPLOY_HTTP_TIMEOUT_SECONDS=15`).
-
-Hành vi khi có lỗi: nếu pull image, khởi động container, health check hoặc smoke
-test thất bại, deploy script sẽ thoát với mã lỗi khác 0 và job deploy thất bại.
-Hệ thống **không tự động rollback** về image trước đó; `release.env` giữ nguyên
-tag SHA mới để phục vụ điều tra và xử lý sự cố.
-
-Nếu branch rules đang bắt buộc check `Validate frontend`, cần gỡ bỏ required
-check này khi chuyển workflow vì workflow mới không còn job này. Nếu chỉ muốn
-triển khai sau khi merge PR, có thể tiếp tục yêu cầu PR và chặn push trực tiếp
-cho nhánh `develop-ci-cd`.
-
-Kiểm tra script deploy tại chỗ bằng `bash tests/deploy-frontend.sh`.
+Kiểm tra deployment: `python3 -m unittest discover -s tests -p 'test_deploy*.py'`.
