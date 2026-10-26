@@ -34,6 +34,19 @@ test("renterBankAccountSchema trims whitespace", () => {
   }
 });
 
+test("renterBankAccountSchema transforms bankCode and accountHolderName to uppercase", () => {
+  const result = renterBankAccountSchema.safeParse({
+    bankCode: "vcb",
+    accountNumber: "1234567890",
+    accountHolderName: "nguyen van a",
+  });
+  assert.equal(result.success, true);
+  if (result.success) {
+    assert.equal(result.data.bankCode, "VCB");
+    assert.equal(result.data.accountHolderName, "NGUYEN VAN A");
+  }
+});
+
 test("renterBankAccountSchema rejects empty or too long bankCode", () => {
   const empty = renterBankAccountSchema.safeParse({
     bankCode: "   ",

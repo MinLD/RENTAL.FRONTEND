@@ -5,7 +5,8 @@ export const renterBankAccountSchema = z.object({
     .string()
     .trim()
     .min(1, "Vui lòng nhập mã ngân hàng.")
-    .max(50, "Mã ngân hàng tối đa 50 ký tự."),
+    .max(50, "Mã ngân hàng tối đa 50 ký tự.")
+    .transform((val) => val.toUpperCase()),
   accountNumber: z
     .string()
     .trim()
@@ -14,7 +15,8 @@ export const renterBankAccountSchema = z.object({
     .string()
     .trim()
     .min(2, "Tên chủ tài khoản cần ít nhất 2 ký tự.")
-    .max(100, "Tên chủ tài khoản tối đa 100 ký tự."),
+    .max(100, "Tên chủ tài khoản tối đa 100 ký tự.")
+    .transform((val) => val.toUpperCase()),
 });
 
 export type RenterBankAccountFormData = z.infer<typeof renterBankAccountSchema>;

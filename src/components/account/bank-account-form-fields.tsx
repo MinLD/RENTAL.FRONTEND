@@ -41,15 +41,15 @@ export function BankAccountFormFields({
     <>
       <TextField
         autoComplete="off"
+        className="uppercase"
         disabled={disabled}
         error={errors.bankCode}
         id={`${idPrefix}-bank-code`}
         label="Mã ngân hàng"
         leftIcon={<Building2 size={16} />}
         maxLength={50}
-        onChange={(event) =>
-          onChange("bankCode", event.target.value.toUpperCase())
-        }
+        onBlur={() => onChange("bankCode", draft.bankCode.trim().toUpperCase())}
+        onChange={(event) => onChange("bankCode", event.target.value)}
         placeholder="Ví dụ: VCB, MB, TCB..."
         required
         value={draft.bankCode}
@@ -72,15 +72,20 @@ export function BankAccountFormFields({
       />
       <TextField
         autoComplete="name"
+        className="uppercase"
         disabled={disabled}
         error={errors.accountHolderName}
         id={`${idPrefix}-account-holder-name`}
         label="Tên chủ tài khoản"
         leftIcon={<User size={16} />}
         maxLength={100}
-        onChange={(event) =>
-          onChange("accountHolderName", event.target.value.toUpperCase())
+        onBlur={() =>
+          onChange(
+            "accountHolderName",
+            draft.accountHolderName.trim().toUpperCase(),
+          )
         }
+        onChange={(event) => onChange("accountHolderName", event.target.value)}
         placeholder="Ví dụ: NGUYEN VAN A"
         required
         value={draft.accountHolderName}
