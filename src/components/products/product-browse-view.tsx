@@ -6,7 +6,6 @@ import { productBrowseHref } from "@/config/product-browse";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { ProductFilters } from "./product-filters";
 import { ProductList } from "./product-list";
-import { ProductPagination } from "./product-pagination";
 import { ProductResults } from "./product-results";
 import { ProductDiscoveryFilters } from "./product-discovery-filters";
 import { ProductResultsToolbar } from "./product-results-toolbar";
@@ -104,12 +103,7 @@ export function ProductBrowseView({
               />
               {result && result.items.length === 0 ? <ProductRecommendations /> : null}
             </ProductResults>
-            {result && result.items.length > 0 ? (
-              <ProductPagination
-                filters={filters}
-                totalPages={result.totalPages}
-              />
-            ) : null}
+
           </section>
         </Container>
       </div>
