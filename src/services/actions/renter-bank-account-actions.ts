@@ -13,6 +13,7 @@ import {
 import type {
   CreateRenterBankAccountRequest,
   RenterBankAccount,
+  UpdateRenterBankAccountRequest,
 } from "@/types/renter-bank-account";
 
 const endpoints = API_ENDPOINTS.backend.rental;
@@ -72,5 +73,37 @@ export async function setDefaultRenterBankAccountAction(
     );
     revalidatePath("/account");
     return result;
+  });
+}
+
+export async function updateRenterBankAccountAction(
+  id: string,
+  request: UpdateRenterBankAccountRequest,
+): Promise<ApiResult<RenterBankAccount>> {
+  return serverApiResult(async () => {
+    const parsed = renterBankAccountSchema.safeParse(request);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path.join(".");
+        (fieldErrors[field] ??= []).push(issue.message);
+      }
+      throw new ApiInputError(
+        "Vui lòng kiểm tra lại thông tin tài khoản ngân hàng.",
+        fieldErrors,
+      );
+    }
+
+    const updated = await serverApiJson<RenterBankAccount>(
+      endpoints.bankAccount(id),
+      "Không thể cập nhật tài khoản ngân hàng.",
+      {
+        method: "PATCH",
+        json: parsed.data,
+      },
+    );
+
+    revalidatePath("/account");
+    return updated;
   });
 }

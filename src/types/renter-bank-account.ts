@@ -4,6 +4,12 @@ export type CreateRenterBankAccountRequest = {
   accountHolderName: string;
 };
 
+export type UpdateRenterBankAccountRequest = {
+  bankCode: string;
+  accountNumber: string;
+  accountHolderName: string;
+};
+
 export type RenterBankAccount = {
   id: string;
   bankCode: string | null;

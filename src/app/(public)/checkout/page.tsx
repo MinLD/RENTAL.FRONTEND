@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { QueryProvider } from "@/providers/query-provider";
 import { getPublicEquipmentListing } from "@/services/queries/inventory-queries";
 import { getRenterAddressesForServer } from "@/services/renter-address-server-service";
+import { getRenterBankAccountsForServer } from "@/services/renter-bank-account-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import type { BuyNowSelection } from "@/types/checkout";
 import { validateCartItem } from "@/utils/cart";
@@ -80,9 +81,10 @@ export default async function CheckoutPage({
     />;
   }
 
-  const [productResult, addressResult] = await Promise.all([
+  const [productResult, addressResult, bankAccountsResult] = await Promise.all([
     getPublicEquipmentListing(selection.equipmentListingId),
     getRenterAddressesForServer(),
+    getRenterBankAccountsForServer(),
   ]);
   if (!productResult.success) {
     return <CheckoutUnavailable
@@ -112,6 +114,8 @@ export default async function CheckoutPage({
       <BuyNowCheckout
         addresses={addressResult.addresses}
         addressesError={addressResult.error}
+        bankAccounts={bankAccountsResult.bankAccounts}
+        bankAccountsError={bankAccountsResult.error}
         depositAmount={product.depositAmount * selection.quantity}
         estimate={estimate}
         product={product}

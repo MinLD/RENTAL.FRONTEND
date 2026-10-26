@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CreditCard, Landmark, Plus, Star, Trash2 } from "lucide-react";
+import { CreditCard, Landmark, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { BankAccountCreateDialog } from "@/components/account/bank-account-create-dialog";
 import { BankAccountDeleteDialog } from "@/components/account/bank-account-delete-dialog";
+import { BankAccountEditDialog } from "@/components/account/bank-account-edit-dialog";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { getRenterBankAccounts } from "@/services/renter-bank-account-service";
@@ -53,6 +54,7 @@ export function AccountBankAccounts({
   const [isSettingDefault, setIsSettingDefault] = useState(false);
 
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<RenterBankAccount | null>(null);
   const [deleting, setDeleting] = useState<RenterBankAccount | null>(null);
 
   async function makeDefault(account: RenterBankAccount) {
@@ -131,10 +133,10 @@ export function AccountBankAccounts({
           </p>
         </div>
       ) : accounts ? (
-        <div className="divide-y divide-border">
+        <div className="flex flex-col gap-3">
           {orderedAccounts.map((account) => (
             <article
-              className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
               key={account.id}
             >
               <div className="flex min-w-0 gap-3">
@@ -164,6 +166,16 @@ export function AccountBankAccounts({
               </div>
 
               <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                <Button
+                  aria-label={`Sửa tài khoản ${account.accountNumber}`}
+                  disabled={isSettingDefault}
+                  onClick={() => setEditing(account)}
+                  size="sm"
+                  type="button"
+                  variant="default"
+                >
+                  <Pencil size={14} /> Sửa
+                </Button>
                 {!account.isDefault && (
                   <Button
                     aria-label={`Đặt tài khoản ${account.accountNumber} làm mặc định`}
@@ -205,6 +217,13 @@ export function AccountBankAccounts({
           account={deleting}
           onChanged={invalidateAccounts}
           onClose={() => setDeleting(null)}
+        />
+      )}
+      {editing && (
+        <BankAccountEditDialog
+          account={editing}
+          onChanged={invalidateAccounts}
+          onClose={() => setEditing(null)}
         />
       )}
     </section>

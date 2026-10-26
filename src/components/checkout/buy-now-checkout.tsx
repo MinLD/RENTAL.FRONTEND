@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Landmark, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -12,12 +12,14 @@ import { toast } from "sonner";
 import { AddressCreateDialog } from "@/components/account/address-create-dialog";
 import { AddressDeleteDialog } from "@/components/account/address-delete-dialog";
 import { AddressEditDialog } from "@/components/account/address-edit-dialog";
+import { BankAccountCreateDialog } from "@/components/account/bank-account-create-dialog";
+import { BankAccountDeleteDialog } from "@/components/account/bank-account-delete-dialog";
+import { BankAccountEditDialog } from "@/components/account/bank-account-edit-dialog";
 import { ErrorState } from "@/components/error-state";
 import { Container } from "@/components/layout/container";
 import { ProductImage } from "@/components/products/product-image";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +28,7 @@ import {
   type BuyNowCheckoutValues,
 } from "@/lib/validations/checkout";
 import { getRenterAddresses } from "@/services/renter-address-service";
+import { getRenterBankAccounts } from "@/services/renter-bank-account-service";
 import {
   getCheckoutOperation,
   submitBuyNowCheckout,
@@ -39,6 +42,7 @@ import type {
 } from "@/types/checkout";
 import type { PublicEquipmentListingDetail } from "@/types/inventory";
 import type { RenterAddress } from "@/types/renter-address";
+import type { RenterBankAccount } from "@/types/renter-bank-account";
 import {
   formatEquipmentListingRate,
   getEquipmentListingName,
@@ -53,6 +57,7 @@ import {
 } from "@/utils/checkout-idempotency";
 
 const MAX_ADDRESSES = 10;
+const MAX_BANK_ACCOUNTS = 10;
 const CHECKOUT_POLL_INTERVAL_MS = 2_000;
 
 function normalizedOperationStatus(value: string | null | undefined) {
@@ -68,6 +73,8 @@ function isCheckoutOperationFailed(status: string | null | undefined) {
 export function BuyNowCheckout({
   addresses: initialAddresses,
   addressesError,
+  bankAccounts: initialBankAccounts,
+  bankAccountsError,
   depositAmount,
   estimate,
   profileCompleted,
@@ -79,6 +86,8 @@ export function BuyNowCheckout({
 }: {
   addresses: RenterAddress[] | null;
   addressesError: string | null;
+  bankAccounts: RenterBankAccount[] | null;
+  bankAccountsError: string | null;
   depositAmount: number;
   estimate: RentalPriceEstimate;
   profileCompleted: boolean;
@@ -102,9 +111,28 @@ export function BuyNowCheckout({
   const initialDefault =
     initialAddresses?.find((address) => address.isDefault) ??
     initialAddresses?.[0];
+
+  const bankAccountsQueryKey = ["renter-bank-accounts", userId] as const;
+  const bankAccountsQuery = useQuery({
+    queryKey: bankAccountsQueryKey,
+    queryFn: getRenterBankAccounts,
+    initialData: initialBankAccounts ?? undefined,
+    staleTime: Infinity,
+    retry: 1,
+  });
+  const bankAccounts = bankAccountsQuery.data;
+  const initialDefaultBank =
+    initialBankAccounts?.find((account) => account.isDefault) ??
+    initialBankAccounts?.[0];
+
   const [creatingAddress, setCreatingAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<RenterAddress | null>(null);
   const [deletingAddress, setDeletingAddress] = useState<RenterAddress | null>(null);
+  const [creatingBankAccount, setCreatingBankAccount] = useState(false);
+  const [deletingBankAccount, setDeletingBankAccount] =
+    useState<RenterBankAccount | null>(null);
+  const [editingBankAccount, setEditingBankAccount] =
+    useState<RenterBankAccount | null>(null);
   const [pendingOrder, setPendingOrder] = useState<RenterOrderSummary | null>(
     null,
   );
@@ -146,14 +174,16 @@ export function BuyNowCheckout({
     defaultValues: {
       addressId: initialDefault?.id ?? "",
       deliveryNote: "",
-      bankCode: "",
-      accountNumber: "",
-      accountHolderName: "",
+      bankAccountId: initialDefaultBank?.id ?? "",
       termsAccepted: false,
     },
   });
   const selectedAddressId = useWatch({ control, name: "addressId" });
+  const selectedBankAccountId = useWatch({ control, name: "bankAccountId" });
   const orderedAddresses = [...(addresses ?? [])].sort(
+    (a, b) => Number(b.isDefault) - Number(a.isDefault),
+  );
+  const orderedBankAccounts = [...(bankAccounts ?? [])].sort(
     (a, b) => Number(b.isDefault) - Number(a.isDefault),
   );
   const name = getEquipmentListingName(product);
@@ -164,6 +194,11 @@ export function BuyNowCheckout({
     ? "Không thể tải địa chỉ nhận hàng."
     : addresses === undefined
       ? addressesError
+      : null;
+  const bankAccountsLoadError = bankAccountsQuery.error
+    ? "Không thể tải tài khoản ngân hàng."
+    : bankAccounts === undefined
+      ? bankAccountsError
       : null;
   const operation = operationQuery.data;
   const operationFailed = isCheckoutOperationFailed(operation?.status);
@@ -186,9 +221,25 @@ export function BuyNowCheckout({
     }
   }, [addresses, selectedAddressId, setValue]);
 
+  useEffect(() => {
+    if (
+      bankAccounts &&
+      !bankAccounts.some((account) => account.id === selectedBankAccountId)
+    ) {
+      const nextBankAccountId =
+        bankAccounts.find((account) => account.isDefault)?.id ??
+        bankAccounts[0]?.id ??
+        "";
+      if (nextBankAccountId !== selectedBankAccountId) {
+        setValue("bankAccountId", nextBankAccountId, { shouldValidate: true });
+      }
+    }
+  }, [bankAccounts, selectedBankAccountId, setValue]);
+
   const addressActionsDisabled = mutation.isPending || Boolean(operationId);
   const invalidateAddresses = () => queryClient.invalidateQueries({ queryKey });
-
+  const invalidateBankAccounts = () =>
+    queryClient.invalidateQueries({ queryKey: bankAccountsQueryKey });
   async function submit(values: BuyNowCheckoutValues) {
     if (mutation.isPending) return;
     if (!profileCompleted) {
@@ -199,14 +250,36 @@ export function BuyNowCheckout({
       setError("addressId", { message: "Vui lòng chọn địa chỉ nhận thiết bị hợp lệ." });
       return;
     }
+    if (
+      bankAccountsQuery.isError ||
+      !bankAccounts?.some((account) => account.id === values.bankAccountId)
+    ) {
+      setError("bankAccountId", {
+        message: "Vui lòng chọn tài khoản nhận hoàn tiền hợp lệ.",
+      });
+      return;
+    }
+    const selectedBank = bankAccounts?.find(
+      (account) => account.id === values.bankAccountId,
+    );
+    if (
+      !selectedBank?.bankCode ||
+      !selectedBank?.accountNumber ||
+      !selectedBank?.accountHolderName
+    ) {
+      setError("bankAccountId", {
+        message: "Tài khoản nhận hoàn tiền đã chọn thiếu thông tin hợp lệ.",
+      });
+      return;
+    }
     const request: CheckoutRequest = {
       buyNow: selection,
       addressId: values.addressId,
       deliveryNote: values.deliveryNote || undefined,
       refundAccount: {
-        bankCode: values.bankCode,
-        accountNumber: values.accountNumber,
-        accountHolderName: values.accountHolderName,
+        bankCode: selectedBank.bankCode,
+        accountNumber: selectedBank.accountNumber,
+        accountHolderName: selectedBank.accountHolderName,
       },
       expectedTotalAmount: totalAmount,
       termsAccepted: true,
@@ -506,72 +579,133 @@ export function BuyNowCheckout({
             </section>
 
             <section className="rounded-lg border border-border bg-background p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-semibold">
-                Tài khoản nhận hoàn tiền
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Dùng khi đơn có khoản cần hoàn trả.
-              </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <label
-                    className="mb-2 block text-sm font-medium"
-                    htmlFor="checkout-bank-code"
-                  >
-                    Mã ngân hàng
-                  </label>
-                  <Input
-                    autoComplete="off"
-                    id="checkout-bank-code"
-                    placeholder="Ví dụ: VCB"
-                    {...register("bankCode")}
-                  />
-                  {errors.bankCode && (
-                    <p className="mt-1 text-xs text-error" role="alert">
-                      {errors.bankCode.message}
-                    </p>
-                  )}
+                  <h2 className="text-lg font-semibold">
+                    Tài khoản nhận hoàn tiền
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Chọn tài khoản nhận tiền hoàn trả từ sổ tài khoản của bạn.
+                  </p>
                 </div>
-                <div>
-                  <label
-                    className="mb-2 block text-sm font-medium"
-                    htmlFor="checkout-account-number"
-                  >
-                    Số tài khoản
-                  </label>
-                  <Input
-                    autoComplete="off"
-                    id="checkout-account-number"
-                    inputMode="numeric"
-                    placeholder="Nhập số tài khoản"
-                    {...register("accountNumber")}
-                  />
-                  {errors.accountNumber && (
-                    <p className="mt-1 text-xs text-error" role="alert">
-                      {errors.accountNumber.message}
-                    </p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <label
-                    className="mb-2 block text-sm font-medium"
-                    htmlFor="checkout-account-holder"
-                  >
-                    Tên chủ tài khoản
-                  </label>
-                  <Input
-                    autoComplete="name"
-                    id="checkout-account-holder"
-                    placeholder="Tên như trên tài khoản ngân hàng"
-                    {...register("accountHolderName")}
-                  />
-                  {errors.accountHolderName && (
-                    <p className="mt-1 text-xs text-error" role="alert">
-                      {errors.accountHolderName.message}
-                    </p>
-                  )}
-                </div>
+                <Button
+                  disabled={
+                    addressActionsDisabled ||
+                    !bankAccounts ||
+                    bankAccountsQuery.isError ||
+                    bankAccounts.length >= MAX_BANK_ACCOUNTS
+                  }
+                  onClick={() => setCreatingBankAccount(true)}
+                  size="sm"
+                  type="button"
+                  variant="secondary"
+                >
+                  <Plus className="size-4" /> Thêm tài khoản
+                </Button>
               </div>
+              {bankAccountsLoadError ? (
+                <ErrorState
+                  action={
+                    <Button
+                      disabled={bankAccountsQuery.isFetching}
+                      onClick={() => void bankAccountsQuery.refetch()}
+                      size="sm"
+                      type="button"
+                    >
+                      Thử lại
+                    </Button>
+                  }
+                  className="min-h-56"
+                  description="Vui lòng thử lại để chọn tài khoản nhận tiền hoàn trả."
+                  title="Không thể tải tài khoản ngân hàng"
+                />
+              ) : bankAccounts?.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  Bạn chưa có tài khoản ngân hàng. Hãy thêm tài khoản để tiếp tục nhận hoàn tiền khi cần.
+                </p>
+              ) : bankAccounts ? (
+                <Controller
+                  control={control}
+                  name="bankAccountId"
+                  render={({ field }) => (
+                    <RadioGroup
+                      aria-label="Tài khoản nhận hoàn tiền"
+                      className="mt-4 max-h-72 overflow-y-auto"
+                      disabled={addressActionsDisabled}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      {orderedBankAccounts.map((account) => (
+                        <div
+                          className="flex flex-col gap-2 rounded border border-border p-3 data-[selected=true]:border-primary sm:flex-row sm:items-start sm:gap-3"
+                          data-selected={field.value === account.id}
+                          key={account.id}
+                        >
+                          <label
+                            className="flex min-w-0 flex-1 cursor-pointer items-start gap-3"
+                            htmlFor={`checkout-bank-account-${account.id}`}
+                          >
+                            <RadioGroupItem
+                              aria-label={`Chọn tài khoản ${account.bankCode ?? ""} của ${account.accountHolderName ?? ""}`}
+                              className="mt-1"
+                              id={`checkout-bank-account-${account.id}`}
+                              value={account.id}
+                            />
+                            <Landmark
+                              aria-hidden="true"
+                              className="mt-0.5 size-4 shrink-0 text-primary"
+                            />
+                            <span className="min-w-0 text-sm">
+                              <span className="flex flex-wrap items-center gap-x-2">
+                                <strong>{account.bankCode || "Ngân hàng"}</strong>
+                                <span className="font-mono text-muted-foreground">
+                                  {account.accountNumber}
+                                </span>
+                                {account.isDefault && (
+                                  <span className="text-xs text-primary">
+                                    Mặc định
+                                  </span>
+                                )}
+                              </span>
+                              <span className="mt-1 block font-medium uppercase text-muted-foreground">
+                                {account.accountHolderName}
+                              </span>
+                            </span>
+                          </label>
+                          <div className="flex shrink-0 justify-end gap-1">
+                            <Button
+                              aria-label={`Sửa tài khoản ${account.bankCode ?? ""} của ${account.accountHolderName ?? ""}`}
+                              disabled={addressActionsDisabled}
+                              onClick={() => setEditingBankAccount(account)}
+                              size="sm"
+                              type="button"
+                              variant="default"
+                            >
+                              <Pencil aria-hidden="true" className="size-3.5" /> Sửa
+                            </Button>
+                            <Button
+                              aria-label={`Xóa tài khoản ${account.bankCode ?? ""} của ${account.accountHolderName ?? ""}`}
+                              className="text-error hover:text-error"
+                              disabled={addressActionsDisabled}
+                              onClick={() => setDeletingBankAccount(account)}
+                              size="sm"
+                              type="button"
+                              variant="default"
+                            >
+                              <Trash2 aria-hidden="true" className="size-3.5" /> Xóa
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
+              ) : null}
+              {errors.bankAccountId && (
+                <p className="mt-2 text-xs text-error" role="alert">
+                  {errors.bankAccountId.message}
+                </p>
+              )}
             </section>
           </div>
 
@@ -692,6 +826,37 @@ export function BuyNowCheckout({
       )}
       {deletingAddress && (
         <AddressDeleteDialog address={deletingAddress} onChanged={invalidateAddresses} onClose={() => setDeletingAddress(null)} />
+      )}
+      {creatingBankAccount && (
+        <BankAccountCreateDialog
+          isFirstAccount={bankAccounts?.length === 0}
+          onChanged={async () => {
+            await invalidateBankAccounts();
+            const nextAccounts = queryClient.getQueryData<RenterBankAccount[]>(
+              bankAccountsQueryKey,
+            );
+            const created = nextAccounts?.find(
+              (acc) => !bankAccounts?.some((prev) => prev.id === acc.id),
+            );
+            if (created)
+              setValue("bankAccountId", created.id, { shouldValidate: true });
+          }}
+          onClose={() => setCreatingBankAccount(false)}
+        />
+      )}
+      {deletingBankAccount && (
+        <BankAccountDeleteDialog
+          account={deletingBankAccount}
+          onChanged={invalidateBankAccounts}
+          onClose={() => setDeletingBankAccount(null)}
+        />
+      )}
+      {editingBankAccount && (
+        <BankAccountEditDialog
+          account={editingBankAccount}
+          onChanged={invalidateBankAccounts}
+          onClose={() => setEditingBankAccount(null)}
+        />
       )}
     </div>
   );
