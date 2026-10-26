@@ -23,6 +23,7 @@ export default async function ProductDetailPage({
   return (
     <ProductDetailView
       isAuthenticated={Boolean(user)}
+      isProfileCompleted={user?.isProfileCompleted ?? false}
       product={result.data}
       specificationFields={schema.success ? schema.data.fields : undefined}
     />
