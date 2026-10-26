@@ -69,17 +69,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-    outputs:
-      private: ${{ steps.visibility.outputs.private }}
     steps:
-      - name: Verify actual repository visibility
-        id: visibility
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          test "$(gh api repos/huutawn/DPRENTAL.FRONTEND --jq '.private')" = true
-          printf 'private=true\n' >> "$GITHUB_OUTPUT"
       - name: Login to GHCR with read permission
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -97,7 +87,7 @@ jobs:
   deploy-dev:
     name: Deploy Frontend locally on Ubuntu VM
     needs: [publish, deployment-policy]
-    if: ${{ github.event_name == 'push' && github.repository == 'huutawn/DPRENTAL.FRONTEND' && github.ref == 'refs/heads/develop-ci-cd' && needs.deployment-policy.outputs.private == 'true' && vars.DEV_DEPLOY_ENABLED == 'true' }}
+    if: ${{ github.event_name == 'push' && github.repository == 'huutawn/DPRENTAL.FRONTEND' && github.ref == 'refs/heads/develop-ci-cd' && vars.DEV_DEPLOY_ENABLED == 'true' }}
     runs-on: [self-hosted, linux, x64, dprental-frontend-deploy]
     environment: dev
     timeout-minutes: 30
