@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { LockKeyhole, MapPin, UserRound } from "lucide-react";
+import { Landmark, LockKeyhole, MapPin, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AccountAddressBook } from "@/components/account/account-address-book";
+import { AccountBankAccounts } from "@/components/account/account-bank-accounts";
 import { AccountEditForm } from "@/components/account/account-edit-form";
 import { AccountExternalLoginCard } from "@/components/account/account-external-login-card";
 import { AccountProfileSummary } from "@/components/account/account-profile-summary";
 import { QueryProvider } from "@/providers/query-provider";
 import type { InitialRenterAddresses } from "@/services/renter-address-server-service";
+import type { InitialRenterBankAccounts } from "@/services/renter-bank-account-server-service";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import type {
   AuthUser,
@@ -21,10 +23,15 @@ import { withReturnTo } from "@/utils/return-to";
 import { cn } from "@/utils/cn";
 
 export type { AccountProfileInitialData } from "@/components/account/account-types";
-export type AccountSection = "profile" | "security" | "addresses";
+export type AccountSection =
+  | "profile"
+  | "security"
+  | "addresses"
+  | "bank-accounts";
 
 type AccountProfileFormProps = {
   initialAddresses: InitialRenterAddresses;
+  initialBankAccounts: InitialRenterBankAccounts;
   initialExternalLogins: ExternalLoginResponse[];
   initialProfile: AccountProfileInitialData;
   initialSection: AccountSection;
@@ -39,6 +46,7 @@ type AvatarPreview = {
 
 export function AccountProfileForm({
   initialAddresses,
+  initialBankAccounts,
   initialExternalLogins,
   initialProfile,
   initialSection,
@@ -76,6 +84,7 @@ export function AccountProfileForm({
     { section: "profile", label: "Thông tin tài khoản", icon: UserRound },
     { section: "security", label: "Bảo mật", icon: LockKeyhole },
     { section: "addresses", label: "Sổ địa chỉ", icon: MapPin },
+    { section: "bank-accounts", label: "Tài khoản ngân hàng", icon: Landmark },
   ] as const;
 
   return (
@@ -131,6 +140,15 @@ export function AccountProfileForm({
             <AccountAddressBook
               initialAddresses={initialAddresses.addresses}
               initialError={initialAddresses.error}
+              userId={user.id}
+            />
+          </QueryProvider>
+        )}
+        {initialSection === "bank-accounts" && (
+          <QueryProvider>
+            <AccountBankAccounts
+              initialBankAccounts={initialBankAccounts.bankAccounts}
+              initialError={initialBankAccounts.error}
               userId={user.id}
             />
           </QueryProvider>
