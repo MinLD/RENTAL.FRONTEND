@@ -19,8 +19,8 @@ export const HOME_PRODUCTS_FEED_PARAMS = {
 } as const;
 
 export const HOME_PRODUCTS_TABS = [
-  { value: "created_desc", label: "Mới nhất" },
   { value: "recommended", label: "Dành cho bạn" },
+  { value: "created_desc", label: "Mới nhất" },
 ] as const;
 
 export type HomeProductsSort = (typeof HOME_PRODUCTS_TABS)[number]["value"];

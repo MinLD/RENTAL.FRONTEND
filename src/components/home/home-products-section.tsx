@@ -16,7 +16,7 @@ export async function HomeProductsSection() {
       <QueryProvider key={userId ?? "guest"}>
         <HomeProductsTabs userId={userId}>
           <Suspense fallback={<HomeProductsFeedSkeleton />}>
-            <HomeLatestProducts userId={userId} />
+            <HomeRecommendedProducts userId={userId} />
           </Suspense>
         </HomeProductsTabs>
       </QueryProvider>
@@ -24,17 +24,17 @@ export async function HomeProductsSection() {
   );
 }
 
-async function HomeLatestProducts({ userId }: { userId: string | null }) {
+async function HomeRecommendedProducts({ userId }: { userId: string | null }) {
   const result = await getPublicEquipmentListings({
     ...HOME_PRODUCTS_FEED_PARAMS,
-    sort: "created_desc",
+    sort: "recommended",
     page: 1,
   });
   return (
     <HomeProductsFeed
       initialLoadFailed={!result.success}
       initialPage={result.success ? result.data : undefined}
-      sort="created_desc"
+      sort="recommended"
       userId={userId}
     />
   );
