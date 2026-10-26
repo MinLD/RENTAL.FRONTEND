@@ -82,7 +82,7 @@ Workflow `.github/workflows/frontend-dev.yml` chạy khi push `develop-ci-cd`.
 Build/Buildx và publish GHCR chạy trên `ubuntu-24.04`, giữ nguyên Dockerfile,
 build arguments và image `ghcr.io/huutawn/dprental-frontend:<full-git-sha>`.
 Deploy chạy trên runner `[self-hosted, linux, x64, dprental-frontend-deploy]`
-của Ubuntu VM. Hướng dẫn quyền, approval và recovery ở [DEPLOYMENT.md](DEPLOYMENT.md).
+của Ubuntu VM. Hướng dẫn quyền và recovery ở [DEPLOYMENT.md](DEPLOYMENT.md).
 
 Giữ bốn environment secrets `dev`: `NEXT_PUBLIC_FIREBASE_API_KEY`,
 `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`,
