@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { Eye } from "lucide-react";
+import { Check, Eye, LoaderCircle, X } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
@@ -72,19 +72,72 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
             </select>
           </>
         )}
-        renderRowActions={(order) => (
-          <Button
-            aria-label={`Xem chi tiết đơn ${order.subOrderCode || order.subOrderId}`}
-            disabled={controller.isSubmitting}
-            onClick={() => controller.openOrder(order)}
-            size="icon"
-            title="Xem chi tiết đơn thuê"
-            type="button"
-            variant="default"
-          >
-            <Eye className="size-4" />
-          </Button>
-        )}
+        renderRowActions={(order) => {
+          const isPending = order.status === "PENDING_SUPPLIER_CONFIRMATION";
+          const isRowLoading =
+            controller.isLoading &&
+            controller.selectedOrder?.subOrderId === order.subOrderId &&
+            !controller.isDrawerOpen;
+
+          return (
+            <div className="flex justify-end gap-1">
+              {isPending && (
+                <>
+                  <Button
+                    aria-label={`Nhận đơn ${order.subOrderCode || order.subOrderId}`}
+                    disabled={controller.isSubmitting || controller.isLoading}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void controller.openQuickDecision(order, "accept");
+                    }}
+                    size="icon"
+                    title="Nhận đơn"
+                    type="button"
+                    variant="default"
+                  >
+                    {isRowLoading && controller.action === "accept" ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <Check className="size-4 text-emerald-600" />
+                    )}
+                  </Button>
+                  <Button
+                    aria-label={`Từ chối đơn ${order.subOrderCode || order.subOrderId}`}
+                    disabled={controller.isSubmitting || controller.isLoading}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void controller.openQuickDecision(order, "reject");
+                    }}
+                    size="icon"
+                    title="Từ chối đơn"
+                    type="button"
+                    variant="default"
+                  >
+                    {isRowLoading && controller.action === "reject" ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <X className="size-4 text-error" />
+                    )}
+                  </Button>
+                </>
+              )}
+              <Button
+                aria-label={`Xem chi tiết đơn ${order.subOrderCode || order.subOrderId}`}
+                disabled={controller.isSubmitting}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  controller.openOrder(order);
+                }}
+                size="icon"
+                title="Xem chi tiết đơn thuê"
+                type="button"
+                variant="default"
+              >
+                <Eye className="size-4" />
+              </Button>
+            </div>
+          );
+        }}
         showCsvExport={false}
         showSearch={false}
         title="Danh sách đơn thuê"
@@ -101,7 +154,7 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
         onRefresh={controller.refreshOrder}
         onReject={() => controller.openDecision("reject")}
         order={controller.order}
-        selectedOrder={controller.selectedOrder}
+        selectedOrder={controller.isDrawerOpen ? controller.selectedOrder : null}
       />
 
       {controller.action && controller.order ? (

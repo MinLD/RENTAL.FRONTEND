@@ -24,12 +24,14 @@ export function useOwnOrdersController({
   onChanged: () => void;
 }) {
   const [selectedOrder, setSelectedOrder] = useState<SupplierOrderSummary | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [order, setOrder] = useState<SupplierOrderDetail | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [action, setAction] = useState<SupplierDecisionAction | null>(null);
   const [decisionError, setDecisionError] = useState<ApiErrorDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [now, setNow] = useState(0);
   const selectedId = useRef<string | null>(null);
   const requestId = useRef(0);
@@ -76,6 +78,7 @@ export function useOwnOrdersController({
   function openOrder(summary: SupplierOrderSummary) {
     if (submitting.current) return;
     selectedId.current = summary.subOrderId;
+    setIsDrawerOpen(true);
     setSelectedOrder(summary);
     setOrder(null);
     setAction(null);
@@ -87,12 +90,51 @@ export function useOwnOrdersController({
     if (submitting.current) return;
     selectedId.current = null;
     ++requestId.current;
+    setIsDrawerOpen(false);
     setSelectedOrder(null);
     setOrder(null);
     setDetailError(null);
     setIsLoading(false);
     setAction(null);
     setDecisionError(null);
+  }
+
+  async function openQuickDecision(
+    summary: SupplierOrderSummary,
+    nextAction: SupplierDecisionAction,
+  ) {
+    if (submitting.current) return;
+    selectedId.current = summary.subOrderId;
+    setIsDrawerOpen(false);
+    setSelectedOrder(summary);
+    setOrder(null);
+    setAction(null);
+    setDecisionError(null);
+    setIsLoading(true);
+    try {
+      const result = await fetchOrder(summary.subOrderId);
+      if (selectedId.current !== summary.subOrderId) return;
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      setNow(Date.now());
+      setOrder(result.data);
+      const state = getSupplierOrderDecisionState(result.data, Date.now());
+      if (!state.canDecide) {
+        toast.error(state.reason);
+        return;
+      }
+      setAction(nextAction);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải chi tiết đơn thuê.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function openDecision(nextAction: SupplierDecisionAction) {
@@ -110,6 +152,11 @@ export function useOwnOrdersController({
     if (submitting.current) return;
     setAction(null);
     setDecisionError(null);
+    if (!isDrawerOpen) {
+      selectedId.current = null;
+      setSelectedOrder(null);
+      setOrder(null);
+    }
   }
 
   async function submitDecision(request?: SupplierRejectRequest) {
@@ -147,7 +194,13 @@ export function useOwnOrdersController({
       setAction(null);
       onChanged();
       toast.success(action === "accept" ? "Đã xác nhận nhận đơn thuê." : "Đã từ chối đơn thuê.");
-      await loadOrder(id);
+      if (isDrawerOpen) {
+        await loadOrder(id);
+      } else {
+        selectedId.current = null;
+        setSelectedOrder(null);
+        setOrder(null);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Chưa xác định được kết quả. Vui lòng thử lại.";
       setDecisionError({ status: 0, message, fieldErrors: {} });
@@ -158,12 +211,14 @@ export function useOwnOrdersController({
     }
   }
 
+
   const decisionState = order ? getSupplierOrderDecisionState(order, now) : null;
   return {
     selectedOrder, order, detailError, isLoading, action, decisionError,
-    isSubmitting, decisionState,
+    isSubmitting, decisionState, isDrawerOpen,
     canDecide: Boolean(decisionState?.canDecide && !isLoading && !detailError && !isSubmitting),
     openOrder, closeOrder, openDecision, closeDecision, submitDecision,
+    openQuickDecision,
     refreshOrder: () => {
       if (selectedId.current && !submitting.current) void loadOrder(selectedId.current);
     },
