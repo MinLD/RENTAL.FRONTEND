@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import {
-  CalendarDays,
-  ChevronDown,
-  Filter,
-  SlidersHorizontal,
-} from "lucide-react";
+import { ChevronDown, Filter, SlidersHorizontal } from "lucide-react";
 import { Popover } from "radix-ui";
 
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
@@ -14,7 +9,6 @@ import type { ProductBrowseData } from "@/types/product-browse";
 import { ProductBrandPopover } from "./product-brand-popover";
 import { ProductCategoryPopover } from "./product-category-popover";
 import { ProductMobileFilters } from "./product-mobile-filters";
-import { ProductRentalFilters } from "./product-rental-filters";
 import { ProductResetFiltersButton } from "./product-reset-filters-button";
 import { ProductSpecificationFilters } from "./product-specification-filters";
 
@@ -110,28 +104,6 @@ export function ProductFilters({
         />
         <div className="hidden sm:block">
           <ProductBrandPopover brands={brands} filters={filters} />
-        </div>
-        <div className="hidden sm:block">
-          <FilterPopover
-            active={Boolean(
-              filters.from || filters.to || filters.requestedQuantity,
-            )}
-            clearable
-            icon={<CalendarDays aria-hidden="true" className="size-3.5" />}
-            label="Lịch thuê & số lượng"
-          >
-            {(close) => (
-              <ProductRentalFilters
-                key={JSON.stringify([
-                  filters.from,
-                  filters.to,
-                  filters.requestedQuantity,
-                ])}
-                filters={filters}
-                onApplied={close}
-              />
-            )}
-          </FilterPopover>
         </div>
         {filters.equipmentTypeId ? (
           <div className="hidden sm:block">
