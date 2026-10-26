@@ -79,7 +79,7 @@ function createProxyResponse(
   );
 }
 
-async function proxyBackendRequest(
+async function forwardBackendRequest(
   request: NextRequest,
   context: BackendProxyContext,
 ) {
@@ -133,6 +133,24 @@ async function proxyBackendRequest(
   copyAuthCookies(refreshResponse.headers, response);
 
   return response;
+}
+
+async function proxyBackendRequest(request: NextRequest, context: BackendProxyContext) {
+  try {
+    return await forwardBackendRequest(request, context);
+  } catch (error) {
+    if (!(error instanceof TypeError) || !error.cause) throw error;
+    const cause = error.cause as { code?: string; errors?: Array<{ code?: string }> };
+    console.warn("Backend connection failed", {
+      method: request.method,
+      path: request.nextUrl.pathname,
+      codes: cause.errors?.map((item) => item.code) ?? [cause.code],
+    });
+    return NextResponse.json(
+      { code: "BACKEND_UNAVAILABLE", detail: "Chưa thể kết nối đến dịch vụ. Vui lòng thử lại sau ít phút." },
+      { status: 503, headers: { "Cache-Control": "private, no-store", "Retry-After": "5" } },
+    );
+  }
 }
 
 export function GET(request: NextRequest, context: BackendProxyContext) {
