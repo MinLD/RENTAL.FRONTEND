@@ -5,7 +5,11 @@ import { LayoutGrid, List } from "lucide-react";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseFilters } from "@/types/product-browse";
 
-export function ProductResultsToolbar({ filters }: { filters: ProductBrowseFilters }) {
+export function ProductResultsToolbar({
+  filters,
+}: {
+  filters: ProductBrowseFilters;
+}) {
   const { isPending, navigate } = useProductBrowseNavigation();
 
   return (
@@ -14,8 +18,11 @@ export function ProductResultsToolbar({ filters }: { filters: ProductBrowseFilte
         Tất cả
       </span>
       <div className="flex items-center gap-2 pb-1 sm:gap-3">
-        <span className="px-2 text-xs font-medium text-foreground sm:text-sm">Tin mới nhất</span>
-        <div aria-label="Kiểu hiển thị" className="flex items-center gap-0.5 rounded border border-border p-0.5" role="group">
+        <div
+          aria-label="Kiểu hiển thị"
+          className="flex items-center gap-0.5 rounded border border-border p-0.5"
+          role="group"
+        >
           <button
             aria-label="Dạng lưới"
             aria-pressed={!filters.view}

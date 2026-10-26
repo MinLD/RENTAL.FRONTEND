@@ -8,6 +8,7 @@ import {
 import { Container } from "@/components/layout/container";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { getRenterAddressesForServer } from "@/services/renter-address-server-service";
+import { getRenterBankAccountsForServer } from "@/services/renter-bank-account-server-service";
 import { serverApi } from "@/services/server-api";
 import { getCurrentUser } from "@/services/session-service";
 import type {
@@ -39,16 +40,25 @@ export default async function AccountPage({
     ? null
     : requestedReturnTo;
   const requestedSection = Array.isArray(params.section) ? params.section[0] : params.section;
-  const initialSection: AccountSection = requestedSection === "security" || requestedSection === "addresses"
-    ? requestedSection
-    : "profile";
-  const [currentUser, externalLogins, initialAddresses] = await Promise.all([
-    getCurrentUser(),
-    initialSection === "security" ? getInitialExternalLogins() : Promise.resolve([]),
-    initialSection === "addresses"
-      ? getRenterAddressesForServer()
-      : Promise.resolve({ addresses: [], error: null }),
-  ]);
+  const initialSection: AccountSection =
+    requestedSection === "security" ||
+    requestedSection === "addresses" ||
+    requestedSection === "bank-accounts"
+      ? requestedSection
+      : "profile";
+  const [currentUser, externalLogins, initialAddresses, initialBankAccounts] =
+    await Promise.all([
+      getCurrentUser(),
+      initialSection === "security"
+        ? getInitialExternalLogins()
+        : Promise.resolve([]),
+      initialSection === "addresses"
+        ? getRenterAddressesForServer()
+        : Promise.resolve({ addresses: [], error: null }),
+      initialSection === "bank-accounts"
+        ? getRenterBankAccountsForServer()
+        : Promise.resolve({ bankAccounts: [], error: null }),
+    ]);
   const user =
     currentUser ??
     ({
@@ -94,6 +104,7 @@ export default async function AccountPage({
 
         <AccountProfileForm
           initialAddresses={initialAddresses}
+          initialBankAccounts={initialBankAccounts}
           initialExternalLogins={externalLogins}
           initialProfile={initialProfile}
           initialSection={initialSection}

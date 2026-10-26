@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, Home, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -294,6 +294,14 @@ function SidebarUserMenu({
             </span>
           </div>
           <div className="py-1">
+            <Link
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              href="/"
+              onClick={() => setIsOpen(false)}
+            >
+              <Home size={16} />
+              Về trang chủ
+            </Link>
             <button
               className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isLoggingOut}

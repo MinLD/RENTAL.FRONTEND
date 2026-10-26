@@ -128,7 +128,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-border/15 py-5 text-[11px] leading-5 text-navy-foreground/55 lg:flex-row lg:items-center lg:justify-between">
-          <p>© {currentYear} DP UNITY. Giữ toàn quyền.</p>
+          <p>© {currentYear} DP UNITY.</p>
           <nav aria-label="Liên kết pháp lý">
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
               {FOOTER_LEGAL_LINKS.map((link) => (
@@ -144,7 +144,7 @@ export function Footer() {
                     <Link
                       className="transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                       href={link.href}
-                    >
+                    > 
                       {link.label}
                     </Link>
                   )}

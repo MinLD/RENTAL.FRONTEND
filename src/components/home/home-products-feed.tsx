@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -27,7 +26,7 @@ export function HomeProductsFeed({
   initialLoadFailed?: boolean;
   initialPage?: PublicEquipmentListingListResponse;
 }) {
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const params = { ...HOME_PRODUCTS_FEED_PARAMS, sort };
   const isRecommended = sort === "recommended";
   const query = useInfiniteQuery({
@@ -55,29 +54,6 @@ export function HomeProductsFeed({
   });
   const { fetchNextPage, hasNextPage, isFetching, isFetchNextPageError } =
     query;
-
-  useEffect(() => {
-    if (
-      !hasNextPage ||
-      isFetching ||
-      isFetchNextPageError ||
-      !loadMoreRef.current
-    )
-      return;
-    if (typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          void fetchNextPage({ cancelRefetch: false });
-        }
-      },
-      { rootMargin: "400px 0px" },
-    );
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
-
   if ((initialLoadFailed || query.isError) && !query.data) {
     return (
       <ErrorState
@@ -132,7 +108,6 @@ export function HomeProductsFeed({
         className={query.isFetchingNextPage
           ? "pt-3 sm:pt-4"
           : "flex min-h-24 items-center justify-center py-6"}
-        ref={loadMoreRef}
       >
         {query.isFetchingNextPage ? (
           <HomeProductsFeedSkeleton />
@@ -154,13 +129,15 @@ export function HomeProductsFeed({
             </Button>
           </div>
         ) : hasNextPage ? (
-          <p
-            className="flex items-center gap-2 text-sm text-muted-foreground"
-            role="status"
-            aria-live="polite"
+          <Button
+            disabled={query.isFetchingNextPage}
+            onClick={() => void fetchNextPage({ cancelRefetch: false })}
+            size="md"
+            variant="secondary"
+            className="min-w-44 rounded-full font-semibold shadow-xs hover:border-primary hover:text-primary"
           >
-            Cuộn xuống để xem thêm thiết bị
-          </p>
+            {query.isFetchingNextPage ? "Đang tải thêm..." : "Xem thêm thiết bị"}
+          </Button>
         ) : null}
       </div>
     </>

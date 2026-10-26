@@ -36,6 +36,13 @@ export function UserMenu({ user }: UserMenuProps) {
   const avatarUrl = optimisticAvatarUrl || user.avatarUrl;
   const displayName = getAuthUserDisplayName(user);
   const roleLabel = getAuthUserRoleLabel(user);
+  const hasOrganization = Boolean(
+    (user.organizations && user.organizations.length > 0) ||
+    user.roles?.some((role) => {
+      const r = role.toLowerCase();
+      return r === "own" || r === "owner" || r === "supplier" || r === "sup";
+    })
+  );
 
   useEffect(() => {
     function handleProfileUpdated(event: Event) {
@@ -155,14 +162,25 @@ export function UserMenu({ user }: UserMenuProps) {
             <ClipboardList aria-hidden="true" size={16} />
             Đơn thuê của tôi
           </Link>
-          <Link
-            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-            href="/partner"
-            onClick={() => setIsOpen(false)}
-          >
-            <Building2 aria-hidden="true" size={16} />
-            Đăng ký tổ chức
-          </Link>
+          {hasOrganization ? (
+            <Link
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              href="/own"
+              onClick={() => setIsOpen(false)}
+            >
+              <Building2 aria-hidden="true" size={16} />
+              Vào trang quản lý tổ chức
+            </Link>
+          ) : (
+            <Link
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              href="/partner"
+              onClick={() => setIsOpen(false)}
+            >
+              <Building2 aria-hidden="true" size={16} />
+              Đăng ký tổ chức
+            </Link>
+          )}
           <button
             disabled={isLoggingOut}
             className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"

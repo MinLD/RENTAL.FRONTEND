@@ -18,10 +18,12 @@ import { ProductRentalPanel } from "./product-rental-panel";
 
 export function ProductDetailView({
   isAuthenticated,
+  isProfileCompleted,
   product,
   specificationFields,
 }: {
   isAuthenticated: boolean;
+  isProfileCompleted: boolean;
   product: PublicEquipmentListingDetail;
   specificationFields?: CatalogSpecField[] | null;
 }) {
@@ -87,6 +89,7 @@ export function ProductDetailView({
           <QueryProvider>
             <ProductRentalPanel
               isAuthenticated={isAuthenticated}
+              isProfileCompleted={isProfileCompleted}
               key={product.id}
               listingId={product.id}
               name={name}

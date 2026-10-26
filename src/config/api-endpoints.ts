@@ -101,6 +101,11 @@ export const API_ENDPOINTS = {
         `/api/v1/rental/me/addresses/${encodeURIComponent(id)}`,
       defaultAddress: (id: string) =>
         `/api/v1/rental/me/addresses/${encodeURIComponent(id)}/default`,
+      bankAccounts: "/api/v1/rental/me/bank-accounts",
+      bankAccount: (id: string) =>
+        `/api/v1/rental/me/bank-accounts/${encodeURIComponent(id)}`,
+      defaultBankAccount: (id: string) =>
+        `/api/v1/rental/me/bank-accounts/${encodeURIComponent(id)}/default`,
       cart: `${rentalApiBase}/cart`,
       items: `${rentalApiBase}/cart/items`,
       item: (id: string) =>

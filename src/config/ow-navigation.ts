@@ -12,6 +12,11 @@ export const OW_NAVIGATION: DashboardNavigationItem[] = [
     label: "Quản lý sản phẩm",
   },
   {
+    href: "/own/orders",
+    icon: "file-text",
+    label: "Quản lý đơn thuê",
+  },
+  {
     href: "/own/warehouse",
     icon: "building",
     label: "Quản lý địa chỉ kho",

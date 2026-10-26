@@ -7,7 +7,6 @@ import { Dialog } from "radix-ui";
 import { useProductBrowseNavigation } from "@/hooks/use-product-browse-navigation";
 import type { ProductBrowseData } from "@/types/product-browse";
 import { hasCatalogListings } from "@/utils/catalog";
-import { ProductRentalFilters } from "./product-rental-filters";
 import { ProductSpecificationFilters } from "./product-specification-filters";
 
 type Props = Pick<ProductBrowseData, "filters" | "brands" | "specificationFields">;
@@ -15,9 +14,8 @@ type Props = Pick<ProductBrowseData, "filters" | "brands" | "specificationFields
 export function ProductMobileFilters({ filters, brands, specificationFields }: Props) {
   const { isPending, navigate, resetFilters } = useProductBrowseNavigation();
   const [open, setOpen] = useState(false);
-  const activeCount = Number(Boolean(filters.brandId)) +
-    Number(Boolean(filters.from || filters.to || filters.requestedQuantity)) +
-    Number(Boolean(filters.filters));
+  const activeCount =
+    Number(Boolean(filters.brandId)) + Number(Boolean(filters.filters));
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -65,13 +63,6 @@ export function ProductMobileFilters({ filters, brands, specificationFields }: P
             ) : <p className="text-sm text-error">Không thể tải thương hiệu.</p>}
           </section>
 
-          <div className="border-b border-border py-5">
-            <ProductRentalFilters
-              key={JSON.stringify([filters.from, filters.to, filters.requestedQuantity])}
-              filters={filters}
-              onApplied={() => setOpen(false)}
-            />
-          </div>
 
           {filters.equipmentTypeId ? (
             <div className="border-b border-border py-5">
