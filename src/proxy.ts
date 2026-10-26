@@ -123,9 +123,12 @@ function buildAuthenticatedRedirect(
     const pathname = new URL(returnTo, request.url).pathname;
     const portal = getPortalRoute(pathname);
     // Preserve the existing portal policy when honoring a requested destination.
-    const permitted = homePath !== "/"
-      ? isRouteMatch(pathname, homePath)
-      : !portal || hasRouteRole(authState, portal.role);
+    const isCustomer = authState.roles.some((role) => role.trim().toLowerCase() === "cus");
+    const permitted = isCustomer
+      ? !portal || hasRouteRole(authState, portal.role)
+      : homePath !== "/"
+        ? isRouteMatch(pathname, homePath)
+        : !portal || hasRouteRole(authState, portal.role);
     if (permitted) target = returnTo;
   }
   return NextResponse.redirect(
@@ -145,23 +148,29 @@ function buildRouteAccessRedirect(
   const pathname = request.nextUrl.pathname;
   const portalRoute = getPortalRoute(pathname);
   const authenticatedHomePath = getAuthenticatedHomePath(authState);
-  const hasPortalHome = authenticatedHomePath !== "/";
+  const isCustomer = authState.roles.some((role) => role.trim().toLowerCase() === "cus");
 
-  if (hasPortalHome && !isRouteMatch(pathname, authenticatedHomePath)) {
-    return buildAuthenticatedRedirect(request, authState);
-  }
-
-  if (portalRoute && !hasRouteRole(authState, portalRoute.role)) {
-    return NextResponse.redirect(new URL(authenticatedHomePath, request.url));
+  if (portalRoute) {
+    if (!hasRouteRole(authState, portalRoute.role)) {
+      const fallback = isCustomer ? "/" : authenticatedHomePath;
+      return NextResponse.redirect(new URL(fallback, request.url));
+    }
+    return null;
   }
 
   if (isAuthRoute(pathname)) {
     return buildAuthenticatedRedirect(request, authState);
   }
 
+  if (!isCustomer) {
+    const hasPortalHome = authenticatedHomePath !== "/";
+    if (hasPortalHome && !isRouteMatch(pathname, authenticatedHomePath)) {
+      return buildAuthenticatedRedirect(request, authState);
+    }
+  }
+
   return null;
 }
-
 function shouldRefreshRequestSession(request: NextRequest) {
   if (!hasRefreshToken(request)) {
     return false;
