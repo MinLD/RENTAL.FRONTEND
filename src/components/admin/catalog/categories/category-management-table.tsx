@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -133,12 +133,12 @@ export function CategoryManagementTable({
               onClick={() => {
                 void handleViewCategory(category, refresh);
               }}
-              size="icon"
+              size="sm"
               title="Xem chi tiết danh mục"
               type="button"
               variant="default"
             >
-              <Eye className="size-4" />
+              Chi tiết
             </Button>
           </div>
         )}

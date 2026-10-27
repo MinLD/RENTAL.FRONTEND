@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -81,11 +81,11 @@ export function UsersManagementTable({
               onClick={() => {
                 void handleViewUser(user, refresh);
               }}
-              size="icon"
+              size="sm"
               type="button"
               variant="default"
             >
-              <Eye className="size-4" />
+              Chi tiết
             </Button>
             <Button
               aria-label={user.status === "active" ? "Tạm khóa" : "Mở khóa"}
@@ -96,15 +96,11 @@ export function UsersManagementTable({
                   user,
                 })
               }
-              size="icon"
+              size="sm"
               type="button"
               variant="default"
             >
-              {user.status === "active" ? (
-                <LockKeyhole className="size-4" />
-              ) : (
-                <UnlockKeyhole className="size-4" />
-              )}
+              {user.status === "active" ? "Tạm khóa" : "Mở khóa"}
             </Button>
           </div>
         )}

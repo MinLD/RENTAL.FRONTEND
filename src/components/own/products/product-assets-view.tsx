@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Eye, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -382,12 +382,12 @@ export function ProductAssetsView({
             onClick={() => {
               handleViewAsset(asset);
             }}
-            size="icon"
+            size="sm"
             title="Xem chi tiết / Sửa máy"
             type="button"
             variant="default"
-          >
-            <Eye className="size-4" />
+            >
+            Chi tiết
           </Button>
         )}
         renderToolbarActions={({ refresh }) => {

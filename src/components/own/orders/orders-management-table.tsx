@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { Check, Eye, LoaderCircle, X } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
@@ -90,16 +89,14 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
                       event.stopPropagation();
                       void controller.openQuickDecision(order, "accept");
                     }}
-                    size="icon"
+                    size="sm"
                     title="Nhận đơn"
                     type="button"
                     variant="default"
                   >
-                    {isRowLoading && controller.action === "accept" ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : (
-                      <Check className="size-4 text-emerald-600" />
-                    )}
+                    {isRowLoading && controller.action === "accept"
+                      ? "Đang nhận..."
+                      : "Nhận đơn"}
                   </Button>
                   <Button
                     aria-label={`Từ chối đơn ${order.subOrderCode || order.subOrderId}`}
@@ -108,16 +105,14 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
                       event.stopPropagation();
                       void controller.openQuickDecision(order, "reject");
                     }}
-                    size="icon"
+                    size="sm"
                     title="Từ chối đơn"
                     type="button"
                     variant="default"
                   >
-                    {isRowLoading && controller.action === "reject" ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : (
-                      <X className="size-4 text-error" />
-                    )}
+                    {isRowLoading && controller.action === "reject"
+                      ? "Đang từ chối..."
+                      : "Từ chối"}
                   </Button>
                 </>
               )}
@@ -128,12 +123,12 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
                   event.stopPropagation();
                   controller.openOrder(order);
                 }}
-                size="icon"
+                size="sm"
                 title="Xem chi tiết đơn thuê"
                 type="button"
                 variant="default"
               >
-                <Eye className="size-4" />
+                Chi tiết
               </Button>
             </div>
           );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Eye, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,10 @@ import type {
   DataTableFetchParams,
   DataTableFetchResult,
 } from "@/types/data-table";
+import type {
+  CatalogBrand,
+  CatalogEquipmentTypeListItem,
+} from "@/types/catalog";
 import {
   EQUIPMENT_LISTING_STATUS,
   type EquipmentListing,
@@ -41,12 +45,16 @@ type ProductsManagementTableProps = {
   fetchProducts: (
     params: DataTableFetchParams<EquipmentListingFilters>,
   ) => Promise<ApiResult<DataTableFetchResult<EquipmentListing>>>;
+  initialBrands?: CatalogBrand[];
+  initialEquipmentTypes?: CatalogEquipmentTypeListItem[];
 };
 
 export function ProductsManagementTable({
   createActions,
   detailActions,
   fetchProducts,
+  initialBrands,
+  initialEquipmentTypes,
 }: ProductsManagementTableProps) {
   const {
     isCreateDrawerOpen,
@@ -57,8 +65,14 @@ export function ProductsManagementTable({
   } = useOwnProductsController(createActions.create);
   const equipmentTypes = useCatalogSelectOptions(
     createActions.fetchEquipmentTypes,
+    true,
+    initialEquipmentTypes,
   );
-  const brands = useCatalogSelectOptions(createActions.fetchBrands);
+  const brands = useCatalogSelectOptions(
+    createActions.fetchBrands,
+    true,
+    initialBrands,
+  );
   const [editingProduct, setEditingProduct] = useState<EquipmentListing | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const submittingRef = useRef(false);
@@ -249,12 +263,12 @@ export function ProductsManagementTable({
             onClick={() => {
               setEditingProduct(product);
             }}
-            size="icon"
+            size="sm"
             title="Sửa thông tin sản phẩm"
             type="button"
             variant="default"
           >
-            <Eye className="size-4" />
+            Chi tiết
           </Button>
         )}
         renderToolbarActions={({ refresh }) => {
@@ -277,6 +291,8 @@ export function ProductsManagementTable({
       {isCreateDrawerOpen ? (
         <ProductCreateDrawer
           actions={createActions}
+          brands={brands}
+          equipmentTypes={equipmentTypes}
           isSubmitting={isCreatingProduct}
           onOpenChange={setIsCreateDrawerOpen}
           onSubmit={handleCreateProduct}
