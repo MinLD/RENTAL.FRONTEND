@@ -16,6 +16,7 @@ export function MonthCalendar({
   renderDay,
   legend,
   errorState,
+  productSelector,
 }: {
   month: string;
   onMonthChange: (month: string) => void;
@@ -25,6 +26,7 @@ export function MonthCalendar({
   renderDay: (date: string) => ReactNode;
   legend?: ReactNode;
   errorState?: ReactNode;
+  productSelector?: ReactNode;
 }) {
   const monthId = useId();
   const [year, monthNum] = month.split("-");
@@ -73,6 +75,7 @@ export function MonthCalendar({
           >
             <ChevronRight className="size-4" />
           </Button>
+          {productSelector}
           {!isCurrentMonth ? (
             <Button
               className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground"

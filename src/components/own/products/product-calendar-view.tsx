@@ -140,29 +140,6 @@ export function ProductCalendarView({
             )}
           </div>
 
-          {/* Product selector dropdown */}
-          {initialProducts.length > 1 ? (
-            <div className="flex shrink-0 items-center gap-2 rounded-lg border border-border/70 bg-muted/20 p-1.5 sm:self-center">
-              <label
-                className="shrink-0 pl-1 text-xs font-medium text-muted-foreground"
-                htmlFor="calendar-product-select"
-              >
-                Sản phẩm:
-              </label>
-              <select
-                className="h-8 min-w-44 max-w-xs cursor-pointer truncate rounded-md border border-input bg-background px-2.5 text-xs font-semibold shadow-2xs outline-none transition-colors hover:border-primary focus:border-primary"
-                id="calendar-product-select"
-                onChange={(e) => handleSelectProduct(e.target.value)}
-                value={selectedProduct?.id ?? ""}
-              >
-                {initialProducts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {getEquipmentListingName(p)} ({p.totalQuantity} máy)
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null}
         </div>
 
         {/* Today KPI Strip */}
@@ -270,6 +247,21 @@ export function ProductCalendarView({
                 fetchCalendar={actions.fetchCalendar}
                 key={selectedProduct.id}
                 productId={selectedProduct.id}
+                productSelector={
+                  <select
+                    aria-label="Chọn sản phẩm"
+                    className="h-9 min-w-44 max-w-64 cursor-pointer truncate rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary focus:border-primary"
+                    id="calendar-product-select"
+                    onChange={(e) => handleSelectProduct(e.target.value)}
+                    value={selectedProduct.id}
+                  >
+                    {initialProducts.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {getEquipmentListingName(p)} ({p.totalQuantity} máy)
+                      </option>
+                    ))}
+                  </select>
+                }
                 revision={revision}
               />
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { DataTableState } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,12 @@ export function ProductCalendarPanel({
   productId,
   fetchCalendar,
   revision,
+  productSelector,
 }: {
   productId: string;
   fetchCalendar: ProductPageActions["fetchCalendar"];
   revision: number;
+  productSelector?: ReactNode;
 }) {
   const [today] = useState(getTodayDate);
   const [month, setMonth] = useState(() => today.slice(0, 7));
@@ -31,6 +33,7 @@ export function ProductCalendarPanel({
   return (
     <div>
       <MonthCalendar
+        productSelector={productSelector}
         errorState={
           calendar.error ? (
             <div className="grid min-h-64 place-items-center">
