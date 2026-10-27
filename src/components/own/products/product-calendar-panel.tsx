@@ -29,13 +29,7 @@ export function ProductCalendarPanel({
     [calendar.data],
   );
   return (
-    <div className="space-y-4">
-      <div className="border-b border-border/60 pb-3">
-        <h2 className="text-base font-bold text-foreground">Chi tiết lịch theo ngày</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Theo dõi tình trạng trống và lịch thuê của sản phẩm trong từng ngày.
-        </p>
-      </div>
+    <div>
       <MonthCalendar
         errorState={
           calendar.error ? (
