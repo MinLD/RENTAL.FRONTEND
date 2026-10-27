@@ -126,6 +126,46 @@ export function ProductsManagementTable({
       "Đã cập nhật giá thuê.",
     );
   }
+
+  async function updateRentalRateAndDeposit(
+    rateRequest: EquipmentListingRentalRate,
+    depositAmount: number,
+  ) {
+    if (!editingProduct) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSaving(true);
+    try {
+      const ratePromise = detailActions.updateRentalRate(
+        editingProduct.id,
+        rateRequest,
+      );
+      const depositPromise = detailActions.updateInformation(
+        editingProduct.id,
+        { depositAmount },
+      );
+
+      const [rateResult, depositResult] = await Promise.all([
+        ratePromise,
+        depositPromise,
+      ]);
+
+      if (rateResult.success && depositResult.success) {
+        setEditingProduct(depositResult.data);
+        tableRefreshRef.current?.();
+        toast.success("Đã cập nhật giá thuê và tiền cọc.");
+      } else {
+        if (!rateResult.success) toast.error(rateResult.error.message);
+        if (!depositResult.success) toast.error(depositResult.error.message);
+      }
+
+      return { rateResult, depositResult };
+    } finally {
+      submittingRef.current = false;
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <DataTable<EquipmentListing, EquipmentListingFilters>
@@ -316,6 +356,7 @@ export function ProductsManagementTable({
           }}
           onUpdateInformation={updateInformation}
           onUpdateRentalRate={updateRate}
+          onUpdateRentalRateAndDeposit={updateRentalRateAndDeposit}
           product={editingProduct}
           selectedName={getEquipmentListingName(editingProduct)}
           typeName={
