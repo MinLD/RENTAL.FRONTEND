@@ -84,6 +84,13 @@ type ProductDetailDrawerProps = {
   onUpdateRentalRate: (
     request: EquipmentListingRentalRate,
   ) => Promise<ApiResult<EquipmentListingRentalRate> | undefined>;
+  onUpdateRentalRateAndDeposit?: (
+    rate: EquipmentListingRentalRate,
+    depositAmount: number,
+  ) => Promise<{
+    rateResult: ApiResult<EquipmentListingRentalRate>;
+    depositResult: ApiResult<EquipmentListing>;
+  } | undefined>;
 };
 
 export function ProductEditDrawer(props: ProductDetailDrawerProps) {
@@ -227,6 +234,7 @@ function ProductDetailForms({
   isBusy,
   onUpdateInformation,
   onUpdateRentalRate,
+  onUpdateRentalRateAndDeposit,
   onUploadingChange,
   onSpecificationReadyChange,
   product,
@@ -327,24 +335,35 @@ function ProductDetailForms({
   async function submitRentalRate(values: ProductRentalRateFormValues) {
     if (isBusy) return;
     rateForm.clearErrors();
-    try {
-      const ratePromise = onUpdateRentalRate({
-        dailyRate: Number(values.dailyRate),
-        weeklyRate: Number(values.weeklyRate),
-        monthlyRate: Number(values.monthlyRate),
-        currency: "VND",
-      });
-      const depositPromise =
-        Number(values.depositAmount || 0) !== (initialProduct.depositAmount ?? 0)
-          ? onUpdateInformation({
-              depositAmount: Number(values.depositAmount || 0),
-            })
-          : Promise.resolve(undefined);
+    const ratePayload: EquipmentListingRentalRate = {
+      dailyRate: Number(values.dailyRate),
+      weeklyRate: Number(values.weeklyRate),
+      monthlyRate: Number(values.monthlyRate),
+      currency: "VND",
+    };
+    const depositAmount = Number(values.depositAmount || 0);
 
-      const [rateResult, depositResult] = await Promise.all([
-        ratePromise,
-        depositPromise,
-      ]);
+    try {
+      if (onUpdateRentalRateAndDeposit) {
+        const result = await onUpdateRentalRateAndDeposit(
+          ratePayload,
+          depositAmount,
+        );
+        if (!result) return;
+        const { rateResult, depositResult } = result;
+        if (rateResult.success && depositResult.success) {
+          rateForm.reset(values);
+        } else {
+          if (!rateResult.success) applyServerErrors(rateForm, rateResult.error);
+          if (!depositResult.success)
+            applyServerErrors(rateForm, depositResult.error);
+        }
+        return;
+      }
+
+      // Fallback: sequential execution to avoid mutex ref collision
+      const rateResult = await onUpdateRentalRate(ratePayload);
+      const depositResult = await onUpdateInformation({ depositAmount });
 
       if (
         (rateResult === undefined || rateResult.success) &&
@@ -362,7 +381,7 @@ function ProductDetailForms({
         message:
           error instanceof Error
             ? error.message
-            : "Không thể cập nhật giá thuê.",
+            : "Không thể cập nhật giá thuê và tiền cọc.",
       });
     }
   }

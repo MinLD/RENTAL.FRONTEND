@@ -13,7 +13,8 @@ import { ResourcePanel } from "@/components/layout/resource-panel";
 import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/use-api-resource";
 import {
-  inventoryAssetFormSchema,
+  inventoryAssetCreateFormSchema,
+  inventoryAssetEditFormSchema,
   inventoryAssetBookingsFormSchema,
   type InventoryAssetBookingsFormValues,
   type InventoryAssetFormValues,
@@ -248,12 +249,17 @@ function InventoryAssetForm({
     values: InventoryAssetFormValues,
   ) => Promise<ApiResult<InventoryAsset> | undefined>;
 }) {
+  const schema =
+    mode === "create"
+      ? inventoryAssetCreateFormSchema
+      : inventoryAssetEditFormSchema;
+
   const form = useForm<InventoryAssetFormValues>({
     defaultValues: {
       serialNumber: asset?.serialNumber ?? "",
       manufactureYear: asset?.manufactureYear?.toString() ?? "",
     },
-    resolver: zodResolver(inventoryAssetFormSchema),
+    resolver: zodResolver(schema),
   });
   async function submit(values: InventoryAssetFormValues) {
     if (isSubmitting) return;
