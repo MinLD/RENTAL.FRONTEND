@@ -29,6 +29,11 @@ export function DashboardShell({
   navigation,
   user,
 }: DashboardShellProps) {
+  const canNavigateHome = Boolean(
+    homeHref !== "/admin" &&
+      user?.roles?.some((r) => r.toLowerCase() === "customer"),
+  );
+
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <DashboardSidebar
@@ -38,6 +43,7 @@ export function DashboardShell({
           user
             ? {
                 avatarUrl: user.avatarUrl,
+                canNavigateHome,
                 name: getAuthUserDisplayName(user),
                 roleLabel: getAuthUserRoleLabel(user),
               }

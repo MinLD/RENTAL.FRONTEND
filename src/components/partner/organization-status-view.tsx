@@ -7,6 +7,7 @@ import {
   CircleAlert,
   Copy,
   FileClock,
+  LogOut,
   RefreshCw,
   ShieldCheck,
   ShieldOff,
@@ -16,7 +17,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { refreshSession } from "@/services/auth-service";
+import { logout, refreshSession } from "@/services/auth-service";
 import {
   ORGANIZATION_STATUS,
   type OrganizationApplication,
@@ -29,6 +30,7 @@ type OrganizationStatusViewProps = {
   error?: string;
   onRefresh: () => void;
   onEdit: () => void;
+  isOwner?: boolean;
 };
 
 const STATUS_CONTENT = {
@@ -85,10 +87,12 @@ export function OrganizationStatusView({
   error,
   onRefresh,
   onEdit,
+  isOwner = false,
 }: OrganizationStatusViewProps) {
   const router = useRouter();
   const [isCopying, setIsCopying] = useState(false);
   const [isEnteringOw, setIsEnteringOw] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isPending = organization.status === ORGANIZATION_STATUS.pending;
   const isActive = organization.status === ORGANIZATION_STATUS.active;
   const isRejected = organization.status === ORGANIZATION_STATUS.rejected;
@@ -99,7 +103,17 @@ export function OrganizationStatusView({
   const content = isPending
     ? STATUS_CONTENT.pending
     : isActive
-      ? STATUS_CONTENT.active
+      ? isOwner
+        ? STATUS_CONTENT.active
+        : {
+            icon: ShieldCheck,
+            label: "Đã được duyệt",
+            title: "Hồ sơ đã được phê duyệt thành công!",
+            subtitle: "Tổ chức của bạn đã được kích hoạt",
+            description:
+              "Tổ chức của bạn đã được xét duyệt thành công. Vui lòng đăng xuất và đăng nhập lại để hệ thống cập nhật quyền quản lý tổ chức vào tài khoản.",
+            color: "text-success",
+          }
       : isRejected
         ? STATUS_CONTENT.rejected
         : isSuspended
@@ -147,6 +161,21 @@ export function OrganizationStatusView({
       router.push(authPageHref("/login", "/own"));
     } finally {
       setIsEnteringOw(false);
+    }
+  }
+
+  async function handleLogoutToUpdateRole() {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      toast.success("Đang chuyển tới trang đăng nhập để cập nhật quyền...");
+      router.push(authPageHref("/login", "/own"));
+    } catch {
+      toast.error("Không thể đăng xuất tự động. Vui lòng đăng xuất thủ công.");
+      router.push(authPageHref("/login", "/own"));
+    } finally {
+      setIsLoggingOut(false);
     }
   }
 
@@ -313,15 +342,28 @@ export function OrganizationStatusView({
           </Button>
         )}
         {isActive && (
-          <Button
-            disabled={isEnteringOw}
-            onClick={() => {
-              void enterOwPortal();
-            }}
-            type="button"
-          >
-            {isEnteringOw ? "Đang vào trang quản lý..." : "Vào trang quản lý"}
-          </Button>
+          isOwner ? (
+            <Button
+              disabled={isEnteringOw}
+              onClick={() => {
+                void enterOwPortal();
+              }}
+              type="button"
+            >
+              {isEnteringOw ? "Đang vào trang quản lý..." : "Vào trang quản lý"}
+            </Button>
+          ) : (
+            <Button
+              disabled={isLoggingOut}
+              onClick={() => {
+                void handleLogoutToUpdateRole();
+              }}
+              type="button"
+            >
+              <LogOut className="size-4" />
+              {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất để cập nhật quyền"}
+            </Button>
+          )
         )}
         {isSuspended && (
           <Button asChild>

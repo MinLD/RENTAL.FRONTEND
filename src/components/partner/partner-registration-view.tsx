@@ -29,7 +29,10 @@ import {
   type PartnerRegistrationFormValues,
 } from "@/lib/validations/partner-registration";
 import { ApiError } from "@/services/api-error";
+import { getCurrentUserCitizenId } from "@/services/account-service";
+import { getRenterAddresses } from "@/services/renter-address-service";
 import { registerOrganization, updateOrganizationProfile } from "@/services/organization-service";
+import type { CurrentUserData } from "./partner-view";
 import type { MediaDocumentReference } from "@/types/media";
 import type { OrganizationApplication, OrganizationResponse } from "@/types/organization";
 import { withReturnTo } from "@/utils/return-to";
@@ -69,12 +72,14 @@ type PartnerRegistrationViewProps = {
   initialOrganization?: OrganizationResponse;
   onSubmitted: (organization: OrganizationApplication) => void;
   onCancel?: () => void;
+  currentUserData?: CurrentUserData;
 };
 
 export function PartnerRegistrationView({
   initialOrganization,
   onSubmitted,
   onCancel,
+  currentUserData,
 }: PartnerRegistrationViewProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<PartnerStepId>(
@@ -93,25 +98,30 @@ export function PartnerRegistrationView({
   const [isValidatingStep, setIsValidatingStep] = useState(false);
   const [hasConfirmedInformation, setHasConfirmedInformation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState("");
+
   const hasSubmitted = useRef(false);
   const submissionInProgress = useRef(false);
   const isChangingStep = useRef(false);
   const pendingFocus = useRef<keyof PartnerRegistrationFormValues | null>(null);
   const form = useForm<PartnerRegistrationFormValues>({
     defaultValues: {
-      contactEmail: initialOrganization?.contactEmail ?? "",
-      contactPhone: initialOrganization?.contactPhone ?? "",
-      province: initialOrganization?.province ?? "",
+      contactEmail:
+        initialOrganization?.contactEmail || currentUserData?.email || "",
+      contactPhone:
+        initialOrganization?.contactPhone || currentUserData?.phone || "",
+      province:
+        initialOrganization?.province || currentUserData?.province || "",
       ward: initialOrganization?.ward ?? "",
-      address: initialOrganization?.address ?? "",
+      address:
+        initialOrganization?.address || currentUserData?.address || "",
       businessLicenseNumber: initialOrganization?.businessLicenseNumber ?? "",
       businessLicenseIssuedDate: initialOrganization?.businessLicenseIssuedDate ?? "",
       businessLicenseIssuedPlace: initialOrganization?.businessLicenseIssuedPlace ?? "",
       businessLicenseDocumentMediaId: initialOrganization?.businessLicenseDocumentMediaId ?? "",
-      legalRepresentativeName: initialOrganization?.legalRepresentativeName ?? "",
-      legalRepresentativeCitizenId: "",
-      description: initialOrganization?.description ?? "",
+      legalRepresentativeName:
+        initialOrganization?.legalRepresentativeName || currentUserData?.fullName || "",
+      legalRepresentativeCitizenId:
+        currentUserData?.citizenId || "",
       establishedDate: initialOrganization?.establishedDate ?? "",
       logoMediaId: initialOrganization?.logoMediaId ?? "",
       name: initialOrganization?.name ?? "",
@@ -139,6 +149,62 @@ export function PartnerRegistrationView({
       pendingFocus.current = null;
     }
   }, [currentStep, form]);
+
+  useEffect(() => {
+    if (currentUserData?.email && !form.getValues("contactEmail")) {
+      form.setValue("contactEmail", currentUserData.email, { shouldValidate: true });
+    }
+    if (currentUserData?.phone && !form.getValues("contactPhone")) {
+      form.setValue("contactPhone", currentUserData.phone, { shouldValidate: true });
+    }
+    if (currentUserData?.province && !form.getValues("province")) {
+      form.setValue("province", currentUserData.province, { shouldValidate: true });
+    }
+    if (currentUserData?.address && !form.getValues("address")) {
+      form.setValue("address", currentUserData.address, { shouldValidate: true });
+    }
+    if (currentUserData?.fullName && !form.getValues("legalRepresentativeName")) {
+      form.setValue("legalRepresentativeName", currentUserData.fullName, { shouldValidate: true });
+    }
+    if (currentUserData?.citizenId && !form.getValues("legalRepresentativeCitizenId")) {
+      form.setValue("legalRepresentativeCitizenId", currentUserData.citizenId, { shouldValidate: true });
+    }
+  }, [currentUserData, form]);
+
+  useEffect(() => {
+    if (!form.getValues("legalRepresentativeCitizenId")) {
+      void getCurrentUserCitizenId()
+        .then((citizenId) => {
+          if (citizenId && !form.getValues("legalRepresentativeCitizenId")) {
+            form.setValue("legalRepresentativeCitizenId", citizenId, {
+              shouldValidate: true,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (!form.getValues("address") || !form.getValues("province")) {
+      void getRenterAddresses()
+        .then((addresses) => {
+          if (Array.isArray(addresses) && addresses.length > 0) {
+            const def = addresses.find((a) => a.isDefault) ?? addresses[0];
+            if (def) {
+              if (def.province && !form.getValues("province")) {
+                form.setValue("province", def.province, { shouldValidate: true });
+              }
+              if (def.addressDetail && !form.getValues("address")) {
+                form.setValue("address", def.addressDetail, { shouldValidate: true });
+              }
+              if (def.recipientPhone && !form.getValues("contactPhone")) {
+                form.setValue("contactPhone", def.recipientPhone, { shouldValidate: true });
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [form]);
 
   async function validatePreviousSteps(stepCount: number) {
     const completed: PartnerStepId[] = [];
@@ -211,7 +277,6 @@ export function PartnerRegistrationView({
 
       if (currentStep === "confirmation") {
         setHasConfirmedInformation(false);
-        setSubmissionError("");
       }
       setCurrentStep(nextStep.id);
     } finally {
@@ -233,8 +298,6 @@ export function PartnerRegistrationView({
 
     submissionInProgress.current = true;
     setIsSubmitting(true);
-    setSubmissionError("");
-
     try {
       if (!(await validatePreviousSteps(PARTNER_REGISTRATION_STEPS.length - 1))) {
         setHasConfirmedInformation(false);
@@ -273,12 +336,13 @@ export function PartnerRegistrationView({
         ));
         return;
       }
-
-      setSubmissionError(
+      const errorMessage =
         error instanceof ApiError
           ? error.message
-          : "Không thể gửi hồ sơ. Vui lòng thử lại sau.",
-      );
+          : error instanceof Error
+            ? error.message
+            : "Không thể gửi hồ sơ. Vui lòng thử lại sau.";
+      toast.error(errorMessage);
     } finally {
       submissionInProgress.current = false;
       setIsSubmitting(false);
@@ -307,8 +371,8 @@ export function PartnerRegistrationView({
               className={
                 currentStep === "confirmation"
                   ? "flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
-                  : currentStep === "contact"
-                    ? "flex w-full items-center justify-between gap-3 border-t border-border/60 pt-4"
+                  : previousStep
+                    ? "flex w-full items-center justify-between gap-3"
                     : "flex items-center justify-self-end-safe gap-3"
               }
             >
@@ -400,7 +464,6 @@ export function PartnerRegistrationView({
               onEdit={(stepId) => {
                 void handleStepChange(stepId);
               }}
-              submissionError={submissionError}
             />
           ) : null}
         </MultiStepFormLayout>

@@ -1,6 +1,5 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 
 import { TextField } from "@/components/forms/text-field";
@@ -98,6 +97,7 @@ export function LegalInformationStep({
             label="CCCD/CMND"
             maxLength={12}
             placeholder="Nhập 12 chữ số"
+            required
             {...register("legalRepresentativeCitizenId")}
           />
           <p
@@ -136,10 +136,6 @@ export function LegalInformationStep({
             </>
           )}
         />
-        <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-          <LockKeyhole className="mt-0.5 size-3.5 shrink-0 text-blue-600" />
-          Thông tin pháp lý chỉ được sử dụng cho mục đích xác minh doanh nghiệp.
-        </p>
       </section>
     </div>
   );

@@ -1,17 +1,15 @@
-import { Check, LockKeyhole, UnlockKeyhole, X } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { ORGANIZATION_STATUS } from "@/types/organization";
 
 type OrganizationStatusAction = {
   disabled: boolean;
-  Icon: typeof Check;
+  isLoading: boolean;
   label: string;
+  loadingLabel: string;
   onClick?: () => void;
 };
 
 export function OrganizationStatusActions({
-  iconOnly = false,
   isApproving = false,
   isActivating = false,
   isRejecting = false,
@@ -22,7 +20,6 @@ export function OrganizationStatusActions({
   onSuspend,
   status,
 }: {
-  iconOnly?: boolean;
   isActivating?: boolean;
   isApproving?: boolean;
   isRejecting?: boolean;
@@ -38,14 +35,16 @@ export function OrganizationStatusActions({
       ? [
           {
             disabled: !onApprove || isApproving,
-            label: "Duyệt hồ sơ",
-            Icon: Check,
+            isLoading: isApproving,
+            label: "Duyệt",
+            loadingLabel: "Đang duyệt...",
             onClick: onApprove,
           },
           {
             disabled: !onReject || isRejecting,
-            label: "Từ chối hồ sơ",
-            Icon: X,
+            isLoading: isRejecting,
+            label: "Từ chối",
+            loadingLabel: "Đang từ chối...",
             onClick: onReject,
           },
         ]
@@ -53,8 +52,9 @@ export function OrganizationStatusActions({
         ? [
             {
               disabled: !onSuspend || isSuspending,
-              label: "Tạm khóa tổ chức",
-              Icon: LockKeyhole,
+              isLoading: isSuspending,
+              label: "Tạm khóa",
+              loadingLabel: "Đang tạm khóa...",
               onClick: onSuspend,
             },
           ]
@@ -62,36 +62,28 @@ export function OrganizationStatusActions({
           ? [
               {
                 disabled: !onActivate || isActivating,
-                label: "Mở khóa tổ chức",
-                Icon: UnlockKeyhole,
+                isLoading: isActivating,
+                label: "Mở khóa",
+                loadingLabel: "Đang mở khóa...",
                 onClick: onActivate,
               },
             ]
           : [];
 
-  return actions.map(({ disabled, label, Icon, onClick }) => (
-    <Button
-      aria-label={label}
-      disabled={disabled}
-      key={label}
-      onClick={onClick}
-      size={iconOnly ? "icon" : "sm"}
-      title={label}
-      type="button"
-      variant={"default"}
-    >
-      <Icon className="size-4" />
-      {!iconOnly
-        ? isApproving && label === "Duyệt hồ sơ"
-          ? "Đang duyệt..."
-          : isRejecting && label === "Từ chối hồ sơ"
-            ? "Đang từ chối..."
-            : isSuspending && label === "Tạm khóa tổ chức"
-              ? "Đang tạm khóa..."
-              : isActivating && label === "Mở khóa tổ chức"
-                ? "Đang mở khóa..."
-                : label
-        : null}
-    </Button>
-  ));
+  return actions.map(
+    ({ disabled, label, loadingLabel, isLoading, onClick }) => (
+      <Button
+        aria-label={label}
+        disabled={disabled}
+        key={label}
+        onClick={onClick}
+        size="sm"
+        title={label}
+        type="button"
+        variant="default"
+      >
+        {isLoading ? loadingLabel : label}
+      </Button>
+    ),
+  );
 }

@@ -22,7 +22,7 @@ import type {
   DataTableFetchResult,
 } from "@/types/data-table";
 import { type ApiValueResult, unwrapApiValue } from "@/utils/api-result";
-
+import { isOwnerUser } from "@/utils/auth-user";
 type AdminUserListItemDto = {
   createdAtUtc?: string;
   email?: string | null;
@@ -169,10 +169,18 @@ export async function updateUserAction(
   request: UpdateAdminUserRequest,
 ) {
   return serverApiResult(async () => {
+    if (request.roleIds && request.roleIds.length > 0) {
+      const existingUser = await getUserDetail(id);
+      if (isOwnerUser(existingUser)) {
+        throw new ApiInputError(
+          "Không thể thay đổi vai trò của người dùng có vai trò Owner.",
+        );
+      }
+    }
+
     const parsedRequest = updateAdminUserRequestSchema.safeParse(
       sanitizeUpdateUserRequest(request),
     );
-
     if (!parsedRequest.success) {
       throw new ApiInputError(
         getValidationErrorMessage(parsedRequest.error.flatten()),
@@ -247,7 +255,11 @@ function mapAdminUserListItem(user: AdminUserListItemDto): AdminUserRow {
 }
 
 function mapAdminUserDetail(user: AdminUserDetailDto): AdminUserRow {
-  const globalRoles = user.globalRoles?.filter(Boolean) ?? [];
+  const rawRoles =
+    user.globalRoles && user.globalRoles.length > 0
+      ? user.globalRoles
+      : (user.roles ?? []);
+  const globalRoles = rawRoles.filter(Boolean);
   const avatarUrl =
     user.avatarUrl ??
     user.avatarURL ??

@@ -1,8 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { DataTable } from "@/components/data-table";
-import { useRouter } from "next/navigation";
-import { Eye, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOwnProductsController } from "@/hooks/use-own-products-controller";
 import { useCatalogSelectOptions } from "@/hooks/use-catalog-select-options";
@@ -11,13 +12,20 @@ import type {
   DataTableFetchParams,
   DataTableFetchResult,
 } from "@/types/data-table";
+import type {
+  CatalogBrand,
+  CatalogEquipmentTypeListItem,
+} from "@/types/catalog";
 import {
   EQUIPMENT_LISTING_STATUS,
   type EquipmentListing,
   type EquipmentListingFilters,
+  type EquipmentListingRentalRate,
+  type UpdateEquipmentListingRequest,
 } from "@/types/inventory";
 import {
   formatEquipmentListingDate,
+  getEquipmentListingName,
   getEquipmentListingStatusLabel,
 } from "@/utils/inventory";
 
@@ -26,18 +34,27 @@ import {
   ProductCreateDrawer,
   CatalogOptionsState,
 } from "./product-create-drawer";
-import type { ProductCreateActions } from "./product-management-types";
-
+import { ProductEditDrawer } from "./product-detail-drawer";
+import type {
+  ProductCreateActions,
+  ProductDetailActions,
+} from "./product-management-types";
 type ProductsManagementTableProps = {
   createActions: ProductCreateActions;
+  detailActions: ProductDetailActions;
   fetchProducts: (
     params: DataTableFetchParams<EquipmentListingFilters>,
   ) => Promise<ApiResult<DataTableFetchResult<EquipmentListing>>>;
+  initialBrands?: CatalogBrand[];
+  initialEquipmentTypes?: CatalogEquipmentTypeListItem[];
 };
 
 export function ProductsManagementTable({
   createActions,
+  detailActions,
   fetchProducts,
+  initialBrands,
+  initialEquipmentTypes,
 }: ProductsManagementTableProps) {
   const {
     isCreateDrawerOpen,
@@ -46,13 +63,68 @@ export function ProductsManagementTable({
     handleOpenCreateProduct,
     handleCreateProduct,
   } = useOwnProductsController(createActions.create);
-  const router = useRouter();
   const equipmentTypes = useCatalogSelectOptions(
     createActions.fetchEquipmentTypes,
+    true,
+    initialEquipmentTypes,
   );
-  const brands = useCatalogSelectOptions(createActions.fetchBrands);
-  function handleViewProduct(product: EquipmentListing) {
-    router.push(`/own/products/${encodeURIComponent(product.id)}`);
+  const brands = useCatalogSelectOptions(
+    createActions.fetchBrands,
+    true,
+    initialBrands,
+  );
+  const [editingProduct, setEditingProduct] = useState<EquipmentListing | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const submittingRef = useRef(false);
+  const tableRefreshRef = useRef<(() => void) | null>(null);
+
+  async function save<T>(
+    operation: () => Promise<ApiResult<T>>,
+    apply: (result: T) => void,
+    message: string,
+  ) {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSaving(true);
+    try {
+      const result = await operation();
+      if (result.success) {
+        apply(result.data);
+        toast.success(message);
+      } else toast.error(result.error.message);
+      return result;
+    } finally {
+      submittingRef.current = false;
+      setIsSaving(false);
+    }
+  }
+
+  async function updateInformation(request: UpdateEquipmentListingRequest) {
+    if (!editingProduct) return;
+    return save(
+      () => detailActions.updateInformation(editingProduct.id, request),
+      (updated) => {
+        setEditingProduct(updated);
+        tableRefreshRef.current?.();
+      },
+      request.specValues
+        ? "Đã cập nhật thông số kỹ thuật."
+        : "Đã cập nhật thông tin sản phẩm.",
+    );
+  }
+
+  async function updateRate(request: EquipmentListingRentalRate) {
+    if (!editingProduct) return;
+    return save(
+      () => detailActions.updateRentalRate(editingProduct.id, request),
+      (rate) => {
+        setEditingProduct((current) =>
+          current ? { ...current, rentalRate: rate } : current,
+        );
+        tableRefreshRef.current?.();
+      },
+      "Đã cập nhật giá thuê.",
+    );
   }
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
@@ -102,7 +174,7 @@ export function ProductsManagementTable({
         initialPageSize={20}
         initialFilterParams={{}}
         onRowDoubleClick={(product) => {
-          void handleViewProduct(product);
+          setEditingProduct(product);
         }}
         pageSizeOptions={[10, 20, 50, 100]}
         renderFilters={({ filters, setFilters }) => (
@@ -187,28 +259,31 @@ export function ProductsManagementTable({
         )}
         renderRowActions={(product) => (
           <Button
-            aria-label="Xem chi tiết sản phẩm"
+            aria-label="Sửa thông tin sản phẩm"
             onClick={() => {
-              void handleViewProduct(product);
+              setEditingProduct(product);
             }}
-            size="icon"
-            title="Xem chi tiết sản phẩm"
+            size="sm"
+            title="Sửa thông tin sản phẩm"
             type="button"
             variant="default"
           >
-            <Eye className="size-4" />
+            Chi tiết
           </Button>
         )}
-        renderToolbarActions={({ refresh }) => (
-          <Button
-            disabled={isCreatingProduct}
-            onClick={() => handleOpenCreateProduct(refresh)}
-            type="button"
-          >
-            <Plus className="size-4" />
-            Thêm sản phẩm
-          </Button>
-        )}
+        renderToolbarActions={({ refresh }) => {
+          tableRefreshRef.current = refresh;
+          return (
+            <Button
+              disabled={isCreatingProduct}
+              onClick={() => handleOpenCreateProduct(refresh)}
+              type="button"
+            >
+              <Plus className="size-4" />
+              Thêm sản phẩm
+            </Button>
+          );
+        }}
         searchDebounceMs={300}
         searchPlaceholder="Tìm sản phẩm…"
         title="Danh sách sản phẩm"
@@ -216,9 +291,38 @@ export function ProductsManagementTable({
       {isCreateDrawerOpen ? (
         <ProductCreateDrawer
           actions={createActions}
+          brands={brands}
+          equipmentTypes={equipmentTypes}
           isSubmitting={isCreatingProduct}
           onOpenChange={setIsCreateDrawerOpen}
           onSubmit={handleCreateProduct}
+        />
+      ) : null}
+      {editingProduct ? (
+        <ProductEditDrawer
+          actions={detailActions}
+          brandName={
+            brands.items.find((b) => b.id === editingProduct.brandId)?.name
+          }
+          error={null}
+          fetchBrands={createActions.fetchBrands}
+          isLoading={false}
+          isSubmitting={isSaving}
+          onOpenChange={(open) => {
+            if (!open) setEditingProduct(null);
+          }}
+          onRefresh={() => {
+            tableRefreshRef.current?.();
+          }}
+          onUpdateInformation={updateInformation}
+          onUpdateRentalRate={updateRate}
+          product={editingProduct}
+          selectedName={getEquipmentListingName(editingProduct)}
+          typeName={
+            equipmentTypes.items.find(
+              (t) => t.id === editingProduct.equipmentTypeId,
+            )?.name
+          }
         />
       ) : null}
     </div>

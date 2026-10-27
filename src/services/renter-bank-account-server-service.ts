@@ -14,6 +14,10 @@ export async function getRenterBankAccountsForServer(): Promise<InitialRenterBan
   try {
     const response = await serverApi(API_ENDPOINTS.backend.rental.bankAccounts);
 
+    if (response.status === 404) {
+      return { bankAccounts: [], error: null };
+    }
+
     if (!response.ok) {
       return {
         bankAccounts: null,

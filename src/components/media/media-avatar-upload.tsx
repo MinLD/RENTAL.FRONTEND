@@ -18,6 +18,7 @@ type MediaAvatarUploadProps = {
   emptyLabel?: string;
   fallbackText?: string;
   fieldName?: string;
+  maxSizeBytes?: number;
   mode?: MediaUploadMode;
   onAvatarButtonClick?: () => void;
   avatarButtonLabel?: string;
@@ -55,6 +56,7 @@ export function MediaAvatarUpload({
   emptyLabel,
   fallbackText = "DP",
   fieldName,
+  maxSizeBytes = 20 * 1024 * 1024,
   mode = "single",
   onAvatarButtonClick,
   avatarButtonLabel = "Cập nhật ảnh",
@@ -93,6 +95,15 @@ export function MediaAvatarUpload({
     if (!selectedFiles.length) {
       return;
     }
+    const oversized = selectedFiles.find((file) => file.size > maxSizeBytes);
+    if (oversized) {
+      const maxMB = Math.round(maxSizeBytes / (1024 * 1024));
+      toast.error(
+        `Ảnh "${oversized.name}" vượt quá dung lượng tối đa cho phép (${maxMB}MB).`,
+      );
+      return;
+    }
+
 
     setIsUploading(true);
     onUploadingChange?.(true);

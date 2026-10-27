@@ -22,6 +22,7 @@ import type {
   AdminUserStatus,
   UpdateAdminUserRequest,
 } from "@/types/admin-users";
+import { isOwnerRole, isOwnerUser } from "@/utils/auth-user";
 import { cn } from "@/utils/cn";
 
 import { getInitials } from "./users-table-utils";
@@ -120,13 +121,16 @@ function UserUpdateForm({
   const [avatarMediaId, setAvatarMediaId] = useState(
     user.avatarMediaId ?? "",
   );
+  const isOwner = isOwnerUser(user);
   const [roles, setRoles] = useState<AdminRoleOption[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const roleOptions = useMemo(
     () => {
       const options = roles
-        .filter((role) => isUuid(role.id) && role.name)
+        .filter(
+          (role) => isUuid(role.id) && role.name && !isOwnerRole(role.name),
+        )
         .map((role) => ({
           label: role.name ?? role.id,
           value: role.id,
@@ -153,8 +157,11 @@ function UserUpdateForm({
   });
 
   useEffect(() => {
-    let isMounted = true;
+    if (isOwner) {
+      return;
+    }
 
+    let isMounted = true;
     async function loadRoles() {
       setIsLoadingRoles(true);
 
@@ -191,11 +198,11 @@ function UserUpdateForm({
     return () => {
       isMounted = false;
     };
-  }, [fetchRoles, user]);
+  }, [fetchRoles, isOwner, user]);
 
   async function submitForm(values: UpdateAdminUserFormValues) {
     const normalizedAvatarMediaId = normalizeUuid(avatarMediaId);
-    const roleIds = normalizeRoleIds(selectedRoleId);
+    const roleIds = isOwner ? undefined : normalizeRoleIds(selectedRoleId);
 
     const request: UpdateAdminUserRequest = {
       avatarMediaId: normalizedAvatarMediaId,
@@ -279,13 +286,31 @@ function UserUpdateForm({
           label="CCCD/CMND"
           {...register("citizenId")}
         />
-        <SelectField
-          disabled={disabled || isLoadingRoles}
-          label="Vai trò"
-          options={roleOptions}
-          onChange={(event) => setSelectedRoleId(event.target.value)}
-          value={selectedRoleId}
-        />
+        {isOwner ? (
+          <div className="space-y-1.5">
+            <TextField
+              disabled
+              label="Vai trò"
+              readOnly
+              value={
+                user.globalRoles?.length
+                  ? user.globalRoles.join(", ")
+                  : (user.role ?? "Owner")
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Không thể thay đổi vai trò của người dùng có vai trò Owner.
+            </p>
+          </div>
+        ) : (
+          <SelectField
+            disabled={disabled || isLoadingRoles}
+            label="Vai trò"
+            options={roleOptions}
+            onChange={(event) => setSelectedRoleId(event.target.value)}
+            value={selectedRoleId}
+          />
+        )}
         <SelectField
           disabled={disabled}
           error={errors.isActive?.message}

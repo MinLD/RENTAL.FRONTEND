@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
-  Eye,
   LockKeyhole,
   UnlockKeyhole,
   XCircle,
@@ -261,15 +260,14 @@ export function OrganizationsManagementTable({
               onClick={() => {
                 void controller.handleViewOrganization(organization);
               }}
-              size="icon"
+              size="sm"
               title="Xem chi tiết tổ chức"
               type="button"
               variant="default"
             >
-              <Eye className="size-4" />
+              Chi tiết
             </Button>
             <OrganizationStatusActions
-              iconOnly
               isActivating={
                 isActivating && activateTarget?.id === organization.id
               }

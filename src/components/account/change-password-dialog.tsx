@@ -71,7 +71,7 @@ export function ChangePasswordDialog() {
               </div>
               <button
                 aria-label="Đóng"
-                className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed"
+                className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-hover-accent hover:text-foreground disabled:cursor-not-allowed"
                 disabled={isPending}
                 onClick={() => setIsOpen(false)}
                 type="button"

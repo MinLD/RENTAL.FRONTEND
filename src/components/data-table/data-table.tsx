@@ -492,7 +492,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     }}
                   />
                 ))}
-                {hasActions ? <col className="w-px" /> : null}
+                {hasActions ? <col className="w-auto" /> : null}
               </colgroup>
               <TableHeader>
                 <TableRow>
@@ -513,7 +513,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     </TableHead>
                   ))}
                   {hasActions ? (
-                    <TableHead className="sticky right-0 top-0 z-30 w-px whitespace-nowrap bg-[#f8fafc] text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
+                    <TableHead className="sticky top-0 z-20 whitespace-nowrap bg-[#f8fafc] text-right">
                       {actionsHeader}
                     </TableHead>
                   ) : null}
@@ -565,7 +565,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                         </TableCell>
                       ))}
                       {hasActions ? (
-                        <TableCell className="sticky right-0 z-10 w-px whitespace-nowrap bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] group-hover:bg-muted/60">
+                        <TableCell className="whitespace-nowrap text-right">
                           <div className="inline-flex w-max items-center justify-end gap-1">
                             {renderRowActions?.(row, {
                               refresh: triggerRefresh,

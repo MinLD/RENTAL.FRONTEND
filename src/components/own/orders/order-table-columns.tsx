@@ -28,6 +28,26 @@ export const orderColumns: DataTableColumn<SupplierOrderSummary>[] = [
     id: "totalAmount", header: "Tổng tiền", width: 170,
     cell: (order) => <span className="font-semibold">{formatEquipmentListingRate(order.totalAmount, order.currency)}</span>,
   },
-  { id: "createdAt", header: "Ngày đặt", width: 160, cell: (order) => formatSupplierOrderDate(order.createdAt) },
-  { id: "paidAt", header: "Ngày thanh toán", width: 160, cell: (order) => formatSupplierOrderDate(order.paidAt) },
+  {
+    id: "createdAt",
+    header: "Ngày đặt",
+    minWidth: 170,
+    width: 175,
+    cell: (order) => (
+      <span className="whitespace-nowrap font-medium text-muted-foreground">
+        {formatSupplierOrderDate(order.createdAt)}
+      </span>
+    ),
+  },
+  {
+    id: "paidAt",
+    header: "Ngày thanh toán",
+    minWidth: 170,
+    width: 175,
+    cell: (order) => (
+      <span className="whitespace-nowrap font-medium text-muted-foreground">
+        {formatSupplierOrderDate(order.paidAt)}
+      </span>
+    ),
+  },
 ];

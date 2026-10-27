@@ -20,8 +20,8 @@ import type {
   AdminRoleOption,
   CreateAdminUserRequest,
 } from "@/types/admin-users";
+import { isOwnerRole } from "@/utils/auth-user";
 import { cn } from "@/utils/cn";
-
 const CREATE_USER_FORM_ID = "admin-create-user-form";
 
 type UserCreateDrawerProps = {
@@ -95,10 +95,12 @@ function CreateUserForm({
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const roleOptions = useMemo(
     () => [
-      ...roles.map((role) => ({
-        label: role.name ?? role.id,
-        value: role.id,
-      })),
+      ...roles
+        .filter((role) => !isOwnerRole(role.name))
+        .map((role) => ({
+          label: role.name ?? role.id,
+          value: role.id,
+        })),
     ],
     [roles],
   );

@@ -10,6 +10,7 @@ import { AddressDeleteDialog } from "@/components/account/address-delete-dialog"
 import { AddressEditDialog } from "@/components/account/address-edit-dialog";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
+import { ApiError } from "@/services/api-error";
 import { getRenterAddresses, setDefaultRenterAddress } from "@/services/renter-address-service";
 import type { RenterAddress } from "@/types/renter-address";
 
@@ -38,9 +39,15 @@ export function AccountAddressBook({
     retry: 1,
   });
   const addresses = addressesQuery.data;
-  const loadError = addressesQuery.error
-    ? errorMessage(addressesQuery.error, "Không thể tải sổ địa chỉ.")
-    : addresses === undefined ? initialError : null;
+  const is404 =
+    addressesQuery.error instanceof ApiError && addressesQuery.error.status === 404;
+  const loadError = is404
+    ? null
+    : addressesQuery.error
+      ? errorMessage(addressesQuery.error, "Không thể tải sổ địa chỉ.")
+      : addresses === undefined
+        ? initialError
+        : null;
   const invalidateAddresses = () => queryClient.invalidateQueries({ queryKey });
   const defaultMutation = useMutation({
     mutationFn: setDefaultRenterAddress,
@@ -74,7 +81,7 @@ export function AccountAddressBook({
           </p>
         </div>
         <Button
-          disabled={defaultMutation.isPending || !addresses || addresses.length >= MAX_ADDRESSES}
+          disabled={defaultMutation.isPending || Boolean(addresses && addresses.length >= MAX_ADDRESSES)}
           onClick={() => setCreating(true)}
           type="button"
         >

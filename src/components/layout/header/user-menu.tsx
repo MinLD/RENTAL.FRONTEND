@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ChevronDown, ClipboardList, LogOut, UserRound } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  ClipboardList,
+  LogOut,
+  UserRound,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -36,12 +42,11 @@ export function UserMenu({ user }: UserMenuProps) {
   const avatarUrl = optimisticAvatarUrl || user.avatarUrl;
   const displayName = getAuthUserDisplayName(user);
   const roleLabel = getAuthUserRoleLabel(user);
-  const hasOrganization = Boolean(
-    (user.organizations && user.organizations.length > 0) ||
+  const isOwner = Boolean(
     user.roles?.some((role) => {
       const r = role.toLowerCase();
       return r === "own" || r === "owner" || r === "supplier" || r === "sup";
-    })
+    }),
   );
 
   useEffect(() => {
@@ -147,7 +152,7 @@ export function UserMenu({ user }: UserMenuProps) {
       {isOpen ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-60 rounded border border-border bg-background py-2 shadow-lg">
           <Link
-            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
             href="/account"
             onClick={() => setIsOpen(false)}
           >
@@ -155,25 +160,25 @@ export function UserMenu({ user }: UserMenuProps) {
             Tài khoản của tôi
           </Link>
           <Link
-            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
             href="/orders"
             onClick={() => setIsOpen(false)}
           >
             <ClipboardList aria-hidden="true" size={16} />
             Đơn thuê của tôi
           </Link>
-          {hasOrganization ? (
+          {isOwner ? (
             <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
               href="/own"
               onClick={() => setIsOpen(false)}
             >
               <Building2 aria-hidden="true" size={16} />
-              Vào trang quản lý tổ chức
+              Quản lý tổ chức
             </Link>
           ) : (
             <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
               href="/partner"
               onClick={() => setIsOpen(false)}
             >
@@ -183,7 +188,7 @@ export function UserMenu({ user }: UserMenuProps) {
           )}
           <button
             disabled={isLoggingOut}
-            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground disabled:cursor-not-allowed disabled:opacity-60"
             onClick={handleLogout}
             type="button"
           >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { DataTableState } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,12 @@ export function ProductCalendarPanel({
   productId,
   fetchCalendar,
   revision,
+  productSelector,
 }: {
   productId: string;
   fetchCalendar: ProductPageActions["fetchCalendar"];
   revision: number;
+  productSelector?: ReactNode;
 }) {
   const [today] = useState(getTodayDate);
   const [month, setMonth] = useState(() => today.slice(0, 7));
@@ -29,14 +31,9 @@ export function ProductCalendarPanel({
     [calendar.data],
   );
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-bold">Lịch sử dụng</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Số máy khả dụng và lịch đang sử dụng theo ngày.
-        </p>
-      </div>
+    <div>
       <MonthCalendar
+        productSelector={productSelector}
         errorState={
           calendar.error ? (
             <div className="grid min-h-64 place-items-center">
@@ -53,10 +50,19 @@ export function ProductCalendarPanel({
         }
         isLoading={calendar.isLoading}
         legend={
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            <span className="text-green-700">● Khả dụng</span>
-            <span className="text-blue-700">● Đang sử dụng / giữ chỗ</span>
-            <span className="text-amber-700">● Bị chặn lịch</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-emerald-500" />
+              <span>Khả dụng</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-blue-600" />
+              <span>Đang sử dụng / Giữ chỗ</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-amber-500" />
+              <span>Bị chặn lịch</span>
+            </div>
           </div>
         }
         month={month}
@@ -64,30 +70,61 @@ export function ProductCalendarPanel({
         onRefresh={() => void calendar.refresh()}
         renderDay={(date) => {
           const day = days.get(date);
-          return day ? (
-            <dl className="space-y-1 text-xs tabular-nums">
-              <div className="flex justify-between gap-2 text-green-700">
-                <dt>Khả dụng</dt>
-                <dd className="font-bold">{day.availableQuantity}</dd>
-              </div>
-              <div className="flex justify-between gap-2 text-blue-700">
-                <dt>Sử dụng</dt>
-                <dd>{day.occupiedQuantity}</dd>
-              </div>
-              <div className="flex justify-between gap-2 text-amber-700">
-                <dt>Bị chặn</dt>
-                <dd>{day.blockedQuantity}</dd>
-              </div>
-              {day.suspendedOccupiedQuantity > 0 ||
-              day.suspendedBlockedQuantity > 0 ? (
-                <p className="pt-1 text-muted-foreground">
-                  Máy tạm ngừng: {day.suspendedOccupiedQuantity} sử dụng ·{" "}
-                  {day.suspendedBlockedQuantity} bị chặn
+          if (!day) {
+            return <p className="text-[11px] text-muted-foreground">Chưa có dữ liệu</p>;
+          }
+
+          const hasActivity = day.occupiedQuantity > 0 || day.blockedQuantity > 0;
+
+          return (
+            <div className="space-y-1.5">
+              {!hasActivity ? (
+                <div className="flex items-center gap-1.5 rounded-md bg-emerald-50/80 px-2 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
+                  <span>{day.availableQuantity} khả dụng</span>
+                </div>
+              ) : (
+                <>
+                  {day.occupiedQuantity > 0 ? (
+                    <div className="flex items-center justify-between gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                      <span className="flex items-center gap-1.5 truncate">
+                        <span className="size-1.5 shrink-0 rounded-full bg-blue-600" />
+                        <span className="truncate">Đang thuê</span>
+                      </span>
+                      <span className="font-bold tabular-nums">{day.occupiedQuantity}</span>
+                    </div>
+                  ) : null}
+
+                  {day.blockedQuantity > 0 ? (
+                    <div className="flex items-center justify-between gap-1 rounded-md bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                      <span className="flex items-center gap-1.5 truncate">
+                        <span className="size-1.5 shrink-0 rounded-full bg-amber-600" />
+                        <span className="truncate">Bị chặn</span>
+                      </span>
+                      <span className="font-bold tabular-nums">{day.blockedQuantity}</span>
+                    </div>
+                  ) : null}
+
+                  {day.availableQuantity > 0 ? (
+                    <div className="flex items-center justify-between gap-1 px-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                      <span className="truncate">Còn trống</span>
+                      <span className="font-bold tabular-nums">{day.availableQuantity}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 rounded-md bg-rose-50/80 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                      <span className="size-1.5 shrink-0 rounded-full bg-rose-500" />
+                      <span>Hết máy</span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {day.suspendedOccupiedQuantity > 0 || day.suspendedBlockedQuantity > 0 ? (
+                <p className="px-1 text-[10px] text-muted-foreground">
+                  Tạm ngừng: {day.suspendedOccupiedQuantity + day.suspendedBlockedQuantity}
                 </p>
               ) : null}
-            </dl>
-          ) : (
-            <p className="text-xs text-muted-foreground">Chưa có dữ liệu</p>
+            </div>
           );
         }}
         today={today}

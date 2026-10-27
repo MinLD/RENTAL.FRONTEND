@@ -5,6 +5,7 @@ import {
 } from "@/lib/validations/partner-registration";
 import { organizationResponseSchema } from "@/lib/validations/organization";
 import { authApiClient, authApiClientJson } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import type {
   OrganizationRegisteredResponse,
   OrganizationRegistrationRequest,
@@ -18,13 +19,18 @@ function nullIfBlank(value: string) {
 export async function getMyOrganization(
   signal?: AbortSignal,
 ): Promise<OrganizationResponse | null> {
-  const response = await authApiClient(API_ENDPOINTS.backend.organizations.mine, {
-    cache: "no-store",
-    signal,
-  });
-  if (response.status === 204) return null;
-  if (response.status !== 200) throw new Error("Unexpected organization response.");
-  return organizationResponseSchema.parse(await response.json());
+  try {
+    const response = await authApiClient(API_ENDPOINTS.backend.organizations.mine, {
+      cache: "no-store",
+      signal,
+    });
+    if (response.status === 204 || response.status === 404) return null;
+    if (response.status !== 200) throw new Error("Unexpected organization response.");
+    return organizationResponseSchema.parse(await response.json());
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 export async function getOrganization(id: string): Promise<OrganizationResponse> {

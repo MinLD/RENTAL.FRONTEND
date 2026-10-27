@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Eye, LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
+import { LockKeyhole, Plus, UnlockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/data-table";
@@ -259,12 +259,12 @@ export function EquipmentTypeManagementTable({
               onClick={() => {
                 void handleViewEquipmentType(equipmentType, refresh);
               }}
-              size="icon"
+              size="sm"
               title="Xem chi tiết loại thiết bị"
               type="button"
               variant="default"
             >
-              <Eye className="size-4" />
+              Chi tiết
             </Button>
             {equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Draft ||
             equipmentType.status === CATALOG_EQUIPMENT_TYPE_STATUS.Disabled ? (
@@ -277,12 +277,12 @@ export function EquipmentTypeManagementTable({
                     refresh,
                   })
                 }
-                size="icon"
+                size="sm"
                 title="Mở khóa loại thiết bị"
                 type="button"
                 variant="default"
               >
-                <UnlockKeyhole className="size-4" />
+                Mở khóa
               </Button>
             ) : null}
             {equipmentType.status ===
@@ -296,12 +296,12 @@ export function EquipmentTypeManagementTable({
                     refresh,
                   })
                 }
-                size="icon"
+                size="sm"
                 title="Khóa loại thiết bị"
                 type="button"
                 variant="default"
               >
-                <LockKeyhole className="size-4" />
+                Khóa
               </Button>
             ) : null}
           </div>

@@ -263,7 +263,7 @@ export function EquipmentSearch({ userId }: { userId: string | null }) {
                   <Link
                     aria-label={name}
                     aria-selected={index === activeIndex}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-primary/5 ${index === activeIndex ? "bg-primary/5" : ""}`}
+                    className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground ${index === activeIndex ? "bg-hover-accent text-hover-accent-foreground" : ""}`}
                     href={`/products/${encodeURIComponent(product.id)}`}
                     id={`${id}-option-${index}`}
                     onClick={close}
@@ -300,7 +300,7 @@ export function EquipmentSearch({ userId }: { userId: string | null }) {
           </ul>
           {!isRecommended && search.canSearch ? (
             <Link
-              className="block truncate border-t border-border px-3.5 py-3 text-xs font-semibold text-primary hover:bg-primary/5"
+              className="block truncate border-t border-border px-3.5 py-3 text-xs font-semibold text-foreground hover:bg-hover-accent"
               href={productBrowseHref({ ...areaParams, q: trimmedKeyword })}
               onClick={close}
               prefetch={false}

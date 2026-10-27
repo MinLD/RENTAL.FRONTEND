@@ -92,7 +92,7 @@ export function EquipmentCatalogPanel({
               <li key={item.id}>
                 <button
                   aria-pressed={category?.id === item.id}
-                  className={`flex w-full cursor-pointer items-center gap-3 rounded px-2 py-2.5 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:outline-primary ${category?.id === item.id ? "bg-primary/10 font-semibold text-primary" : "hover:bg-primary/5 hover:text-primary"}`}
+                  className={`flex w-full cursor-pointer items-center gap-3 rounded px-2 py-2.5 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:outline-primary ${category?.id === item.id ? "bg-hover-accent font-semibold text-foreground" : "hover:bg-hover-accent hover:text-foreground"}`}
                   onClick={() => selectCategory(item.id)}
                   onFocus={() => selectCategory(item.id)}
                   onPointerEnter={(event) => {
@@ -136,7 +136,7 @@ export function EquipmentCatalogPanel({
                 {equipmentTypes.data.data.map((item) => (
                   <li key={item.id}>
                     <Link
-                      className="block rounded px-2 py-2 text-xs hover:bg-primary/5 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                      className="block rounded px-2 py-2 text-xs hover:bg-hover-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
                       href={catalogBrowseHref({
                         categoryId: category.id,
                         equipmentTypeId: item.id,
@@ -154,7 +154,7 @@ export function EquipmentCatalogPanel({
         )}
         {category ? (
           <Link
-            className="mt-3 rounded px-2 py-2 text-xs font-semibold text-primary hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary"
+            className="mt-3 rounded px-2 py-2 text-xs font-semibold text-primary hover:bg-hover-accent focus-visible:outline-2 focus-visible:outline-primary"
             href={catalogBrowseHref({ categoryId: category.id })}
             onClick={onNavigate}
             prefetch={false}

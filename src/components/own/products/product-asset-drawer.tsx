@@ -335,6 +335,7 @@ function InventoryAssetForm({
             label="Năm sản xuất"
             maxLength={4}
             placeholder="VD: 2024"
+            required
           />
         ) : null}
       </div>

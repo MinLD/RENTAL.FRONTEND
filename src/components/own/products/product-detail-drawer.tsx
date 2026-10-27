@@ -264,7 +264,7 @@ function ProductDetailForms({
       manufactureYear: initialProduct.manufactureYear?.toString() ?? "",
       mediaIds: initialMedia.map((item) => item.id),
       thumbnailMediaId: initialProduct.thumbnailMediaId ?? "",
-      depositAmount: String(initialProduct.depositAmount ?? 0),
+
     },
     resolver: zodResolver(productInformationFormSchema),
     shouldFocusError: false,
@@ -278,6 +278,7 @@ function ProductDetailForms({
       dailyRate: initialProduct.rentalRate?.dailyRate?.toString() ?? "",
       weeklyRate: initialProduct.rentalRate?.weeklyRate?.toString() ?? "",
       monthlyRate: initialProduct.rentalRate?.monthlyRate?.toString() ?? "",
+      depositAmount: initialProduct.depositAmount?.toString() ?? "0",
     },
     resolver: zodResolver(productRentalRateFormSchema),
   });
@@ -293,8 +294,7 @@ function ProductDetailForms({
       request.description = values.description || null;
     if (dirtyFields.status)
       request.status = Number(values.status) as EquipmentListingStatus;
-    if (dirtyFields.depositAmount)
-      request.depositAmount = Number(values.depositAmount);
+
     if (dirtyFields.manufactureYear)
       request.manufactureYear = values.manufactureYear
         ? Number(values.manufactureYear)
@@ -328,14 +328,35 @@ function ProductDetailForms({
     if (isBusy) return;
     rateForm.clearErrors();
     try {
-      const result = await onUpdateRentalRate({
+      const ratePromise = onUpdateRentalRate({
         dailyRate: Number(values.dailyRate),
         weeklyRate: Number(values.weeklyRate),
         monthlyRate: Number(values.monthlyRate),
         currency: "VND",
       });
-      if (result?.success) rateForm.reset(values);
-      else if (result) applyServerErrors(rateForm, result.error);
+      const depositPromise =
+        Number(values.depositAmount || 0) !== (initialProduct.depositAmount ?? 0)
+          ? onUpdateInformation({
+              depositAmount: Number(values.depositAmount || 0),
+            })
+          : Promise.resolve(undefined);
+
+      const [rateResult, depositResult] = await Promise.all([
+        ratePromise,
+        depositPromise,
+      ]);
+
+      if (
+        (rateResult === undefined || rateResult.success) &&
+        (depositResult === undefined || depositResult.success)
+      ) {
+        rateForm.reset(values);
+      } else {
+        if (rateResult && !rateResult.success)
+          applyServerErrors(rateForm, rateResult.error);
+        if (depositResult && !depositResult.success)
+          applyServerErrors(rateForm, depositResult.error);
+      }
     } catch (error) {
       rateForm.setError("root.server", {
         message:
@@ -435,6 +456,7 @@ function ProductDetailForms({
                   }),
                 )}
                 required
+                searchable={false}
               />
             )}
           />
@@ -447,6 +469,7 @@ function ProductDetailForms({
             placeholder="VD: 2024"
             inputMode="numeric"
             maxLength={4}
+            required
           />
         </div>
         <TextareaField
@@ -457,24 +480,7 @@ function ProductDetailForms({
           id={`${INFO_FORM_ID}-description`}
           label="Mô tả sản phẩm"
         />
-        <Controller
-          control={informationForm.control}
-          name="depositAmount"
-          render={({ field, fieldState }) => (
-            <MoneyField
-              {...field}
-              disabled={isBusy}
-              error={fieldState.error?.message}
-              id={`${INFO_FORM_ID}-depositAmount`}
-              label="Tiền cọc"
-              placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
-              required
-              rightElement={
-                <span className="px-2 text-xs text-muted-foreground">VND</span>
-              }
-            />
-          )}
-        />
+
         <Controller
           control={informationForm.control}
           name="mediaIds"
@@ -565,6 +571,23 @@ function ProductDetailForms({
             />
           ))}
         </div>
+        <Controller
+          control={rateForm.control}
+          name="depositAmount"
+          render={({ field, fieldState }) => (
+            <MoneyField
+              {...field}
+              disabled={isBusy}
+              error={fieldState.error?.message}
+              id={`${RATE_FORM_ID}-depositAmount`}
+              label="Tiền cọc"
+              placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
+              rightElement={
+                <span className="px-2 text-xs text-muted-foreground">VND</span>
+              }
+            />
+          )}
+        />
       </form>
       {visitedTabs.includes("specifications") ? (
         <div hidden={activeTab !== "specifications"}>

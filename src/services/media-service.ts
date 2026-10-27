@@ -1,10 +1,12 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClient } from "@/services/api-client";
 import type { MediaUploadResponse, MediaUploadResult } from "@/types/media";
+import { compressImageFile } from "@/utils/image-compression";
 
 type UploadMediaOptions = {
   fieldName?: string;
   idempotencyKey?: string;
+  skipCompression?: boolean;
 };
 
 const DEFAULT_MEDIA_FILE_FIELD_NAME = "Files";
@@ -31,10 +33,13 @@ export async function uploadMediaFiles(
   if (!files.length) {
     return [];
   }
+  const processedFiles = options.skipCompression
+    ? files
+    : await Promise.all(files.map((file) => compressImageFile(file)));
 
   const formData = new FormData();
 
-  for (const file of files) {
+  for (const file of processedFiles) {
     formData.append(options.fieldName ?? DEFAULT_MEDIA_FILE_FIELD_NAME, file);
     formData.append(MEDIA_CHECKSUM_FIELD_NAME, await getFileSha256Checksum(file));
   }

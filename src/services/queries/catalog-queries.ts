@@ -1,7 +1,7 @@
 import "server-only";
 
 import { API_ENDPOINTS } from "@/config/api-endpoints";
-import { ApiInputError } from "@/services/api-error";
+import { ApiError, ApiInputError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
 import { serverApiJson, serverApiResult } from "@/services/server-api";
 import type {
@@ -34,11 +34,18 @@ export async function getCatalogBrands(
   params: CatalogBrandListParams = {},
 ): Promise<ApiResult<CatalogPagedResult<CatalogBrand>>> {
   return serverApiResult(async () => {
-    const response = await serverApiJson<CatalogBrandListResponse>(
-      API_ENDPOINTS.backend.catalog.brands.list(params),
-      "Không thể tải danh sách thương hiệu.",
-    );
-    return normalizeCatalogBrandList(response, params);
+    try {
+      const response = await serverApiJson<CatalogBrandListResponse>(
+        API_ENDPOINTS.backend.catalog.brands.list(params),
+        "Không thể tải danh sách thương hiệu.",
+      );
+      return normalizeCatalogBrandList(response, params);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return { data: [], page: params.page ?? 1, pageSize: params.pageSize ?? 20, totalItems: 0, totalPages: 1 };
+      }
+      throw error;
+    }
   });
 }
 
@@ -46,13 +53,20 @@ export async function getCatalogCategories(): Promise<
   ApiResult<CatalogPagedResult<CatalogCategoryDetail>>
 > {
   return serverApiResult(async () => {
-    const response = await serverApiJson<
-      CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
-    >(
-      API_ENDPOINTS.backend.catalog.categories.list(),
-      "Không thể tải danh sách danh mục.",
-    );
-    return normalizeCatalogCategoryList(response);
+    try {
+      const response = await serverApiJson<
+        CatalogCategoryDetailResponse[] | CatalogCategoryListResponse
+      >(
+        API_ENDPOINTS.backend.catalog.categories.list(),
+        "Không thể tải danh sách danh mục.",
+      );
+      return normalizeCatalogCategoryList(response);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return { data: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 1 };
+      }
+      throw error;
+    }
   });
 }
 
@@ -60,11 +74,18 @@ export async function getCatalogEquipmentTypes(
   params: CatalogEquipmentTypeListParams = {},
 ): Promise<ApiResult<CatalogPagedResult<CatalogEquipmentTypeListItem>>> {
   return serverApiResult(async () => {
-    const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
-      API_ENDPOINTS.backend.catalog.equipmentTypes.list(params),
-      "Không thể tải danh sách loại thiết bị.",
-    );
-    return normalizeCatalogEquipmentTypeList(response, params);
+    try {
+      const response = await serverApiJson<CatalogEquipmentTypeListResponse>(
+        API_ENDPOINTS.backend.catalog.equipmentTypes.list(params),
+        "Không thể tải danh sách loại thiết bị.",
+      );
+      return normalizeCatalogEquipmentTypeList(response, params);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return { data: [], page: params.page ?? 1, pageSize: params.pageSize ?? 20, totalItems: 0, totalPages: 1 };
+      }
+      throw error;
+    }
   });
 }
 

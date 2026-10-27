@@ -67,7 +67,7 @@ export function MultiStepFormLayout({
                   aria-current={isActive ? "step" : undefined}
                   className={cn(
                     "flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors",
-                    "hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
+                    "hover:bg-hover-accent hover:text-hover-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
                     isActive
                       ? "font-semibold text-primary"
                       : "font-medium text-muted-foreground hover:text-foreground",

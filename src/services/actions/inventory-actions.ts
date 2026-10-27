@@ -10,6 +10,7 @@ import {
   updateInventoryAssetBookingsRequestSchema,
   createInventoryCalendarBlockRequestSchema,
 } from "@/lib/validations/inventory-product";
+import { ApiError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
 import {
   serverApiJson,
@@ -64,14 +65,21 @@ export async function getOwnEquipmentListingAssetsAction(
 ): Promise<ApiResult<DataTableFetchResult<InventoryAsset>>> {
   return serverApiResult(async () => {
     assertListingId(id);
-    const result = await serverApiJson<InventoryAssetListResponse>(
-      API_ENDPOINTS.backend.inventory.equipmentListings.assets(
-        id,
-        getPagination(params),
-      ),
-      "Không thể tải danh sách máy vật lý.",
-    );
-    return { data: result.items ?? [], totalItems: result.totalCount ?? 0 };
+    try {
+      const result = await serverApiJson<InventoryAssetListResponse>(
+        API_ENDPOINTS.backend.inventory.equipmentListings.assets(
+          id,
+          getPagination(params),
+        ),
+        "Không thể tải danh sách máy vật lý.",
+      );
+      return { data: result.items ?? [], totalItems: result.totalCount ?? 0 };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return { data: [], totalItems: 0 };
+      }
+      throw error;
+    }
   });
 }
 
@@ -265,21 +273,28 @@ export async function getOwnEquipmentListingsAction(
             updateEquipmentListingRequestSchema.shape.status,
             filters.status,
           );
-    const response = await serverApiJson<EquipmentListingListResponse>(
-      API_ENDPOINTS.backend.inventory.equipmentListings.list({
-        page,
-        pageSize,
-        q: params.keyword,
-        equipmentTypeId: filters.equipmentTypeId || undefined,
-        brandId: filters.brandId || undefined,
-        status,
-      }),
-      "Không thể tải danh sách sản phẩm.",
-    );
+    try {
+      const response = await serverApiJson<EquipmentListingListResponse>(
+        API_ENDPOINTS.backend.inventory.equipmentListings.list({
+          page,
+          pageSize,
+          q: params.keyword,
+          equipmentTypeId: filters.equipmentTypeId || undefined,
+          brandId: filters.brandId || undefined,
+          status,
+        }),
+        "Không thể tải danh sách sản phẩm.",
+      );
 
-    return {
-      data: response.items ?? [],
-      totalItems: response.totalCount ?? 0,
-    };
+      return {
+        data: response.items ?? [],
+        totalItems: response.totalCount ?? 0,
+      };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return { data: [], totalItems: 0 };
+      }
+      throw error;
+    }
   });
 }

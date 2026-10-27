@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import type {
   CurrentUserCitizenIdResponse,
   ExternalLoginResponse,
@@ -30,9 +31,14 @@ export async function getCurrentUserCitizenId(signal?: AbortSignal) {
 export function getExternalLogins() {
   return authApiClientJson<
     ApiValueResult<ExternalLoginResponse[]> | ExternalLoginResponse[]
-  >(API_ENDPOINTS.backend.currentUser.externalLogins).then((response) =>
-    unwrapApiValue<ExternalLoginResponse[]>(response),
-  );
+  >(API_ENDPOINTS.backend.currentUser.externalLogins)
+    .then((response) => unwrapApiValue<ExternalLoginResponse[]>(response))
+    .catch((error) => {
+      if (error instanceof ApiError && error.status === 404) {
+        return [];
+      }
+      throw error;
+    });
 }
 
 export function unlinkExternalLogin(provider: string) {

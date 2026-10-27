@@ -70,7 +70,7 @@ export function FormDrawer({
                       "h-9 rounded px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                        : "text-muted-foreground hover:bg-hover-accent hover:text-hover-accent-foreground",
                     )}
                     key={tab.value}
                     onClick={() => onTabChange?.(tab.value)}

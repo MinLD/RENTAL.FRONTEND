@@ -22,16 +22,29 @@ import { authPageHref } from "@/utils/auth-redirect";
 import type { ProfileCompletion } from "@/utils/profile-completion";
 import { withReturnTo } from "@/utils/return-to";
 
+export type CurrentUserData = {
+  fullName?: string;
+  citizenId?: string;
+  email?: string;
+  phone?: string;
+  province?: string;
+  address?: string;
+};
+
 type PartnerViewProps = {
   initialOrganization: OrganizationResponse | null;
   initialError?: string;
   profileCompletion: ProfileCompletion;
+  currentUserData?: CurrentUserData;
+  isOwner?: boolean;
 };
 
 export function PartnerView({
   initialOrganization,
   initialError = "",
   profileCompletion,
+  currentUserData,
+  isOwner = false,
 }: PartnerViewProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -97,6 +110,7 @@ export function PartnerView({
     return (
       <OrganizationStatusView
         error={error}
+        isOwner={isOwner}
         isRefreshing={isLoading}
         onEdit={() => void loadOrganization(true)}
         onRefresh={() => void loadOrganization()}
@@ -122,6 +136,7 @@ export function PartnerView({
           editingOrganization ? () => setEditingOrganization(null) : undefined
         }
         onSubmitted={handleSubmitted}
+        currentUserData={currentUserData}
       />
     );
   }

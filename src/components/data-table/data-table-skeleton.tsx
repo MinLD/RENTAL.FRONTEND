@@ -93,6 +93,7 @@ type DataTableRowsSkeletonProps = {
 };
 
 type DataTableSkeletonColumn = {
+  className?: string;
   skeleton?: ReactNode;
 };
 
@@ -115,13 +116,13 @@ export function DataTableRowsSkeleton({
                   "sticky top-0 z-20 bg-[#f8fafc]",
                   showActions &&
                     index === totalColumns - 1 &&
-                    "right-0 z-30 w-px whitespace-nowrap text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]",
+                    "whitespace-nowrap text-right",
                 )}
                 key={index}
               >
                 <Skeleton
                   className={cn(
-                    "h-4",
+                    "h-4 max-w-[80%]",
                     showActions && index === totalColumns - 1 ? "w-12" : "w-20",
                   )}
                 />
@@ -150,38 +151,41 @@ export function DataTableBodySkeletonRows({
   columnCount?: number;
   columns?: DataTableSkeletonColumn[];
 }) {
-  const skeletonColumns =
+  const skeletonColumns: DataTableSkeletonColumn[] =
     columns ??
-    Array.from({ length: columnCount ?? 0 }, () => ({ skeleton: undefined }));
+    Array.from({ length: columnCount ?? 0 }, () => ({}));
 
   return (
     <>
       {Array.from({ length: rowCount }, (_, rowIndex) => (
         <TableRow key={rowIndex}>
           {skeletonColumns.map((column, columnIndex) => (
-            <TableCell className="max-w-0" key={columnIndex}>
+            <TableCell
+              className={cn("max-w-0 overflow-hidden", column.className)}
+              key={columnIndex}
+            >
               {column.skeleton ??
                 (columnIndex === 0 ? (
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="size-9 rounded-full" />
-                    <Skeleton className="h-4 w-28" />
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Skeleton className="size-9 shrink-0 rounded-full" />
+                    <Skeleton className="h-4 w-28 max-w-[calc(100%-48px)]" />
                   </div>
                 ) : (
                   <Skeleton
                     className={cn(
-                      "h-4",
+                      "h-4 max-w-[75%]",
                       columnIndex % 3 === 0
-                        ? "w-24"
+                        ? "w-16"
                         : columnIndex % 2 === 0
-                          ? "w-32"
-                          : "w-44",
+                          ? "w-24"
+                          : "w-20",
                     )}
                   />
                 ))}
             </TableCell>
           ))}
           {showActions ? (
-            <TableCell className="sticky right-0 z-10 w-px whitespace-nowrap bg-background text-right shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]">
+            <TableCell className="whitespace-nowrap text-right">
               <div className="inline-flex w-max items-center justify-end">
                 <Skeleton className="size-8" />
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Plus, Power, PowerOff } from "lucide-react";
+import { Plus, Power, PowerOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/data-table";
@@ -168,12 +168,12 @@ export function BrandManagementTable({
               onClick={() => {
                 void handleViewBrand(brand, refresh);
               }}
-              size="icon"
+              size="sm"
               title="Xem chi tiết thương hiệu"
               type="button"
               variant="default"
             >
-              <Eye className="size-4" />
+              Chi tiết
             </Button>
             <Button
               aria-label={
@@ -188,7 +188,7 @@ export function BrandManagementTable({
                   refresh,
                 })
               }
-              size="icon"
+              size="sm"
               title={
                 brand.isActive
                   ? "Vô hiệu hóa thương hiệu"
@@ -197,11 +197,7 @@ export function BrandManagementTable({
               type="button"
               variant="default"
             >
-              {brand.isActive ? (
-                <PowerOff className="size-4" />
-              ) : (
-                <Power className="size-4" />
-              )}
+              {brand.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
             </Button>
           </div>
         )}
