@@ -857,7 +857,7 @@ function toMediaFormItem(
     displayOrder: index,
     isThumbnail: index === 0,
     mediaId: upload.mediaId,
-    url: `/api/v1/media/${upload.mediaId}/content`,
+    url: upload.previewUrl || `/api/v1/media/${upload.mediaId}/content`,
   };
 }
 
@@ -874,6 +874,13 @@ async function uploadEquipmentTypeImages(files: File[]) {
 
   if (invalidFile) {
     throw new Error("Ảnh thiết bị chỉ hỗ trợ JPG, PNG hoặc WEBP.");
+  }
+
+  const oversized = files.find((file) => file.size > 20 * 1024 * 1024);
+  if (oversized) {
+    throw new Error(
+      `Ảnh "${oversized.name}" vượt quá dung lượng tối đa cho phép (20MB).`,
+    );
   }
 
   const uploads = await uploadMediaFiles(files);

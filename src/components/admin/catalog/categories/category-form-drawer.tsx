@@ -421,6 +421,10 @@ async function uploadCategoryImage(file: File) {
     throw new Error("Ảnh danh mục chỉ hỗ trợ JPG, PNG hoặc WEBP.");
   }
 
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error("Dung lượng ảnh danh mục không được vượt quá 20MB.");
+  }
+
   const upload = await uploadMediaFile(file);
 
   if (

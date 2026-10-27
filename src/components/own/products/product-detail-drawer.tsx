@@ -456,6 +456,7 @@ function ProductDetailForms({
                   }),
                 )}
                 required
+                searchable={false}
               />
             )}
           />

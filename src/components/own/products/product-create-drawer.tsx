@@ -742,6 +742,12 @@ export function SchemaLoadState({
 async function uploadProductImages(files: File[]) {
   if (files.some((file) => !IMAGE_CONTENT_TYPES.includes(file.type)))
     throw new Error("Ảnh sản phẩm chỉ hỗ trợ JPG, PNG hoặc WEBP.");
+  const oversized = files.find((file) => file.size > 20 * 1024 * 1024);
+  if (oversized) {
+    throw new Error(
+      `Ảnh "${oversized.name}" vượt quá dung lượng tối đa cho phép (20MB).`,
+    );
+  }
   const uploads = await uploadMediaFiles(files);
   if (uploads.some((upload) => upload.status.toLowerCase() !== "ready"))
     throw new Error(
@@ -782,7 +788,10 @@ export function ProductImageField({
                   (item) =>
                     [
                       item.mediaId,
-                      { id: item.mediaId, url: `/api/v1/media/${item.mediaId}/content` },
+                      {
+                        id: item.mediaId,
+                        url: item.previewUrl || `/api/v1/media/${item.mediaId}/content`,
+                      },
                     ] as const,
                 ),
               ]).values(),
