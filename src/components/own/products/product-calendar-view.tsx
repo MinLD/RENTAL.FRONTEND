@@ -1,13 +1,13 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { Boxes, CalendarClock, CalendarX, CheckCircle2, RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableState } from "@/components/data-table";
-import { StatisticCards } from "@/components/layout/detail-page";
 import { useApiResource } from "@/hooks/use-api-resource";
 import type { EquipmentListing } from "@/types/inventory";
 import { getTodayDate } from "@/utils/calendar";
@@ -64,7 +64,7 @@ export function ProductCalendarView({
   );
 
   const todayCalendar = useApiResource(requestToday, Boolean(selectedProduct));
-  const todayStats = todayCalendar.data?.days?.find((day) => day.date === today);
+  const todayStats = todayCalendar.data?.days?.find((day: { date: string }) => day.date === today);
 
   if (initialProducts.length === 0) {
     return (
@@ -95,48 +95,50 @@ export function ProductCalendarView({
           </div>
 
           {/* Product selector dropdown */}
-          <div className="flex items-center gap-2">
-            <label
-              className="shrink-0 text-xs font-medium text-muted-foreground"
-              htmlFor="calendar-product-select"
-            >
-              Chọn sản phẩm:
-            </label>
-            <select
-              className="h-9 min-w-48 max-w-xs cursor-pointer truncate rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-              id="calendar-product-select"
-              onChange={(e) => handleSelectProduct(e.target.value)}
-              value={selectedProduct?.id ?? ""}
-            >
-              {initialProducts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {getEquipmentListingName(p)} ({p.totalQuantity} máy)
-                </option>
-              ))}
-            </select>
-          </div>
+          {initialProducts.length > 1 ? (
+            <div className="flex items-center gap-2">
+              <label
+                className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                htmlFor="calendar-product-select"
+              >
+                Sản phẩm:
+              </label>
+              <select
+                className="h-9 min-w-48 max-w-xs cursor-pointer truncate rounded-md border border-input bg-background px-3 text-sm font-semibold shadow-2xs outline-none transition-colors hover:border-primary focus:border-primary"
+                id="calendar-product-select"
+                onChange={(e) => handleSelectProduct(e.target.value)}
+                value={selectedProduct?.id ?? ""}
+              >
+                {initialProducts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {getEquipmentListingName(p)} ({p.totalQuantity} máy)
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
         </div>
 
         {/* Selected Product Banner */}
         {selectedProduct ? (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/30 p-2.5">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/80 bg-muted/25 p-3">
+            <div className="flex min-w-0 items-center gap-3.5">
               <AvatarWithSkeleton
                 alt={getEquipmentListingName(selectedProduct)}
-                className="size-10 shrink-0 rounded border border-border"
+                className="size-11 shrink-0 rounded-lg border border-border shadow-2xs"
                 fallback={
                   getEquipmentListingName(selectedProduct)
                     ?.trim()
                     .slice(0, 2)
                     .toUpperCase() || "SP"
                 }
-                fallbackClassName="rounded bg-muted text-xs font-bold text-foreground"
-                imageClassName="rounded object-contain"
+                fallbackClassName="rounded-lg bg-muted text-xs font-bold text-foreground"
+                imageClassName="rounded-lg object-contain"
                 loading="lazy"
                 src={selectedProduct.thumbnailUrl}
               />
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <span className="truncate text-sm font-bold text-foreground">
                     {getEquipmentListingName(selectedProduct)}
                   </span>
@@ -147,9 +149,11 @@ export function ProductCalendarView({
                     {getEquipmentListingStatusLabel(selectedProduct.status)}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   {selectedProduct.model ? (
-                    <span>Model: {selectedProduct.model}</span>
+                    <span>
+                      Model: <span className="font-medium text-foreground">{selectedProduct.model}</span>
+                    </span>
                   ) : null}
                   <span>
                     Tổng máy:{" "}
@@ -169,36 +173,67 @@ export function ProductCalendarView({
         {selectedProduct ? (
           <>
             {/* Today statistic cards */}
-            <StatisticCards
-              items={[
-                {
-                  label: "Tổng máy vật lý",
-                  value: selectedProduct.totalQuantity,
-                  description: "Mỗi máy có số serial riêng",
-                },
-                {
-                  label: "Đang sử dụng hôm nay",
-                  value: todayCalendar.error ? "—" : todayStats?.occupiedQuantity,
-                  description: "Bao gồm lịch thuê và giữ chỗ",
-                  tone: "accent",
-                  isLoading: todayCalendar.isLoading,
-                },
-                {
-                  label: "Bị chặn lịch hôm nay",
-                  value: todayCalendar.error ? "—" : todayStats?.blockedQuantity,
-                  description: "Máy bị chặn không thể đặt thuê",
-                  tone: "warning",
-                  isLoading: todayCalendar.isLoading,
-                },
-                {
-                  label: "Khả dụng hôm nay",
-                  value: todayCalendar.error ? "—" : todayStats?.availableQuantity,
-                  description: "Theo lịch sử dụng của sản phẩm",
-                  tone: "success",
-                  isLoading: todayCalendar.isLoading,
-                },
-              ]}
-            />
+            <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+              <div className="flex min-w-0 flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-2xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Tổng máy vật lý</span>
+                  <span className="grid size-8 place-items-center rounded-lg bg-muted/70 text-muted-foreground">
+                    <Boxes className="size-4" />
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <div className="text-2xl font-bold tabular-nums text-foreground">
+                    {selectedProduct.totalQuantity}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">Mỗi máy có số serial riêng</p>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col justify-between rounded-xl border border-blue-200/70 bg-blue-50/30 p-4 shadow-2xs dark:border-blue-900/50 dark:bg-blue-950/20">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-blue-900 dark:text-blue-200">Đang thuê hôm nay</span>
+                  <span className="grid size-8 place-items-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                    <CalendarClock className="size-4" />
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <div className="text-2xl font-bold tabular-nums text-blue-700 dark:text-blue-300">
+                    {todayCalendar.isLoading ? <Skeleton className="h-8 w-12" /> : (todayStats?.occupiedQuantity ?? 0)}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-blue-700/70 dark:text-blue-300/70">Bao gồm lịch thuê & giữ chỗ</p>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col justify-between rounded-xl border border-amber-200/70 bg-amber-50/30 p-4 shadow-2xs dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-amber-900 dark:text-amber-200">Bị chặn lịch hôm nay</span>
+                  <span className="grid size-8 place-items-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                    <CalendarX className="size-4" />
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <div className="text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-300">
+                    {todayCalendar.isLoading ? <Skeleton className="h-8 w-12" /> : (todayStats?.blockedQuantity ?? 0)}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-amber-700/70 dark:text-amber-300/70">Bảo trì hoặc khóa lịch</p>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col justify-between rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-4 shadow-2xs dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-emerald-900 dark:text-emerald-200">Khả dụng hôm nay</span>
+                  <span className="grid size-8 place-items-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                    <CheckCircle2 className="size-4" />
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <div className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                    {todayCalendar.isLoading ? <Skeleton className="h-8 w-12" /> : (todayStats?.availableQuantity ?? 0)}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-emerald-700/70 dark:text-emerald-300/70">Sẵn sàng để cho thuê</p>
+                </div>
+              </div>
+            </div>
 
             {todayCalendar.error ? (
               <div
