@@ -153,13 +153,13 @@ export function ProductCalendarView({
                 <p className="truncate text-[11px] font-medium text-emerald-900/80 dark:text-emerald-300/80">
                   Khả dụng hôm nay
                 </p>
-                <p className="text-lg font-bold leading-none tabular-nums text-emerald-700 dark:text-emerald-300">
+                <div className="text-lg font-bold leading-none tabular-nums text-emerald-700 dark:text-emerald-300">
                   {todayCalendar.isLoading ? (
                     <Skeleton className="mt-1 h-5 w-8" />
                   ) : (
                     todayStats?.availableQuantity ?? 0
                   )}
-                </p>
+                </div>
               </div>
             </div>
 
@@ -171,13 +171,13 @@ export function ProductCalendarView({
                 <p className="truncate text-[11px] font-medium text-blue-900/80 dark:text-blue-300/80">
                   Đang thuê / Giữ chỗ
                 </p>
-                <p className="text-lg font-bold leading-none tabular-nums text-blue-700 dark:text-blue-300">
+                <div className="text-lg font-bold leading-none tabular-nums text-blue-700 dark:text-blue-300">
                   {todayCalendar.isLoading ? (
                     <Skeleton className="mt-1 h-5 w-8" />
                   ) : (
                     todayStats?.occupiedQuantity ?? 0
                   )}
-                </p>
+                </div>
               </div>
             </div>
 
@@ -189,13 +189,13 @@ export function ProductCalendarView({
                 <p className="truncate text-[11px] font-medium text-amber-900/80 dark:text-amber-300/80">
                   Bị chặn lịch
                 </p>
-                <p className="text-lg font-bold leading-none tabular-nums text-amber-700 dark:text-amber-300">
+                <div className="text-lg font-bold leading-none tabular-nums text-amber-700 dark:text-amber-300">
                   {todayCalendar.isLoading ? (
                     <Skeleton className="mt-1 h-5 w-8" />
                   ) : (
                     todayStats?.blockedQuantity ?? 0
                   )}
-                </p>
+                </div>
               </div>
             </div>
 
@@ -207,9 +207,9 @@ export function ProductCalendarView({
                 <p className="truncate text-[11px] font-medium text-muted-foreground">
                   Tổng máy vật lý
                 </p>
-                <p className="text-lg font-bold leading-none tabular-nums text-foreground">
+                <div className="text-lg font-bold leading-none tabular-nums text-foreground">
                   {selectedProduct.totalQuantity}
-                </p>
+                </div>
               </div>
             </div>
           </div>
