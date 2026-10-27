@@ -48,18 +48,25 @@ export const organizationColumns: DataTableColumn<AdminOrganizationSummary>[] = 
   {
     id: "type",
     header: "Loại tổ chức",
+    minWidth: 130,
     width: 140,
-    cell: (organization) => getOrganizationTypeLabel(organization.type),
+    cell: (organization) => (
+      <span className="whitespace-nowrap text-muted-foreground">
+        {getOrganizationTypeLabel(organization.type)}
+      </span>
+    ),
   },
   {
     id: "status",
     header: "Trạng thái",
+    minWidth: 120,
     width: 130,
     cell: (organization) => <OrganizationStatusBadge status={organization.status} />,
   },
   {
     id: "province",
     header: "Tỉnh/thành",
+    minWidth: 140,
     width: 150,
     cell: (organization) => (
       <span className="block truncate text-muted-foreground" title={organization.province ?? undefined}>
@@ -70,7 +77,12 @@ export const organizationColumns: DataTableColumn<AdminOrganizationSummary>[] = 
   {
     id: "createdAtUtc",
     header: "Ngày tạo",
-    width: 160,
-    cell: (organization) => formatOrganizationDate(organization.createdAtUtc),
+    minWidth: 170,
+    width: 180,
+    cell: (organization) => (
+      <span className="whitespace-nowrap font-medium text-muted-foreground">
+        {formatOrganizationDate(organization.createdAtUtc)}
+      </span>
+    ),
   },
 ];
