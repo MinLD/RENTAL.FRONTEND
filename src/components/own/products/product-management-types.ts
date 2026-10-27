@@ -96,11 +96,3 @@ export type ProductPageActions = ProductDetailActions & {
     range: InventoryCalendarRange,
   ) => Promise<ApiResult<EquipmentListingCalendar>>;
 };
-
-export type ProductDetailInitialData = {
-  initialProduct: ApiResult<EquipmentListing>;
-  initialBrand: ApiResult<CatalogBrand> | null;
-  initialType: ApiResult<CatalogEquipmentTypeDetail> | null;
-  initialCalendar: ApiResult<EquipmentListingCalendar>;
-  initialToday: string;
-};

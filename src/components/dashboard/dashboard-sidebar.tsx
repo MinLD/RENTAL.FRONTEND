@@ -108,8 +108,8 @@ function DashboardSidebarItem({
           className={cn(
             "h-10 rounded-lg text-[13px] font-bold uppercase tracking-[0.01em] text-muted-foreground",
             "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
-            "hover:bg-primary/10 hover:text-primary",
-            isActive && "bg-primary/10 text-primary",
+            "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           )}
           isActive={isActive}
           onClick={() => {
@@ -141,8 +141,8 @@ function DashboardSidebarItem({
           className={cn(
             "h-10 rounded-lg text-[13px] font-bold uppercase tracking-[0.01em] text-muted-foreground",
             "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
-            "hover:bg-primary/10 hover:text-primary",
-            isActive && "bg-primary/10 text-primary",
+            "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           )}
           isActive={isActive}
           tooltip={item.label}
@@ -162,7 +162,7 @@ function DashboardSidebarItem({
             <SidebarMenuSubItem key={child.href}>
               <SidebarMenuSubButton
                 asChild
-                isActive={isItemActive(pathname, child.href)}
+                isActive={isChildItemActive(pathname, child.href, item.children)}
               >
                 <Link href={child.href}>
                   <span>{child.label}</span>
@@ -182,6 +182,25 @@ function isItemActive(pathname: string, href: string) {
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isChildItemActive(
+  pathname: string,
+  childHref: string,
+  allChildren?: DashboardNavigationItem[],
+) {
+  if (allChildren) {
+    const hasMoreSpecificMatch = allChildren.some(
+      (sibling) =>
+        sibling.href !== childHref &&
+        sibling.href.startsWith(`${childHref}/`) &&
+        isItemActive(pathname, sibling.href),
+    );
+    if (hasMoreSpecificMatch) {
+      return false;
+    }
+  }
+  return isItemActive(pathname, childHref);
 }
 
 function SidebarUserMenu({
@@ -244,9 +263,9 @@ function SidebarUserMenu({
         aria-expanded={isOpen}
         className={cn(
           "flex h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg bg-muted px-3 text-left transition-colors",
-          "hover:bg-primary/10 hover:text-primary",
+          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
-          isOpen && "bg-primary/10 text-primary",
+          isOpen && "bg-sidebar-accent text-sidebar-accent-foreground",
         )}
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
@@ -295,7 +314,7 @@ function SidebarUserMenu({
           </div>
           <div className="py-1">
             <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               href="/"
               onClick={() => setIsOpen(false)}
             >
@@ -303,7 +322,7 @@ function SidebarUserMenu({
               Về trang chủ
             </Link>
             <button
-              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isLoggingOut}
               onClick={handleLogout}
               type="button"

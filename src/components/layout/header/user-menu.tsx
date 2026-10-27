@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ChevronDown, ClipboardList, LogOut, UserRound } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  ClipboardList,
+  LogOut,
+  UserRound,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -41,7 +47,7 @@ export function UserMenu({ user }: UserMenuProps) {
     user.roles?.some((role) => {
       const r = role.toLowerCase();
       return r === "own" || r === "owner" || r === "supplier" || r === "sup";
-    })
+    }),
   );
 
   useEffect(() => {
@@ -169,7 +175,7 @@ export function UserMenu({ user }: UserMenuProps) {
               onClick={() => setIsOpen(false)}
             >
               <Building2 aria-hidden="true" size={16} />
-              Vào trang quản lý tổ chức
+              Quản lý tổ chức
             </Link>
           ) : (
             <Link

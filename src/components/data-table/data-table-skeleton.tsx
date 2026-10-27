@@ -93,6 +93,7 @@ type DataTableRowsSkeletonProps = {
 };
 
 type DataTableSkeletonColumn = {
+  className?: string;
   skeleton?: ReactNode;
 };
 
@@ -121,7 +122,7 @@ export function DataTableRowsSkeleton({
               >
                 <Skeleton
                   className={cn(
-                    "h-4",
+                    "h-4 max-w-[80%]",
                     showActions && index === totalColumns - 1 ? "w-12" : "w-20",
                   )}
                 />
@@ -150,31 +151,34 @@ export function DataTableBodySkeletonRows({
   columnCount?: number;
   columns?: DataTableSkeletonColumn[];
 }) {
-  const skeletonColumns =
+  const skeletonColumns: DataTableSkeletonColumn[] =
     columns ??
-    Array.from({ length: columnCount ?? 0 }, () => ({ skeleton: undefined }));
+    Array.from({ length: columnCount ?? 0 }, () => ({}));
 
   return (
     <>
       {Array.from({ length: rowCount }, (_, rowIndex) => (
         <TableRow key={rowIndex}>
           {skeletonColumns.map((column, columnIndex) => (
-            <TableCell className="max-w-0" key={columnIndex}>
+            <TableCell
+              className={cn("max-w-0 overflow-hidden", column.className)}
+              key={columnIndex}
+            >
               {column.skeleton ??
                 (columnIndex === 0 ? (
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="size-9 rounded-full" />
-                    <Skeleton className="h-4 w-28" />
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Skeleton className="size-9 shrink-0 rounded-full" />
+                    <Skeleton className="h-4 w-28 max-w-[calc(100%-48px)]" />
                   </div>
                 ) : (
                   <Skeleton
                     className={cn(
-                      "h-4",
+                      "h-4 max-w-[75%]",
                       columnIndex % 3 === 0
-                        ? "w-24"
+                        ? "w-16"
                         : columnIndex % 2 === 0
-                          ? "w-32"
-                          : "w-44",
+                          ? "w-24"
+                          : "w-20",
                     )}
                   />
                 ))}

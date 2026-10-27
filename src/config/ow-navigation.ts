@@ -10,6 +10,20 @@ export const OW_NAVIGATION: DashboardNavigationItem[] = [
     href: "/own/products",
     icon: "package",
     label: "Quản lý sản phẩm",
+    children: [
+      {
+        href: "/own/products",
+        label: "Danh sách sản phẩm",
+      },
+      {
+        href: "/own/products/assets",
+        label: "Máy vật lý",
+      },
+      {
+        href: "/own/products/calendar",
+        label: "Lịch sử dụng",
+      },
+    ],
   },
   {
     href: "/own/orders",
