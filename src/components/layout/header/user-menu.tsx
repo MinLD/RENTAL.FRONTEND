@@ -42,8 +42,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const avatarUrl = optimisticAvatarUrl || user.avatarUrl;
   const displayName = getAuthUserDisplayName(user);
   const roleLabel = getAuthUserRoleLabel(user);
-  const hasOrganization = Boolean(
-    (user.organizations && user.organizations.length > 0) ||
+  const isOwner = Boolean(
     user.roles?.some((role) => {
       const r = role.toLowerCase();
       return r === "own" || r === "owner" || r === "supplier" || r === "sup";
@@ -168,7 +167,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <ClipboardList aria-hidden="true" size={16} />
             Đơn thuê của tôi
           </Link>
-          {hasOrganization ? (
+          {isOwner ? (
             <Link
               className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
               href="/own"

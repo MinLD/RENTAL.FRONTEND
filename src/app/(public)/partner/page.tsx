@@ -36,6 +36,12 @@ export default async function PartnerPage() {
     province: defaultAddress?.province ?? "",
     address: defaultAddress?.addressDetail ?? "",
   };
+  const isOwner = Boolean(
+    currentUser?.roles?.some((role) => {
+      const r = role.toLowerCase();
+      return r === "own" || r === "owner" || r === "supplier" || r === "sup";
+    }),
+  );
   return (
     <div className="flex flex-1 flex-col bg-background py-8 sm:py-10">
       <Container>
@@ -56,6 +62,7 @@ export default async function PartnerPage() {
           currentUserData={currentUserData}
           initialError={result.success ? undefined : result.error.message}
           initialOrganization={organization}
+          isOwner={isOwner}
           profileCompletion={profileCompletion}
           key={`${organization?.id ?? "new"}:${organization?.status ?? "new"}:${organization?.submittedAtUtc ?? ""}`}
         />

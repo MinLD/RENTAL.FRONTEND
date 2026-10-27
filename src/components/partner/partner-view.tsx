@@ -36,6 +36,7 @@ type PartnerViewProps = {
   initialError?: string;
   profileCompletion: ProfileCompletion;
   currentUserData?: CurrentUserData;
+  isOwner?: boolean;
 };
 
 export function PartnerView({
@@ -43,6 +44,7 @@ export function PartnerView({
   initialError = "",
   profileCompletion,
   currentUserData,
+  isOwner = false,
 }: PartnerViewProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -108,6 +110,7 @@ export function PartnerView({
     return (
       <OrganizationStatusView
         error={error}
+        isOwner={isOwner}
         isRefreshing={isLoading}
         onEdit={() => void loadOrganization(true)}
         onRefresh={() => void loadOrganization()}
