@@ -20,7 +20,6 @@ type ConfirmationStepProps = {
   logoPreviewUrl: string;
   onConfirmedChange: (confirmed: boolean) => void;
   onEdit: (step: "business" | "legal" | "contact") => void;
-  submissionError?: string;
 };
 
 function formatDate(value?: string) {
@@ -36,7 +35,6 @@ export function ConfirmationStep({
   logoPreviewUrl,
   onConfirmedChange,
   onEdit,
-  submissionError,
 }: ConfirmationStepProps) {
   const { control } = useFormContext<PartnerRegistrationFormValues>();
   const values = useWatch({ control });
@@ -166,11 +164,7 @@ export function ConfirmationStep({
           Sau khi gửi, hồ sơ sẽ được DPU Rental xét duyệt trước khi doanh nghiệp có thể đăng thiết bị cho thuê.
         </p>
       </div>
-      {submissionError ? (
-        <p className="whitespace-pre-line rounded-lg border border-error/20 bg-error/5 p-3 text-sm text-error" role="alert">
-          {submissionError}
-        </p>
-      ) : null}
+
     </div>
   );
 }

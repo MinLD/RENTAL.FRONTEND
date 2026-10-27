@@ -206,7 +206,7 @@ function AreaDialog({
           {provinceOptions.length ? (
             provinceOptions.map((item) => (
               <label
-                className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded px-4 py-2 text-sm hover:bg-primary/5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary sm:text-base"
+                className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded px-4 py-2 text-sm hover:bg-hover-accent has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary sm:text-base"
                 key={item.code}
               >
                 <span>{item.name.replace(/^(Tỉnh|Thành phố) /, "")}</span>

@@ -153,7 +153,7 @@ export function UserMenu({ user }: UserMenuProps) {
       {isOpen ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-60 rounded border border-border bg-background py-2 shadow-lg">
           <Link
-            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
             href="/account"
             onClick={() => setIsOpen(false)}
           >
@@ -161,7 +161,7 @@ export function UserMenu({ user }: UserMenuProps) {
             Tài khoản của tôi
           </Link>
           <Link
-            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
             href="/orders"
             onClick={() => setIsOpen(false)}
           >
@@ -170,7 +170,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </Link>
           {hasOrganization ? (
             <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
               href="/own"
               onClick={() => setIsOpen(false)}
             >
@@ -179,7 +179,7 @@ export function UserMenu({ user }: UserMenuProps) {
             </Link>
           ) : (
             <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground"
               href="/partner"
               onClick={() => setIsOpen(false)}
             >
@@ -189,7 +189,7 @@ export function UserMenu({ user }: UserMenuProps) {
           )}
           <button
             disabled={isLoggingOut}
-            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground disabled:cursor-not-allowed disabled:opacity-60"
             onClick={handleLogout}
             type="button"
           >

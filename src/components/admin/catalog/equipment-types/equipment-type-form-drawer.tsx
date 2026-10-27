@@ -551,7 +551,7 @@ function CategoryMultiSelect({
         {activeCategories.length ? (
           activeCategories.map((category) => (
             <label
-              className="flex cursor-pointer items-start gap-3 rounded p-2 text-sm font-semibold text-foreground hover:bg-primary/5"
+              className="flex cursor-pointer items-start gap-3 rounded p-2 text-sm font-semibold text-foreground hover:bg-hover-accent"
               key={category.id}
             >
               <Checkbox

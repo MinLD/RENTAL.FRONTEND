@@ -134,8 +134,8 @@ export function MobileMenu({ user }: MobileMenuProps) {
                 const isActive = isMainNavigationActive(pathname, item.href);
                 const linkProps = {
                   "aria-current": isActive ? "page" as const : undefined,
-                  className: `flex rounded px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary/10 hover:text-primary ${
-                    isActive ? "bg-primary/10 text-primary" : ""
+                  className: `flex rounded px-3 py-2 text-sm font-semibold transition-colors hover:bg-hover-accent hover:text-hover-accent-foreground ${
+                    isActive ? "bg-hover-accent text-hover-accent-foreground font-bold" : "text-muted-foreground"
                   }`,
                   onClick: () => setIsOpen(false),
                 };

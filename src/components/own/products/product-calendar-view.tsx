@@ -1,17 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  Calendar as CalendarIcon,
-  Plus,
-  RefreshCw,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/empty-state";
+import { DataTableState } from "@/components/data-table";
 import { StatisticCards } from "@/components/layout/detail-page";
 import { useApiResource } from "@/hooks/use-api-resource";
 import type { EquipmentListing } from "@/types/inventory";
@@ -73,20 +68,8 @@ export function ProductCalendarView({
 
   if (initialProducts.length === 0) {
     return (
-      <div className="flex h-full min-w-0 flex-col items-center justify-center p-6">
-        <EmptyState
-          action={
-            <Button asChild>
-              <Link href="/own/products">
-                <Plus className="size-4" />
-                Tạo sản phẩm mới
-              </Link>
-            </Button>
-          }
-          description="Bạn cần có sản phẩm đã đăng ký trước khi theo dõi lịch sử dụng và khả dụng của thiết bị."
-          icon={<CalendarIcon className="size-10 text-muted-foreground" />}
-          title="Chưa có sản phẩm nào"
-        />
+      <div className="grid h-full min-h-64 place-items-center p-6">
+        <DataTableState message="Không có sản phẩm nào để hiển thị lịch sử dụng." />
       </div>
     );
   }

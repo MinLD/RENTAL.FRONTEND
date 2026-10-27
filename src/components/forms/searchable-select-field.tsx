@@ -204,8 +204,8 @@ export const SearchableSelectField = forwardRef<
                   <button
                     aria-selected={option.value === value}
                     className={cn(
-                      "flex w-full cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-foreground hover:bg-primary/5",
-                      index === activeIndex && "bg-primary/5",
+                      "flex w-full cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-foreground hover:bg-hover-accent hover:text-hover-accent-foreground",
+                      index === activeIndex && "bg-hover-accent text-hover-accent-foreground",
                     )}
                     id={`${listId}-${index}`}
                     key={option.value}

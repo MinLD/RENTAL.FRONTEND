@@ -52,7 +52,7 @@ export function NotificationDropdown({
             <Popover.Close asChild>
               <button
                 aria-label="Đóng thông báo"
-                className="inline-flex size-7 cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-primary/5 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="inline-flex size-7 cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-hover-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
                 type="button"
               >
                 <X aria-hidden="true" className="size-4" />
