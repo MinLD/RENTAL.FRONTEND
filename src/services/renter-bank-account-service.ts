@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import type {
   RenterBankAccount,
   UpdateRenterBankAccountRequest,
@@ -7,10 +8,17 @@ import type {
 
 const endpoints = API_ENDPOINTS.backend.rental;
 
-export function getRenterBankAccounts() {
-  return authApiClientJson<RenterBankAccount[]>(endpoints.bankAccounts, {
-    cache: "no-store",
-  });
+export async function getRenterBankAccounts(): Promise<RenterBankAccount[]> {
+  try {
+    return await authApiClientJson<RenterBankAccount[]>(endpoints.bankAccounts, {
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 export function updateRenterBankAccount(

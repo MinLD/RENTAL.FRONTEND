@@ -3,6 +3,7 @@ import { z } from "zod";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { parsePublicEquipmentListingListParams } from "@/lib/validations/public-equipment-search";
 import { authApiClient } from "@/services/api-client";
+import { ApiError } from "@/services/api-error";
 import type {
   EquipmentAvailabilityCheckRequest,
   EquipmentAvailabilityCheckResponse,
@@ -52,9 +53,22 @@ export async function fetchPublicEquipmentListings(
   const request = parsePublicEquipmentListingListParams(params);
   // This public endpoint accepts optional authentication for recommendations.
   // The BFF forwards the HttpOnly session cookie when present; guests need no token.
-  const response = await authApiClient(
-    API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
-    { signal },
-  );
-  return response.json();
+  try {
+    const response = await authApiClient(
+      API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
+      { signal },
+    );
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return {
+        items: [],
+        page: request.page ?? 1,
+        pageSize: request.pageSize ?? 20,
+        totalCount: 0,
+        totalPages: 1,
+      };
+    }
+    throw error;
+  }
 }

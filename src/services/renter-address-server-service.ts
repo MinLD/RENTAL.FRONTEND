@@ -14,6 +14,10 @@ export async function getRenterAddressesForServer(): Promise<InitialRenterAddres
   try {
     const response = await serverApi(API_ENDPOINTS.backend.rental.addresses);
 
+    if (response.status === 404) {
+      return { addresses: [], error: null };
+    }
+
     if (!response.ok) {
       return {
         addresses: null,

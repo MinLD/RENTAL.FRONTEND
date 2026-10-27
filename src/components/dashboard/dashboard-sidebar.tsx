@@ -33,6 +33,7 @@ type DashboardSidebarProps = {
   items: DashboardNavigationItem[];
   user?: {
     avatarUrl?: string | null;
+    canNavigateHome?: boolean;
     name: string;
     roleLabel: string;
   } | null;
@@ -208,6 +209,7 @@ function SidebarUserMenu({
 }: {
   user?: {
     avatarUrl?: string | null;
+    canNavigateHome?: boolean;
     name: string;
     roleLabel: string;
   } | null;
@@ -313,14 +315,16 @@ function SidebarUserMenu({
             </span>
           </div>
           <div className="py-1">
-            <Link
-              className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              href="/"
-              onClick={() => setIsOpen(false)}
-            >
-              <Home size={16} />
-              Về trang chủ
-            </Link>
+            {user?.canNavigateHome ? (
+              <Link
+                className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                href="/"
+                onClick={() => setIsOpen(false)}
+              >
+                <Home size={16} />
+                Về trang chủ
+              </Link>
+            ) : null}
             <button
               className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isLoggingOut}

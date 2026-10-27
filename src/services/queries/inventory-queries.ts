@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { parsePublicEquipmentListingListParams } from "@/lib/validations/public-equipment-search";
-import { ApiInputError } from "@/services/api-error";
+import { ApiError, ApiInputError } from "@/services/api-error";
 import type { ApiResult } from "@/services/api-error";
 import {
   assertInventoryId,
@@ -36,10 +36,23 @@ export async function getPublicEquipmentListings(
 ): Promise<ApiResult<PublicEquipmentListingListResponse>> {
   return serverApiResult(async () => {
     const request = parsePublicEquipmentListingListParams(params);
-    return serverApiJson<PublicEquipmentListingListResponse>(
-      API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
-      "Không thể tải danh sách thiết bị.",
-    );
+    try {
+      return await serverApiJson<PublicEquipmentListingListResponse>(
+        API_ENDPOINTS.backend.inventory.equipmentListings.publicList(request),
+        "Không thể tải danh sách thiết bị.",
+      );
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return {
+          items: [],
+          page: request.page ?? 1,
+          pageSize: request.pageSize ?? 20,
+          totalCount: 0,
+          totalPages: 1,
+        };
+      }
+      throw error;
+    }
   });
 }
 

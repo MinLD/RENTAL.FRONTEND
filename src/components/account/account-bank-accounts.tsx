@@ -10,6 +10,7 @@ import { BankAccountDeleteDialog } from "@/components/account/bank-account-delet
 import { BankAccountEditDialog } from "@/components/account/bank-account-edit-dialog";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
+import { ApiError } from "@/services/api-error";
 import { getRenterBankAccounts } from "@/services/renter-bank-account-service";
 import { setDefaultRenterBankAccountAction } from "@/services/actions/renter-bank-account-actions";
 import type { RenterBankAccount } from "@/types/renter-bank-account";
@@ -39,8 +40,11 @@ export function AccountBankAccounts({
   });
 
   const accounts = accountsQuery.data;
-  const loadError =
-    accountsQuery.error instanceof Error && accountsQuery.error.message
+  const is404 =
+    accountsQuery.error instanceof ApiError && accountsQuery.error.status === 404;
+  const loadError = is404
+    ? null
+    : accountsQuery.error instanceof Error && accountsQuery.error.message
       ? accountsQuery.error.message
       : accountsQuery.error
         ? "Không thể tải sổ tài khoản ngân hàng."
@@ -96,8 +100,7 @@ export function AccountBankAccounts({
         <Button
           disabled={
             isSettingDefault ||
-            !accounts ||
-            accounts.length >= MAX_BANK_ACCOUNTS
+            Boolean(accounts && accounts.length >= MAX_BANK_ACCOUNTS)
           }
           onClick={() => setCreating(true)}
           type="button"
