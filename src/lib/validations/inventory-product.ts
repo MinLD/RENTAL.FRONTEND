@@ -200,9 +200,24 @@ export const updateInventoryAssetRequestSchema = z.object({
   serialNumber: productCreateFormSchema.shape.serialNumber.optional(),
   manufactureYear: manufactureYearRequestSchema.optional(),
 });
-export const inventoryAssetFormSchema = z.object({
+export const inventoryAssetCreateFormSchema = z.object({
+  serialNumber: productCreateFormSchema.shape.serialNumber,
+});
+export type InventoryAssetCreateFormValues = z.infer<
+  typeof inventoryAssetCreateFormSchema
+>;
+
+export const inventoryAssetEditFormSchema = z.object({
   serialNumber: productCreateFormSchema.shape.serialNumber,
   manufactureYear: manufactureYearInputSchema,
+});
+export type InventoryAssetEditFormValues = z.infer<
+  typeof inventoryAssetEditFormSchema
+>;
+
+export const inventoryAssetFormSchema = z.object({
+  serialNumber: productCreateFormSchema.shape.serialNumber,
+  manufactureYear: manufactureYearInputSchema.optional().or(z.literal("")),
 });
 export type InventoryAssetFormValues = z.infer<typeof inventoryAssetFormSchema>;
 
