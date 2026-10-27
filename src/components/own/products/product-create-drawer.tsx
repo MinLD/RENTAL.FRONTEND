@@ -28,6 +28,8 @@ import {
 import type { ApiResult } from "@/services/api-error";
 import { uploadMediaFiles } from "@/services/media-service";
 import type {
+  CatalogBrand,
+  CatalogEquipmentTypeListItem,
   CatalogPublishedSpecSchema,
   CatalogSpecField,
 } from "@/types/catalog";
@@ -50,6 +52,18 @@ type ProductCreateDrawerProps = {
   onSubmit: (
     request: CreateEquipmentListingRequest,
   ) => Promise<ApiResult<EquipmentListing> | undefined>;
+  brands?: {
+    items: CatalogBrand[];
+    isLoading: boolean;
+    error: string | null;
+    retry: () => void;
+  };
+  equipmentTypes?: {
+    items: CatalogEquipmentTypeListItem[];
+    isLoading: boolean;
+    error: string | null;
+    retry: () => void;
+  };
 };
 
 export function ProductCreateDrawer({
@@ -57,6 +71,8 @@ export function ProductCreateDrawer({
   isSubmitting,
   onOpenChange,
   onSubmit,
+  brands: providedBrands,
+  equipmentTypes: providedEquipmentTypes,
 }: ProductCreateDrawerProps) {
   const { fetchSchema } = actions;
   const [activeTab, setActiveTab] = useState("detail");
@@ -68,8 +84,16 @@ export function ProductCreateDrawer({
     Record<string, string | null>
   >({});
   const schemaRequestIdRef = useRef(0);
-  const equipmentTypes = useCatalogSelectOptions(actions.fetchEquipmentTypes);
-  const brands = useCatalogSelectOptions(actions.fetchBrands);
+  const fallbackEquipmentTypes = useCatalogSelectOptions(
+    actions.fetchEquipmentTypes,
+    !providedEquipmentTypes,
+  );
+  const fallbackBrands = useCatalogSelectOptions(
+    actions.fetchBrands,
+    !providedBrands,
+  );
+  const equipmentTypes = providedEquipmentTypes ?? fallbackEquipmentTypes;
+  const brands = providedBrands ?? fallbackBrands;
   const fields = schema?.fields ?? EMPTY_FIELDS;
   const resolverSchema = useMemo(
     () => getProductCreateFormSchema(fields),
@@ -205,7 +229,7 @@ export function ProductCreateDrawer({
           currency: "VND",
         },
         thumbnailMediaId: values.thumbnailMediaId || null,
-        depositAmount: Number(values.depositAmount),
+        depositAmount: Number(values.depositAmount || 0),
       });
       if (result && !result.success) {
         setError("root.server", { message: result.error.message });
@@ -248,6 +272,18 @@ export function ProductCreateDrawer({
           }
         }
         if (hasSpecError) setActiveTab("specs");
+        else if (
+          Object.keys(result.error.fieldErrors).some((k) =>
+            [
+              "dailyrate",
+              "weeklyrate",
+              "monthlyrate",
+              "depositamount",
+            ].includes(k.toLowerCase()),
+          )
+        ) {
+          setActiveTab("pricing");
+        }
       }
     } catch (error) {
       setError("root.server", {
@@ -294,6 +330,7 @@ export function ProductCreateDrawer({
       tabs={[
         { label: "Thông tin", value: "detail" },
         { label: "Thông số kỹ thuật", value: "specs" },
+        { label: "Giá thuê", value: "pricing" },
       ]}
       title="Thêm sản phẩm"
     >
@@ -302,11 +339,40 @@ export function ProductCreateDrawer({
         id={FORM_ID}
         noValidate
         onSubmit={handleSubmit(submitForm, (formErrors) => {
-          setActiveTab(
-            Object.keys(formErrors).some((key) => key !== "specInputs")
-              ? "detail"
-              : "specs",
+          const keys = Object.keys(formErrors);
+          const hasDetailError = keys.some((key) =>
+            [
+              "equipmentTypeId",
+              "brandId",
+              "name",
+              "description",
+              "model",
+              "serialNumber",
+              "manufactureYear",
+              "mediaIds",
+              "thumbnailMediaId",
+            ].includes(key),
           );
+          if (hasDetailError) {
+            setActiveTab("detail");
+            return;
+          }
+          if (keys.includes("specInputs")) {
+            setActiveTab("specs");
+            return;
+          }
+          if (
+            keys.some((key) =>
+              [
+                "dailyRate",
+                "weeklyRate",
+                "monthlyRate",
+                "depositAmount",
+              ].includes(key),
+            )
+          ) {
+            setActiveTab("pricing");
+          }
         })}
       >
         {errors.root?.server?.message ? (
@@ -430,6 +496,7 @@ export function ProductCreateDrawer({
               placeholder="VD: 2024"
               inputMode="numeric"
               maxLength={4}
+              required
             />
           </div>
           <TextareaField
@@ -471,58 +538,7 @@ export function ProductCreateDrawer({
               />
             )}
           />
-          <section className="space-y-4 pt-5">
-            <h2 className="text-sm font-semibold">Giá thuê (VND)</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {(
-                [
-                  ["dailyRate", "Giá / ngày"],
-                  ["weeklyRate", "Giá / tuần"],
-                  ["monthlyRate", "Giá / tháng"],
-                ] as const
-              ).map(([name, label]) => (
-                <Controller
-                  control={control}
-                  key={name}
-                  name={name}
-                  render={({ field, fieldState }) => (
-                    <MoneyField
-                      {...field}
-                      disabled={isBusy}
-                      error={fieldState.error?.message}
-                      id={`${FORM_ID}-${name}`}
-                      label={label}
-                      placeholder="VD: 100.000"
-                      required
-                      rightElement={
-                        <span className="px-2 text-xs text-muted-foreground">
-                          VND
-                        </span>
-                      }
-                    />
-                  )}
-                />
-              ))}
-            </div>
-          </section>
-          <Controller
-            control={control}
-            name="depositAmount"
-            render={({ field, fieldState }) => (
-              <MoneyField
-                {...field}
-                disabled={isBusy}
-                error={fieldState.error?.message}
-                id={`${FORM_ID}-depositAmount`}
-                label="Tiền cọc"
-                placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
-                required
-                rightElement={
-                  <span className="px-2 text-xs text-muted-foreground">VND</span>
-                }
-              />
-            )}
-          />
+
           {equipmentTypeId ? (
             <SchemaLoadState
               error={schemaError}
@@ -572,6 +588,60 @@ export function ProductCreateDrawer({
               ) : null}
             </>
           )}
+        </div>
+        <div className="space-y-5" hidden={activeTab !== "pricing"}>
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold">Giá thuê (VND)</h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {(
+                [
+                  ["dailyRate", "Giá / ngày"],
+                  ["weeklyRate", "Giá / tuần"],
+                  ["monthlyRate", "Giá / tháng"],
+                ] as const
+              ).map(([name, label]) => (
+                <Controller
+                  control={control}
+                  key={name}
+                  name={name}
+                  render={({ field, fieldState }) => (
+                    <MoneyField
+                      {...field}
+                      disabled={isBusy}
+                      error={fieldState.error?.message}
+                      id={`${FORM_ID}-${name}`}
+                      label={label}
+                      placeholder="VD: 100.000"
+                      required
+                      rightElement={
+                        <span className="px-2 text-xs text-muted-foreground">
+                          VND
+                        </span>
+                      }
+                    />
+                  )}
+                />
+              ))}
+            </div>
+          </section>
+          <Controller
+            control={control}
+            name="depositAmount"
+            render={({ field, fieldState }) => (
+              <MoneyField
+                {...field}
+                disabled={isBusy}
+                error={fieldState.error?.message}
+                id={`${FORM_ID}-depositAmount`}
+                label="Tiền cọc"
+                placeholder="Nhập 0 nếu không yêu cầu tiền cọc"
+
+                rightElement={
+                  <span className="px-2 text-xs text-muted-foreground">VND</span>
+                }
+              />
+            )}
+          />
         </div>
       </form>
     </FormDrawer>
@@ -697,7 +767,7 @@ export function ProductImageField({
 }) {
   return (
     <div className="space-y-3 rounded border border-border bg-muted/40 p-4">
-      <p className="text-xs font-semibold uppercase">Ảnh sản phẩm</p>
+      <p className="text-xs font-semibold uppercase">Ảnh sản phẩm <span className="ml-1 text-error">*</span></p>
       <div className="flex flex-wrap items-center gap-4">
         <MediaAvatarUpload
           accept={IMAGE_CONTENT_TYPES.join(",")}

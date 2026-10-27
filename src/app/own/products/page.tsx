@@ -15,7 +15,17 @@ import {
   updateOwnEquipmentListingRentalRateAction,
 } from "@/services/actions/inventory-actions";
 
-export default function OwnProductsPage() {
+export default async function OwnProductsPage() {
+  const [brandsResult, equipmentTypesResult] = await Promise.all([
+    listCatalogBrandsAction({ page: 1, pageSize: 100 }),
+    listCatalogEquipmentTypesAction({ page: 1, pageSize: 100 }),
+  ]);
+
+  const initialBrands = brandsResult.success ? brandsResult.data.data : [];
+  const initialEquipmentTypes = equipmentTypesResult.success
+    ? equipmentTypesResult.data.data
+    : [];
+
   return (
     <ProductsManagementTable
       createActions={{
@@ -33,6 +43,8 @@ export default function OwnProductsPage() {
         fetchSchemaVersion: getCatalogEquipmentTypeSchemaVersionAction,
       }}
       fetchProducts={getOwnEquipmentListingsAction}
+      initialBrands={initialBrands}
+      initialEquipmentTypes={initialEquipmentTypes}
     />
   );
 }

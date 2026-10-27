@@ -23,18 +23,23 @@ const rateInputSchema = z
 const depositInputSchema = z
   .string()
   .trim()
-  .min(1, "Vui lòng nhập tiền cọc; nhập 0 nếu không yêu cầu tiền cọc.")
   .refine(
-    (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
+    (value) => !value || (Number.isFinite(Number(value)) && Number(value) >= 0),
     "Tiền cọc phải là số từ 0 trở lên.",
   );
 
 const manufactureYearInputSchema = z
   .string()
   .trim()
+  .min(1, "Vui lòng nhập năm sản xuất.")
+  .regex(/^\d{4}$/, "Năm sản xuất phải gồm đúng 4 chữ số.")
   .refine(
-    (value) => !value || (/^\d{4}$/.test(value) && Number(value) >= 1),
-    "Vui lòng nhập năm gồm 4 chữ số.",
+    (value) => {
+      const year = Number(value);
+      const currentYear = new Date().getFullYear();
+      return year >= 1900 && year <= currentYear + 1;
+    },
+    "Năm sản xuất không hợp lệ.",
   );
 const manufactureYearRequestSchema = z
   .number()
@@ -51,12 +56,17 @@ export const productCreateFormSchema = z.object({
   model: z.string().trim().min(1, "Vui lòng nhập model sản phẩm."),
   serialNumber: z.string().trim().min(1, "Vui lòng nhập số serial."),
   manufactureYear: manufactureYearInputSchema,
-  mediaIds: z.array(uuidSchema),
+  mediaIds: z
+    .array(uuidSchema)
+    .min(1, "Vui lòng tải lên ít nhất 1 ảnh sản phẩm."),
   dailyRate: rateInputSchema,
   weeklyRate: rateInputSchema,
   monthlyRate: rateInputSchema,
   depositAmount: depositInputSchema,
-  thumbnailMediaId: z.union([uuidSchema, z.literal("")]),
+  thumbnailMediaId: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng chọn ảnh đại diện sản phẩm."),
   specInputs: z.array(z.union([z.string(), z.boolean()])),
 });
 
@@ -113,7 +123,6 @@ export const productInformationFormSchema = productCreateFormSchema
     manufactureYear: true,
     mediaIds: true,
     thumbnailMediaId: true,
-    depositAmount: true,
   })
   .extend({
     status: z.enum(["1", "2", "3"], {
@@ -152,6 +161,7 @@ export const productRentalRateFormSchema = productCreateFormSchema.pick({
   dailyRate: true,
   weeklyRate: true,
   monthlyRate: true,
+  depositAmount: true,
 });
 export type ProductRentalRateFormValues = z.infer<
   typeof productRentalRateFormSchema
