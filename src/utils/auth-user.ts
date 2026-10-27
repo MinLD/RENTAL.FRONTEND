@@ -13,9 +13,9 @@ export function getAuthUserRoleLabel(user?: AuthUser | null) {
   }
 
   if (
-    roles.some((r) => ["own", "owner", "supplier", "sup"].includes(r)) ||
+    roles.some(isOwnerRole) ||
     (primaryOrganization?.roleName &&
-      ["owner", "own", "supplier"].includes(primaryOrganization.roleName.toLowerCase()))
+      isOwnerRole(primaryOrganization.roleName))
   ) {
     return "Chủ thiết bị";
   }
@@ -29,4 +29,36 @@ export function getAuthUserRoleLabel(user?: AuthUser | null) {
 
 export function getAuthUserIdentityNumber(user?: AuthUser | null) {
   return user?.maskedCitizenId ?? "";
+}
+
+export function isOwnerRole(role?: string | null): boolean {
+  if (!role) {
+    return false;
+  }
+
+  const normalized = role.trim().toLowerCase();
+  return (
+    normalized === "own" ||
+    normalized === "owner" ||
+    normalized === "supplier" ||
+    normalized === "sup"
+  );
+}
+
+export function isOwnerUser(user?: {
+  globalRoles?: string[] | null;
+  role?: string | null;
+  roles?: string[] | null;
+} | null): boolean {
+  if (!user) {
+    return false;
+  }
+
+  const roles = [
+    ...(user.roles ?? []),
+    ...(user.globalRoles ?? []),
+    ...(user.role ? user.role.split(",").map((r) => r.trim()) : []),
+  ];
+
+  return roles.some(isOwnerRole);
 }
