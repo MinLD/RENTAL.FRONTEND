@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { QueryProvider } from "@/providers/query-provider";
 import { SupplierDashboardView } from "@/components/own/dashboard/supplier-dashboard-view";
 import {
-  getSupplierAnalyticsOverview,
-  getSupplierAnalyticsRevenue,
-  getSupplierListingStatistics,
-} from "@/services/analytics-service";
+  getSupplierAnalyticsOverviewServer,
+  getSupplierAnalyticsRevenueServer,
+  getSupplierListingStatisticsServer,
+} from "@/services/analytics-server-service";
 
 export const metadata: Metadata = {
   title: "Dashboard Nhà cung cấp | DPRental",
@@ -13,26 +13,18 @@ export const metadata: Metadata = {
 };
 
 export default async function OwPage() {
-  let initialOverview = null;
-  let initialRevenue = null;
-  let initialListingStats = null;
-
-  try {
-    [initialOverview, initialRevenue, initialListingStats] = await Promise.all([
-      getSupplierAnalyticsOverview(),
-      getSupplierAnalyticsRevenue({ granularity: "day" }),
-      getSupplierListingStatistics(),
-    ]);
-  } catch {
-    // Nếu SSR gặp sự cố, client-side React Query sẽ tự động nạp lại
-  }
+  const [initialOverview, initialRevenue, initialListingStats] = await Promise.all([
+    getSupplierAnalyticsOverviewServer(),
+    getSupplierAnalyticsRevenueServer({ granularity: "day" }),
+    getSupplierListingStatisticsServer(),
+  ]);
 
   return (
     <QueryProvider>
       <SupplierDashboardView
+        initialListingStats={initialListingStats}
         initialOverview={initialOverview}
         initialRevenue={initialRevenue}
-        initialListingStats={initialListingStats}
       />
     </QueryProvider>
   );

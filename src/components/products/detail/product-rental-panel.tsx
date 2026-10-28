@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { CART_ENABLED } from "@/config/features";
 import { useEquipmentAvailability } from "@/hooks/use-equipment-availability";
 import type { EquipmentListingRentalRateResponse } from "@/types/inventory";
 import { formatEquipmentListingRate } from "@/utils/inventory";
@@ -261,23 +260,21 @@ export function ProductRentalPanel({
           </p>
         ) : null}
       </div>
-      <div className={`mt-5 grid gap-2 ${CART_ENABLED ? "sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : ""}`}>
-        {CART_ENABLED && (
-          <LoginRequiredPopover
-            isAuthenticated={isAuthenticated}
-            isProfileCompleted={isProfileCompleted}
-            message="Đăng nhập để thêm vào giỏ hàng"
-            profileMessage="Cần cập nhật hồ sơ để có thể thuê thiết bị"
+      <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <LoginRequiredPopover
+          isAuthenticated={isAuthenticated}
+          isProfileCompleted={isProfileCompleted}
+          message="Đăng nhập để thêm vào giỏ hàng"
+          profileMessage="Cần cập nhật hồ sơ để có thể thuê thiết bị"
+        >
+          <Button
+            disabled={!estimate || !availabilityCheck.availability?.isAvailable}
+            onClick={() => setIsPreviewOpen(true)}
+            variant="secondary"
           >
-            <Button
-              disabled={!estimate || !availabilityCheck.availability?.isAvailable}
-              onClick={() => setIsPreviewOpen(true)}
-              variant="secondary"
-            >
-              Thêm vào giỏ
-            </Button>
-          </LoginRequiredPopover>
-        )}
+            Thêm vào giỏ
+          </Button>
+        </LoginRequiredPopover>
         <LoginRequiredPopover
           isAuthenticated={isAuthenticated}
           isProfileCompleted={isProfileCompleted}
@@ -307,7 +304,7 @@ export function ProductRentalPanel({
           </Button>
         </LoginRequiredPopover>
       </div>
-      {CART_ENABLED && <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Thông tin thuê dự kiến</DialogTitle>
@@ -369,7 +366,7 @@ export function ProductRentalPanel({
             }}>Thêm vào giỏ hàng</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>}
+      </Dialog>
     </aside>
   );
 }

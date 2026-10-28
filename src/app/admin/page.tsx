@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { QueryProvider } from "@/providers/query-provider";
 import { AdminDashboardView } from "@/components/admin/dashboard/admin-dashboard-view";
 import {
-  getAdminAnalyticsOverview,
-  getAdminAnalyticsRevenue,
-} from "@/services/analytics-service";
+  getAdminAnalyticsOverviewServer,
+  getAdminAnalyticsRevenueServer,
+} from "@/services/analytics-server-service";
 
 export const metadata: Metadata = {
   title: "Dashboard Tổng quan - Admin | DPRental",
@@ -12,17 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPage() {
-  let initialOverview = null;
-  let initialRevenue = null;
-
-  try {
-    [initialOverview, initialRevenue] = await Promise.all([
-      getAdminAnalyticsOverview(),
-      getAdminAnalyticsRevenue({ granularity: "day" }),
-    ]);
-  } catch {
-    // Nếu SSR gặp sự cố, client-side React Query sẽ tiếp tục nạp lại
-  }
+  const [initialOverview, initialRevenue] = await Promise.all([
+    getAdminAnalyticsOverviewServer(),
+    getAdminAnalyticsRevenueServer({ granularity: "day" }),
+  ]);
 
   return (
     <QueryProvider>

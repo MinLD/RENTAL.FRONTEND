@@ -9,7 +9,7 @@ import {
   getSupplierAnalyticsRevenue,
   getSupplierListingStatistics,
 } from "@/services/analytics-service";
-import { getDefaultAnalyticsDateRange } from "@/mocks/analytics/dashboard-mock-data";
+import { getDefaultAnalyticsDateRange } from "@/utils/analytics";
 import type {
   AnalyticsDataChangedEvent,
   AnalyticsGranularity,

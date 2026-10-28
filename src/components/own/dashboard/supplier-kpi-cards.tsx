@@ -15,7 +15,7 @@ import type {
   InventoryListingStatisticsResponse,
   SupplierAnalyticsOverviewResponse,
 } from "@/types/analytics";
-import { calculateTotalListings } from "@/mocks/analytics/dashboard-mock-data";
+import { calculateTotalListings } from "@/utils/analytics";
 
 function formatCurrency(amount: number | null | undefined): string {
   if (amount == null || !Number.isFinite(amount)) return "0 ₫";

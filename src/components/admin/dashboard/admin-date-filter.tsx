@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { Calendar, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTodayDateString, offsetDate } from "@/mocks/analytics/dashboard-mock-data";
+import { getTodayDateString, offsetDate } from "@/utils/analytics";
 
 export type DatePreset = "7d" | "30d" | "this-month" | "custom";
 

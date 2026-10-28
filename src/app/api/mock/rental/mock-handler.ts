@@ -13,6 +13,7 @@ type MockCartLine = {
   estimatedRentalAmount: number;
   currentPriceVersion: string;
   status: string;
+  interactionStatus?: string;
   message: string | null;
 };
 type MockOrder = Record<string, any>;
@@ -87,7 +88,27 @@ function recalc(line: MockCartLine) {
 
 function makeOrder(account: MockAccount, requestBody: any, renterId: string) {
   const selectedIds: string[] = Array.isArray(requestBody.cartItemIds) ? requestBody.cartItemIds : [];
-  const lines = account.cart.filter((line) => selectedIds.includes(line.cartItemId));
+  let lines = account.cart.filter((line) => selectedIds.includes(line.cartItemId));
+  if (!lines.length && requestBody.buyNow) {
+    const buy = requestBody.buyNow;
+    lines = [{
+      cartItemId: uuid(),
+      equipmentListingId: buy.equipmentListingId,
+      quantity: Number(buy.quantity) || 1,
+      expectedStartDate: buy.expectedStartDate,
+      expectedEndDate: buy.expectedEndDate,
+      currentDailyRate: 180_000,
+      currentDeposit: 0,
+      estimatedRentalAmount: 180_000 * (Number(buy.quantity) || 1) * daysBetween(buy.expectedStartDate, buy.expectedEndDate),
+      currentPriceVersion: "mock-v1",
+      status: "AVAILABLE",
+      interactionStatus: "ENABLED",
+      message: null,
+    }];
+  }
+  if (selectedIds.length > 0) {
+    account.cart = account.cart.filter((line) => !selectedIds.includes(line.cartItemId));
+  }
   const created = now();
   const orderId = uuid();
   const subOrderId = uuid();
@@ -179,7 +200,7 @@ export async function handleMockRental(request: NextRequest, backendPath: string
       return problem(400, "Cart.InvalidRequest", "Thông tin thiết bị, số lượng hoặc ngày thuê không hợp lệ.");
     const existing = account.cart.find((line) => line.equipmentListingId === input.equipmentListingId && line.expectedStartDate === input.expectedStartDate && line.expectedEndDate === input.expectedEndDate);
     if (existing) existing.quantity += Number(input.quantity);
-    else account.cart.push({ cartItemId: uuid(), equipmentListingId: input.equipmentListingId, quantity: Number(input.quantity), expectedStartDate: input.expectedStartDate, expectedEndDate: input.expectedEndDate, currentDailyRate: 180_000, currentDeposit: 0, estimatedRentalAmount: 0, currentPriceVersion: "mock-v1", status: "AVAILABLE", message: null });
+    else account.cart.push({ cartItemId: uuid(), equipmentListingId: input.equipmentListingId, quantity: Number(input.quantity), expectedStartDate: input.expectedStartDate, expectedEndDate: input.expectedEndDate, currentDailyRate: 180_000, currentDeposit: 0, estimatedRentalAmount: 0, currentPriceVersion: "mock-v1", status: "AVAILABLE", interactionStatus: "ENABLED", message: null });
     const saved = recalc(existing || account.cart.at(-1)!);
     if (idempotencyKey) account.cartAddIdempotency.set(idempotencyKey, saved.cartItemId);
     return json({ cartItemId: saved.cartItemId });
@@ -207,7 +228,8 @@ export async function handleMockRental(request: NextRequest, backendPath: string
     const previous = account.idempotency.get(key);
     if (previous) return json(previous, 202);
     const selected: string[] = Array.isArray(body.cartItemIds) ? body.cartItemIds : [];
-    if (!selected.length || selected.some((id) => !account.cart.some((line) => line.cartItemId === id))) return problem(400, "Checkout.InvalidRequest", "Chọn ít nhất một mục đang có trong giỏ.");
+    if (!selected.length && !body.buyNow) return problem(400, "Checkout.InvalidRequest", "Cần chọn ít nhất một mục đang có trong giỏ hoặc mua ngay.");
+    if (selected.length && selected.some((id) => !account.cart.some((line) => line.cartItemId === id))) return problem(400, "Checkout.InvalidRequest", "Mục trong giỏ không hợp lệ.");
     if (body.termsAccepted !== true) return problem(400, "Checkout.TermsRequired", "Cần xác nhận điều khoản thuê.");
     const { order } = makeOrder(account, body, accountKey(request));
     const operationId = uuid();

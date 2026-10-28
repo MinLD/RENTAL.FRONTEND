@@ -1,35 +1,28 @@
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
-import {
-  calculateTotalListings,
-  generateMockAdminOverview,
-  generateMockAdminRevenue,
-  generateMockSupplierOverview,
-  generateMockSupplierRevenue,
-  MOCK_INVENTORY_STATISTICS_SAMPLE,
-} from "@/mocks/analytics/dashboard-mock-data";
+import { calculateTotalListings } from "@/utils/analytics";
 import type {
+  AdminAnalyticsEquipmentResponse,
+  AdminAnalyticsOrdersResponse,
   AdminAnalyticsOverviewResponse,
   AdminAnalyticsRevenueResponse,
+  AdminAnalyticsSuppliersResponse,
   AnalyticsDateRangeParams,
+  AnalyticsEquipmentParams,
   AnalyticsRevenueParams,
+  AnalyticsSuppliersParams,
   InventoryListingStatisticsResponse,
   SupplierAnalyticsOverviewResponse,
   SupplierAnalyticsRevenueResponse,
 } from "@/types/analytics";
 
-const isMockAnalytics = process.env.NEXT_PUBLIC_MOCK_ANALYTICS_API !== "false";
-
 /**
  * Lấy 4 thẻ tổng quan Admin toàn sàn
  * Path: GET /api/v1/analytics/overview
  */
-export async function getAdminAnalyticsOverview(
+export function getAdminAnalyticsOverview(
   params?: AnalyticsDateRangeParams,
 ): Promise<AdminAnalyticsOverviewResponse> {
-  if (isMockAnalytics && typeof window === "undefined") {
-    return generateMockAdminOverview(params?.from, params?.to);
-  }
   return authApiClientJson<AdminAnalyticsOverviewResponse>(
     API_ENDPOINTS.backend.analytics.overview(params),
     { cache: "no-store" },
@@ -40,14 +33,50 @@ export async function getAdminAnalyticsOverview(
  * Lấy dữ liệu biểu đồ GMV và Phí nền tảng Admin
  * Path: GET /api/v1/analytics/revenue
  */
-export async function getAdminAnalyticsRevenue(
+export function getAdminAnalyticsRevenue(
   params?: AnalyticsRevenueParams,
 ): Promise<AdminAnalyticsRevenueResponse> {
-  if (isMockAnalytics && typeof window === "undefined") {
-    return generateMockAdminRevenue(params?.from, params?.to, params?.granularity);
-  }
   return authApiClientJson<AdminAnalyticsRevenueResponse>(
     API_ENDPOINTS.backend.analytics.revenue(params),
+    { cache: "no-store" },
+  );
+}
+
+/**
+ * Lấy biểu đồ số đơn tạo, thanh toán, hoàn tất, hủy theo ngày của Admin
+ * Path: GET /api/v1/analytics/orders
+ */
+export function getAdminAnalyticsOrders(
+  params: { from: string; to: string },
+): Promise<AdminAnalyticsOrdersResponse> {
+  return authApiClientJson<AdminAnalyticsOrdersResponse>(
+    API_ENDPOINTS.backend.analytics.orders(params),
+    { cache: "no-store" },
+  );
+}
+
+/**
+ * Lấy top loại thiết bị, listing và thương hiệu cho Admin
+ * Path: GET /api/v1/analytics/equipment
+ */
+export function getAdminAnalyticsEquipment(
+  params: AnalyticsEquipmentParams,
+): Promise<AdminAnalyticsEquipmentResponse> {
+  return authApiClientJson<AdminAnalyticsEquipmentResponse>(
+    API_ENDPOINTS.backend.analytics.equipment(params),
+    { cache: "no-store" },
+  );
+}
+
+/**
+ * Lấy báo cáo hiệu suất và công nợ nhà cung cấp cho Admin
+ * Path: GET /api/v1/analytics/suppliers
+ */
+export function getAdminAnalyticsSuppliers(
+  params: AnalyticsSuppliersParams,
+): Promise<AdminAnalyticsSuppliersResponse> {
+  return authApiClientJson<AdminAnalyticsSuppliersResponse>(
+    API_ENDPOINTS.backend.analytics.suppliers(params),
     { cache: "no-store" },
   );
 }
@@ -56,12 +85,9 @@ export async function getAdminAnalyticsRevenue(
  * Lấy 4 thẻ tổng quan của Nhà cung cấp
  * Path: GET /api/v1/analytics/me/overview
  */
-export async function getSupplierAnalyticsOverview(
+export function getSupplierAnalyticsOverview(
   params?: AnalyticsDateRangeParams,
 ): Promise<SupplierAnalyticsOverviewResponse> {
-  if (isMockAnalytics && typeof window === "undefined") {
-    return generateMockSupplierOverview(params?.from, params?.to);
-  }
   return authApiClientJson<SupplierAnalyticsOverviewResponse>(
     API_ENDPOINTS.backend.analytics.meOverview(params),
     { cache: "no-store" },
@@ -72,12 +98,9 @@ export async function getSupplierAnalyticsOverview(
  * Lấy dữ liệu biểu đồ Tiền thuê & Tiền đã nhận của Nhà cung cấp
  * Path: GET /api/v1/analytics/me/revenue
  */
-export async function getSupplierAnalyticsRevenue(
+export function getSupplierAnalyticsRevenue(
   params?: AnalyticsRevenueParams,
 ): Promise<SupplierAnalyticsRevenueResponse> {
-  if (isMockAnalytics && typeof window === "undefined") {
-    return generateMockSupplierRevenue(params?.from, params?.to, params?.granularity);
-  }
   return authApiClientJson<SupplierAnalyticsRevenueResponse>(
     API_ENDPOINTS.backend.analytics.meRevenue(params),
     { cache: "no-store" },
@@ -88,10 +111,7 @@ export async function getSupplierAnalyticsRevenue(
  * Lấy thống kê số lượng listing của Nhà cung cấp từ InventoryService
  * Path: GET /api/v1/inventory/equipment-listings/statistics
  */
-export async function getSupplierListingStatistics(): Promise<InventoryListingStatisticsResponse> {
-  if (isMockAnalytics && typeof window === "undefined") {
-    return MOCK_INVENTORY_STATISTICS_SAMPLE;
-  }
+export function getSupplierListingStatistics(): Promise<InventoryListingStatisticsResponse> {
   return authApiClientJson<InventoryListingStatisticsResponse>(
     API_ENDPOINTS.backend.inventory.statistics,
     { cache: "no-store" },

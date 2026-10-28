@@ -8,7 +8,7 @@ import {
   getAdminAnalyticsOverview,
   getAdminAnalyticsRevenue,
 } from "@/services/analytics-service";
-import { getDefaultAnalyticsDateRange } from "@/mocks/analytics/dashboard-mock-data";
+import { getDefaultAnalyticsDateRange } from "@/utils/analytics";
 import type {
   AdminAnalyticsOverviewResponse,
   AdminAnalyticsRevenueResponse,

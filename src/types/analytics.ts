@@ -31,7 +31,7 @@ export type AnalyticsRentalSummary = {
 export type AdminAnalyticsOverviewResponse = {
   from: string;
   to: string;
-  currency: string;
+  currency: string | null;
   orders: AnalyticsOrdersSummary;
   financial: AnalyticsFinancialSummary;
   rental: AnalyticsRentalSummary;
@@ -39,8 +39,8 @@ export type AdminAnalyticsOverviewResponse = {
 
 export type AnalyticsRevenueBucket = {
   periodStart: string;
-  platformRevenue: number;
   grossRentalValue: number;
+  platformRevenue: number;
   refundAmount: number;
   supplierPayout: number;
 };
@@ -48,18 +48,72 @@ export type AnalyticsRevenueBucket = {
 export type AdminAnalyticsRevenueResponse = {
   from: string;
   to: string;
-  granularity: AnalyticsGranularity;
-  currency: string;
+  granularity: AnalyticsGranularity | string | null;
+  currency: string | null;
   totalPlatformRevenue: number;
   totalGrossRentalValue: number;
   totalRefundAmount: number;
   totalSupplierPayout: number;
-  buckets: AnalyticsRevenueBucket[];
+  buckets: AnalyticsRevenueBucket[] | null;
 };
 
 export type SupplierAnalyticsOverviewResponse = AdminAnalyticsOverviewResponse;
 
 export type SupplierAnalyticsRevenueResponse = AdminAnalyticsRevenueResponse;
+
+export type OrderTrendPoint = {
+  date: string;
+  created: number;
+  paid: number;
+  completed: number;
+  cancelled: number;
+  expired: number;
+};
+
+export type AdminAnalyticsOrdersResponse = {
+  from: string;
+  to: string;
+  active: number;
+  points: OrderTrendPoint[] | null;
+};
+
+export type EquipmentRank = {
+  id: string | null;
+  name: string | null;
+  rentalItemCount: number;
+  rentedQuantity: number;
+  grossRentalValue: number;
+  completedCount: number;
+};
+
+export type AdminAnalyticsEquipmentResponse = {
+  from: string;
+  to: string;
+  topEquipmentTypes: EquipmentRank[] | null;
+  topListings: EquipmentRank[] | null;
+  topBrands: EquipmentRank[] | null;
+};
+
+export type SupplierMetrics = {
+  supplierId: string;
+  totalRequests: number;
+  accepted: number;
+  rejected: number;
+  timeout: number;
+  completedRentals: number;
+  rentalValue: number;
+  supplierPayable: number;
+  payoutCompleted: number;
+};
+
+export type AdminAnalyticsSuppliersResponse = {
+  from: string;
+  to: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  items: SupplierMetrics[] | null;
+};
 
 export type InventoryListingStatisticsResponse = {
   byEquipmentType: Record<string, number>;
@@ -84,4 +138,17 @@ export type AnalyticsDateRangeParams = {
 
 export type AnalyticsRevenueParams = AnalyticsDateRangeParams & {
   granularity?: AnalyticsGranularity;
+};
+
+export type AnalyticsEquipmentParams = {
+  from: string;
+  to: string;
+  limit?: number;
+};
+
+export type AnalyticsSuppliersParams = {
+  from: string;
+  to: string;
+  page?: number;
+  pageSize?: number;
 };
