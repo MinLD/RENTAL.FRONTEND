@@ -38,7 +38,11 @@ export function useAnalyticsRealtime({
   onCatchUp,
 }: UseAnalyticsRealtimeOptions = {}): UseAnalyticsRealtimeResult {
   const [status, setStatus] = useState<RealtimeConnectionStatus>("polling");
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(() => new Date());
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setLastUpdatedAt(new Date());
+  }, []);
 
   const isDisposedRef = useRef(false);
   const connectionRef = useRef<HubConnection | null>(null);
