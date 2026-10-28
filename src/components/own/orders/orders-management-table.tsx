@@ -12,7 +12,7 @@ import {
   rejectSupplierOrder,
 } from "@/services/supplier-orders-service";
 import type { SupplierOrdersFilters, SupplierOrderSummary } from "@/types/supplier-orders";
-import { SUPPLIER_ORDER_STATUS_LABELS } from "@/utils/supplier-orders";
+import { SUPPLIER_ORDER_STATUS_LABELS, isOrderPendingSupplierConfirmation } from "@/utils/supplier-orders";
 import { OrderDecisionDialog } from "./order-decision-dialog";
 import { OrderDetailDrawer } from "./order-detail-drawer";
 import { orderColumns } from "./order-table-columns";
@@ -72,7 +72,7 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
           </>
         )}
         renderRowActions={(order) => {
-          const isPending = order.status === "PENDING_SUPPLIER_CONFIRMATION";
+          const isPending = isOrderPendingSupplierConfirmation(order.status);
           const isRowLoading =
             controller.isLoading &&
             controller.selectedOrder?.subOrderId === order.subOrderId &&

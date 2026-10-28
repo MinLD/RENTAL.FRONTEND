@@ -122,7 +122,36 @@ export const API_ENDPOINTS = {
       supplierSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}`,
       supplierAcceptSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/accept`,
       supplierRejectSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/reject`,
-      adminOrders: `${rentalApiBase}/admin/orders`,
+      adminOrders: (params?: {
+        orderCode?: string;
+        subOrderCode?: string;
+        rentalItemId?: string;
+        listingId?: string;
+        assetId?: string;
+        supplierId?: string;
+        renterId?: string;
+        status?: string;
+        itemStatus?: string;
+        createdFrom?: string;
+        createdTo?: string;
+        page?: number;
+        pageSize?: number;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/orders`, {
+          OrderCode: params?.orderCode,
+          SubOrderCode: params?.subOrderCode,
+          RentalItemId: params?.rentalItemId,
+          ListingId: params?.listingId,
+          AssetId: params?.assetId,
+          SupplierId: params?.supplierId,
+          RenterId: params?.renterId,
+          Status: params?.status,
+          ItemStatus: params?.itemStatus,
+          CreatedFrom: params?.createdFrom,
+          CreatedTo: params?.createdTo,
+          Page: params?.page,
+          PageSize: params?.pageSize,
+        }),
       adminOrder: (id: string) => `${rentalApiBase}/admin/orders/${encodeURIComponent(id)}`,
       adminDisputes: `${rentalApiBase}/admin/disputes`,
       itemHandover: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/handover`,

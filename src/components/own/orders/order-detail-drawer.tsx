@@ -18,7 +18,7 @@ import type {
   SupplierOrderSummary,
 } from "@/types/supplier-orders";
 import { formatEquipmentListingRate } from "@/utils/inventory";
-import { formatSupplierOrderDate } from "@/utils/supplier-orders";
+import { formatSupplierOrderDate, isOrderPendingSupplierConfirmation } from "@/utils/supplier-orders";
 import { OrderStatusBadge } from "./order-status-badge";
 
 export function OrderDetailDrawer({
@@ -46,7 +46,7 @@ export function OrderDetailDrawer({
   onAccept: () => void;
   onReject: () => void;
 }) {
-  const pending = order?.status === "PENDING_SUPPLIER_CONFIRMATION";
+  const pending = isOrderPendingSupplierConfirmation(order?.status);
   return (
     <FormDrawer
       className="sm:max-w-2xl"

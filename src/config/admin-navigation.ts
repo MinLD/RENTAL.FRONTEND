@@ -35,11 +35,11 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
       },
     ],
   },
-  // {
-  //   href: "/admin/orders",
-  //   icon: "file-text",
-  //   label: "Quản lý đơn thuê",
-  // },
+  {
+    href: "/admin/orders",
+    icon: "file-text",
+    label: "Quản lý đơn thuê",
+  },
   // {
   //   href: "/admin/equipment",
   //   icon: "package",
