@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { DataTableState } from "@/components/data-table";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ResourcePanel({

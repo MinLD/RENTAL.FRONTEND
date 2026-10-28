@@ -34,10 +34,13 @@ function CartRow({
   const [start, setStart] = useState(item.expectedStartDate);
   const [end, setEnd] = useState(item.expectedEndDate);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [prevQuantity, setPrevQuantity] = useState(item.quantity);
   const [qtyInput, setQtyInput] = useState(String(item.quantity));
-  useEffect(() => {
+
+  if (item.quantity !== prevQuantity) {
+    setPrevQuantity(item.quantity);
     setQtyInput(String(item.quantity));
-  }, [item.quantity]);
+  }
 
   const handleQtyBlur = () => {
     const parsed = parseInt(qtyInput, 10);

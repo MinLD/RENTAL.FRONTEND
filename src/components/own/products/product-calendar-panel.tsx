@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { DataTableState } from "@/components/data-table";
-import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/use-api-resource";
 import { getMonthRange, getTodayDate } from "@/utils/calendar";
 import type { ProductPageActions } from "./product-management-types";

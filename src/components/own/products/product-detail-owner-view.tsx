@@ -8,8 +8,6 @@ import {
   Cpu,
   Edit,
   FileText,
-  Package,
-  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +42,7 @@ export function ProductDetailOwnerView({
   const [activeTab, setActiveTab] = useState<"assets" | "info" | "calendar">("assets");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [calendarRevision, setCalendarRevision] = useState(0);
+  const [calendarRevision] = useState(0);
 
   const productName = getEquipmentListingName(product);
 
