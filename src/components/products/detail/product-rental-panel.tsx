@@ -68,7 +68,7 @@ export function ProductRentalPanel({
     dailyRate != null && Number.isFinite(dailyRate) && dailyRate >= 0;
   let error: string | null = null;
   if (!from || !to) error = "Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc.";
-  else if (from < minStart) error = "Ngày bắt đầu thuê phải cách hôm nay ít nhất 3 ngày.";
+  else if (from < minStart) error = "Ngày bắt đầu thuê phải cách hôm nay ít nhất 3 ngày (thời gian chuẩn bị và vận chuyển thiết bị).";
   else if (from > maxStartDate(today)) error = "Ngày bắt đầu thuê không được quá 6 tháng tới.";
   else if (!days || days > 365) error = "Thời gian thuê phải từ 1 đến 365 ngày.";
   else if (!maxQuantity) error = "Thiết bị hiện chưa có số lượng để thuê.";
@@ -147,6 +147,10 @@ export function ProductRentalPanel({
           />
         </label>
       </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        * Cần tối thiểu 3 ngày chuẩn bị và vận chuyển. Ngày nhận máy sớm nhất:{" "}
+        <span className="font-medium text-foreground">{formatRentalDate(minStart)}</span>.
+      </p>
       <div className="mt-5 space-y-2">
         <label className="text-xs font-semibold" htmlFor="rental-quantity">
           Số lượng thiết bị

@@ -1,5 +1,5 @@
 import type { AddCartItem, CartItem, CartItemSnapshot } from "@/types/cart";
-import { getRentalDayCount } from "@/utils/product-detail";
+import { getRentalDayCount } from "./product-detail.ts";
 
 export const GUEST_CART_KEY = "dprental-guest-cart-v1";
 
@@ -24,7 +24,7 @@ export function validateCartItem(item: AddCartItem, today: string): string | nul
   if (!item.equipmentListingId || !Number.isSafeInteger(item.quantity) || item.quantity < 1)
     return "Số lượng thiết bị không hợp lệ.";
   if (item.expectedStartDate < addDays(today, 3))
-    return "Ngày bắt đầu thuê phải cách hôm nay ít nhất 3 ngày.";
+    return "Ngày bắt đầu thuê phải cách hôm nay ít nhất 3 ngày (thời gian chuẩn bị và vận chuyển thiết bị).";
   if (item.expectedStartDate > maxStartDate(today))
     return "Ngày bắt đầu thuê không được quá 6 tháng tới.";
   const days = getRentalDayCount(item.expectedStartDate, item.expectedEndDate);
