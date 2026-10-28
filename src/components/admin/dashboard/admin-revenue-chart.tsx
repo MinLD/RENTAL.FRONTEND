@@ -11,12 +11,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   AdminAnalyticsRevenueResponse,
   AnalyticsGranularity,
 } from "@/types/analytics";
-
 function formatCurrencyShort(value: number): string {
   if (value >= 1_000_000_000) {
     return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")} tỷ`;
@@ -103,11 +104,17 @@ export function AdminRevenueChart({
   granularity,
   onGranularityChange,
   isLoading,
+  isError,
+  errorMessage,
+  onRetry,
 }: {
   revenue?: AdminAnalyticsRevenueResponse | null;
   granularity: AnalyticsGranularity;
   onGranularityChange: (granularity: AnalyticsGranularity) => void;
   isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
 }) {
   const chartData = useMemo(() => {
     return (revenue?.buckets ?? []).map((b) => ({
@@ -202,7 +209,7 @@ export function AdminRevenueChart({
 
       {/* Vùng vẽ biểu đồ */}
       <div className="mt-6 h-[320px] w-full">
-        {isLoading ? (
+        {isLoading && !revenue ? (
           <div className="h-full w-full flex flex-col justify-end gap-3 pb-6">
             <Skeleton className="h-[200px] w-full" />
             <div className="flex justify-between">
@@ -211,6 +218,21 @@ export function AdminRevenueChart({
               <Skeleton className="h-4 w-12" />
               <Skeleton className="h-4 w-12" />
             </div>
+          </div>
+        ) : isError && !revenue ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+            <AlertCircle className="size-8 text-destructive" />
+            <p className="text-sm font-medium text-foreground">
+              Không thể tải dữ liệu doanh thu
+            </p>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {errorMessage || "Đã xảy ra lỗi khi lấy biểu đồ doanh thu. Vui lòng thử lại."}
+            </p>
+            {onRetry && (
+              <Button size="sm" variant="secondary" onClick={onRetry} className="gap-1.5 text-xs">
+                <RefreshCw className="size-3.5" /> Thử lại
+              </Button>
+            )}
           </div>
         ) : !hasData ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

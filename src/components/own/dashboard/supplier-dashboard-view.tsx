@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import * as signalR from "@microsoft/signalr";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Radio } from "lucide-react";
 import {
   getSupplierAnalyticsOverview,
   getSupplierAnalyticsRevenue,
   getSupplierListingStatistics,
 } from "@/services/analytics-service";
-import { getDefaultAnalyticsDateRange } from "@/utils/analytics";
+import { analyticsQueryKeys, getDefaultAnalyticsDateRange } from "@/utils/analytics";
+import { useAnalyticsRealtime } from "@/hooks/use-analytics-realtime";
+import type { ApiResult } from "@/services/api-error";
 import type {
-  AnalyticsDataChangedEvent,
   AnalyticsGranularity,
   InventoryListingStatisticsResponse,
   SupplierAnalyticsOverviewResponse,
@@ -25,30 +25,34 @@ export function SupplierDashboardView({
   initialOverview,
   initialRevenue,
   initialListingStats,
+  initialDateRange,
+  userId,
 }: {
-  initialOverview?: SupplierAnalyticsOverviewResponse | null;
-  initialRevenue?: SupplierAnalyticsRevenueResponse | null;
-  initialListingStats?: InventoryListingStatisticsResponse | null;
+  initialOverview?: ApiResult<SupplierAnalyticsOverviewResponse>;
+  initialRevenue?: ApiResult<SupplierAnalyticsRevenueResponse>;
+  initialListingStats?: ApiResult<InventoryListingStatisticsResponse>;
+  initialDateRange?: { from: string; to: string };
+  userId?: string;
 }) {
-  const queryClient = useQueryClient();
-  const defaultRange = getDefaultAnalyticsDateRange();
+  const defaultRange = initialDateRange ?? getDefaultAnalyticsDateRange();
 
-  const [from, setFrom] = useState(initialOverview?.from ?? defaultRange.from);
-  const [to, setTo] = useState(initialOverview?.to ?? defaultRange.to);
+  const [from, setFrom] = useState(
+    initialOverview?.success ? initialOverview.data.from : defaultRange.from,
+  );
+  const [to, setTo] = useState(
+    initialOverview?.success ? initialOverview.data.to : defaultRange.to,
+  );
   const [granularity, setGranularity] = useState<AnalyticsGranularity>("day");
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
-
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Query nạp Overview của NCC
   const overviewQuery = useQuery({
-    queryKey: ["supplier-analytics-overview", from, to],
-    queryFn: () => getSupplierAnalyticsOverview({ from, to }),
+    queryKey: analyticsQueryKeys.supplierOverview(userId, from, to),
+    queryFn: ({ signal }) => getSupplierAnalyticsOverview({ from, to }, { signal }),
     initialData:
-      initialOverview &&
-      initialOverview.from === from &&
-      initialOverview.to === to
-        ? initialOverview
+      initialOverview?.success &&
+      initialOverview.data.from === from &&
+      initialOverview.data.to === to
+        ? initialOverview.data
         : undefined,
     refetchInterval: 60_000,
     staleTime: 30_000,
@@ -56,103 +60,61 @@ export function SupplierDashboardView({
 
   // 2. Query nạp Biểu đồ Doanh thu của NCC
   const revenueQuery = useQuery({
-    queryKey: ["supplier-analytics-revenue", from, to, granularity],
-    queryFn: () => getSupplierAnalyticsRevenue({ from, to, granularity }),
+    queryKey: analyticsQueryKeys.supplierRevenue(userId, from, to, granularity),
+    queryFn: ({ signal }) =>
+      getSupplierAnalyticsRevenue({ from, to, granularity }, { signal }),
     initialData:
-      initialRevenue &&
-      initialRevenue.from === from &&
-      initialRevenue.to === to &&
-      initialRevenue.granularity === granularity
-        ? initialRevenue
+      initialRevenue?.success &&
+      initialRevenue.data.from === from &&
+      initialRevenue.data.to === to &&
+      initialRevenue.data.granularity === granularity
+        ? initialRevenue.data
         : undefined,
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
 
-  // 3. Query nạp Thống kê Listing từ InventoryService (độc lập bộ lọc ngày)
+  // 3. Query nạp Thống kê Listing từ InventoryService (độc lập bộ lọc ngày, làm mới độc lập)
   const listingStatsQuery = useQuery({
-    queryKey: ["supplier-inventory-statistics"],
-    queryFn: () => getSupplierListingStatistics(),
-    initialData: initialListingStats ?? undefined,
+    queryKey: analyticsQueryKeys.supplierListingStats(userId),
+    queryFn: ({ signal }) => getSupplierListingStatistics({ signal }),
+    initialData: initialListingStats?.success ? initialListingStats.data : undefined,
     refetchInterval: 60_000,
-    staleTime: 60_000,
+    staleTime: 30_000,
   });
 
-  // 4. Kết nối Realtime SignalR Hub (/hubs/analytics)
-  useEffect(() => {
-    let connection: signalR.HubConnection | null = null;
-    let isMounted = true;
-
-    try {
-      connection = new signalR.HubConnectionBuilder()
-        .withUrl("/hubs/analytics", {
-          skipNegotiation: false,
-          transport: signalR.HttpTransportType.WebSockets,
-          withCredentials: true,
-        })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-        .configureLogging(signalR.LogLevel.None)
-        .build();
-
-      connection.on(
-        "AnalyticsDataChanged",
-        (event: AnalyticsDataChangedEvent) => {
-          if (!isMounted) return;
-          const scope = event?.data?.scope;
-          clearTimeout(debounceTimerRef.current ?? undefined);
-          debounceTimerRef.current = setTimeout(() => {
-            if (scope === "Finance" || scope === "Rental") {
-              void queryClient.invalidateQueries({
-                queryKey: ["supplier-analytics-overview"],
-              });
-              void queryClient.invalidateQueries({
-                queryKey: ["supplier-analytics-revenue"],
-              });
-            }
-          }, 300);
-        },
-      );
-
-      connection.onreconnecting(() => {
-        if (isMounted) setIsRealtimeConnected(false);
-      });
-
-      connection.onreconnected(() => {
-        if (isMounted) {
-          setIsRealtimeConnected(true);
-          void queryClient.invalidateQueries({
-            queryKey: ["supplier-analytics-overview"],
-          });
-          void queryClient.invalidateQueries({
-            queryKey: ["supplier-analytics-revenue"],
-          });
+  // 4. Hook Realtime SignalR
+  const { status, statusLabel, lastUpdatedAt, markDataUpdated, reconnect } =
+    useAnalyticsRealtime({
+      onDataChanged: (scopes) => {
+        // Rental và Finance đều cập nhật overview và revenue của NCC
+        if (scopes.has("Rental") || scopes.has("Finance")) {
+          void overviewQuery.refetch();
+          void revenueQuery.refetch();
         }
-      });
+        // Listing Inventory refresh độc lập, KHÔNG gắn vào event Rental/Finance
+      },
+      onCatchUp: () => {
+        void overviewQuery.refetch();
+        void revenueQuery.refetch();
+      },
+    });
 
-      connection.onclose(() => {
-        if (isMounted) setIsRealtimeConnected(false);
-      });
-
-      connection
-        .start()
-        .then(() => {
-          if (isMounted) setIsRealtimeConnected(true);
-        })
-        .catch(() => {
-          if (isMounted) setIsRealtimeConnected(false);
-        });
-    } catch {
-      // Bỏ qua lỗi khởi tạo
+  // Cập nhật timestamp khi các query hoàn tất thành công
+  useEffect(() => {
+    if (
+      overviewQuery.dataUpdatedAt ||
+      revenueQuery.dataUpdatedAt ||
+      listingStatsQuery.dataUpdatedAt
+    ) {
+      markDataUpdated();
     }
-
-    return () => {
-      isMounted = false;
-      clearTimeout(debounceTimerRef.current ?? undefined);
-      if (connection) {
-        connection.stop().catch(() => {});
-      }
-    };
-  }, [queryClient]);
+  }, [
+    overviewQuery.dataUpdatedAt,
+    revenueQuery.dataUpdatedAt,
+    listingStatsQuery.dataUpdatedAt,
+    markDataUpdated,
+  ]);
 
   const handleRefresh = () => {
     void overviewQuery.refetch();
@@ -170,27 +132,73 @@ export function SupplierDashboardView({
     revenueQuery.isFetching ||
     listingStatsQuery.isFetching;
 
+  const hasAnyRefreshError =
+    (overviewQuery.isError && Boolean(overviewQuery.data)) ||
+    (revenueQuery.isError && Boolean(revenueQuery.data)) ||
+    (listingStatsQuery.isError && Boolean(listingStatsQuery.data));
+
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Tiêu đề & Trạng thái kết nối */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-primary">
-              Supplier Portal
-            </span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Tổng quan kinh doanh
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Tổng quan Nhà cung cấp
           </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-            Theo dõi lượt thuê, doanh thu thiết bị, tiền sàn giải ngân (Payout)
-            và danh mục kho của bạn.
+          <p className="text-sm text-muted-foreground mt-1">
+            Theo dõi lượt cho thuê, doanh số thu về và tiến độ chi trả Payout của bạn
           </p>
+        </div>
+
+        {/* Trạng thái SignalR / Polling & Lần cập nhật cuối */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border ${
+              status === "connected"
+                ? "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                : status === "reconnecting"
+                  ? "border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                  : "border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+            }`}
+          >
+            <Radio
+              className={`size-3 ${
+                status === "connected"
+                  ? "animate-pulse text-emerald-600 dark:text-emerald-400"
+                  : status === "reconnecting"
+                    ? "animate-spin text-amber-600 dark:text-amber-400"
+                    : "text-blue-600 dark:text-blue-400"
+              }`}
+            />
+            {statusLabel}
+          </div>
+
+          {lastUpdatedAt && (
+            <span className="text-xs text-muted-foreground">
+              Cập nhật: {lastUpdatedAt.toLocaleTimeString("vi-VN")}
+            </span>
+          )}
+
+          {status !== "connected" && (
+            <button
+              type="button"
+              onClick={() => void reconnect()}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              Thử kết nối lại
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Thanh công cụ lọc ngày & Làm mới */}
+      {/* Thông báo khi có widget refresh lỗi nhưng vẫn giữ data cũ */}
+      {hasAnyRefreshError && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-50/50 p-3 text-xs text-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
+          Cập nhật mới nhất gặp sự cố mạng. Dashboard đang giữ số liệu gần nhất.
+        </div>
+      )}
+
+      {/* Bộ lọc ngày dùng chung */}
       <AdminDateFilter
         from={from}
         to={to}
@@ -199,19 +207,28 @@ export function SupplierDashboardView({
         isLoading={isFetching}
       />
 
-      {/* 4 Thẻ KPI chính & Dải thông số phụ */}
+      {/* 4 Thẻ KPI chính & Thông số phụ trợ */}
       <SupplierKpiCards
         overview={overviewQuery.data}
         listingStats={listingStatsQuery.data}
-        isLoading={overviewQuery.isLoading || listingStatsQuery.isLoading}
+        isLoading={overviewQuery.isLoading}
+        isError={overviewQuery.isError}
+        errorMessage={overviewQuery.error?.message}
+        onRetry={() => void overviewQuery.refetch()}
+        isListingStatsLoading={listingStatsQuery.isLoading}
+        isListingStatsError={listingStatsQuery.isError}
+        onRetryListingStats={() => void listingStatsQuery.refetch()}
       />
 
-      {/* Biểu đồ Tiền thuê & Tiền đã nhận */}
+      {/* Biểu đồ Tiền thuê & Tiền nhận Payout */}
       <SupplierRevenueChart
         revenue={revenueQuery.data}
         granularity={granularity}
         onGranularityChange={setGranularity}
         isLoading={revenueQuery.isLoading}
+        isError={revenueQuery.isError}
+        errorMessage={revenueQuery.error?.message}
+        onRetry={() => void revenueQuery.refetch()}
       />
     </div>
   );

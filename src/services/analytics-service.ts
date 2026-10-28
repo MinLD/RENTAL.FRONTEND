@@ -22,10 +22,11 @@ import type {
  */
 export function getAdminAnalyticsOverview(
   params?: AnalyticsDateRangeParams,
+  options?: { signal?: AbortSignal },
 ): Promise<AdminAnalyticsOverviewResponse> {
   return authApiClientJson<AdminAnalyticsOverviewResponse>(
     API_ENDPOINTS.backend.analytics.overview(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -35,10 +36,11 @@ export function getAdminAnalyticsOverview(
  */
 export function getAdminAnalyticsRevenue(
   params?: AnalyticsRevenueParams,
+  options?: { signal?: AbortSignal },
 ): Promise<AdminAnalyticsRevenueResponse> {
   return authApiClientJson<AdminAnalyticsRevenueResponse>(
     API_ENDPOINTS.backend.analytics.revenue(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -48,10 +50,11 @@ export function getAdminAnalyticsRevenue(
  */
 export function getAdminAnalyticsOrders(
   params: { from: string; to: string },
+  options?: { signal?: AbortSignal },
 ): Promise<AdminAnalyticsOrdersResponse> {
   return authApiClientJson<AdminAnalyticsOrdersResponse>(
     API_ENDPOINTS.backend.analytics.orders(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -61,10 +64,11 @@ export function getAdminAnalyticsOrders(
  */
 export function getAdminAnalyticsEquipment(
   params: AnalyticsEquipmentParams,
+  options?: { signal?: AbortSignal },
 ): Promise<AdminAnalyticsEquipmentResponse> {
   return authApiClientJson<AdminAnalyticsEquipmentResponse>(
     API_ENDPOINTS.backend.analytics.equipment(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -74,10 +78,11 @@ export function getAdminAnalyticsEquipment(
  */
 export function getAdminAnalyticsSuppliers(
   params: AnalyticsSuppliersParams,
+  options?: { signal?: AbortSignal },
 ): Promise<AdminAnalyticsSuppliersResponse> {
   return authApiClientJson<AdminAnalyticsSuppliersResponse>(
     API_ENDPOINTS.backend.analytics.suppliers(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -87,10 +92,11 @@ export function getAdminAnalyticsSuppliers(
  */
 export function getSupplierAnalyticsOverview(
   params?: AnalyticsDateRangeParams,
+  options?: { signal?: AbortSignal },
 ): Promise<SupplierAnalyticsOverviewResponse> {
   return authApiClientJson<SupplierAnalyticsOverviewResponse>(
     API_ENDPOINTS.backend.analytics.meOverview(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -100,10 +106,11 @@ export function getSupplierAnalyticsOverview(
  */
 export function getSupplierAnalyticsRevenue(
   params?: AnalyticsRevenueParams,
+  options?: { signal?: AbortSignal },
 ): Promise<SupplierAnalyticsRevenueResponse> {
   return authApiClientJson<SupplierAnalyticsRevenueResponse>(
     API_ENDPOINTS.backend.analytics.meRevenue(params),
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 
@@ -111,10 +118,12 @@ export function getSupplierAnalyticsRevenue(
  * Lấy thống kê số lượng listing của Nhà cung cấp từ InventoryService
  * Path: GET /api/v1/inventory/equipment-listings/statistics
  */
-export function getSupplierListingStatistics(): Promise<InventoryListingStatisticsResponse> {
+export function getSupplierListingStatistics(
+  options?: { signal?: AbortSignal },
+): Promise<InventoryListingStatisticsResponse> {
   return authApiClientJson<InventoryListingStatisticsResponse>(
     API_ENDPOINTS.backend.inventory.statistics,
-    { cache: "no-store" },
+    { cache: "no-store", signal: options?.signal },
   );
 }
 

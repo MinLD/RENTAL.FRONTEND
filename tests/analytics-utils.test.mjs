@@ -4,8 +4,11 @@ import assert from "node:assert/strict";
 const {
   calculateTotalListings,
   getDefaultAnalyticsDateRange,
+  isValidDateString,
   offsetDate,
   resolveAnalyticsDateRange,
+  validateAnalyticsDateRange,
+  analyticsQueryKeys,
 } = await import("../src/utils/analytics.ts");
 
 const { API_ENDPOINTS } = await import("../src/config/api-endpoints.ts");
@@ -53,6 +56,37 @@ test("resolveAnalyticsDateRange validates contract rules", () => {
   const valid = resolveAnalyticsDateRange("2026-10-01", "2026-10-05");
   assert.equal(valid.from, "2026-10-01");
   assert.equal(valid.to, "2026-10-05");
+});
+
+test("isValidDateString correctly handles calendar valid and invalid dates including leap years", () => {
+  assert.equal(isValidDateString("2024-02-29"), true); // 2024 is a leap year
+  assert.equal(isValidDateString("2026-02-29"), false); // 2026 is not a leap year
+  assert.equal(isValidDateString("2026-02-28"), true);
+  assert.equal(isValidDateString("2026-04-31"), false); // April has 30 days
+  assert.equal(isValidDateString("2026-13-01"), false); // Month 13
+  assert.equal(isValidDateString("invalid-date"), false);
+});
+
+test("validateAnalyticsDateRange tests 366 boundary", () => {
+  // 366 days inclusive in a leap year: 2024-01-01 to 2024-12-31 is 366 days
+  const res366 = validateAnalyticsDateRange("2024-01-01", "2024-12-31");
+  assert.equal(res366.valid, true);
+
+  // 367 days inclusive: 2024-01-01 to 2025-01-01 is 367 days
+  const res367 = validateAnalyticsDateRange("2024-01-01", "2025-01-01");
+  assert.equal(res367.valid, false);
+  assert.match(res367.error, /366 ngày/);
+});
+
+test("analyticsQueryKeys builds isolated query keys with user ID", () => {
+  const keyAdmin = analyticsQueryKeys.adminOverview("user-1", "2026-10-01", "2026-10-30");
+  assert.deepEqual(keyAdmin, ["analytics", "admin", "user-1", "overview", "2026-10-01", "2026-10-30"]);
+
+  const keySupplier = analyticsQueryKeys.supplierOverview("user-2", "2026-10-01", "2026-10-30");
+  assert.deepEqual(keySupplier, ["analytics", "supplier", "user-2", "overview", "2026-10-01", "2026-10-30"]);
+
+  const keyStats = analyticsQueryKeys.supplierListingStats("user-2");
+  assert.deepEqual(keyStats, ["analytics", "supplier", "user-2", "inventory-stats"]);
 });
 
 test("calculateTotalListings strictly avoids double counting byBrand", () => {

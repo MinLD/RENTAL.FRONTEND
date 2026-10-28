@@ -6,6 +6,8 @@ import {
   getSupplierAnalyticsRevenueServer,
   getSupplierListingStatisticsServer,
 } from "@/services/analytics-server-service";
+import { getDefaultAnalyticsDateRange } from "@/utils/analytics";
+import { getCurrentUser } from "@/services/session-service";
 
 export const metadata: Metadata = {
   title: "Dashboard Nhà cung cấp | DPRental",
@@ -13,18 +15,24 @@ export const metadata: Metadata = {
 };
 
 export default async function OwPage() {
-  const [initialOverview, initialRevenue, initialListingStats] = await Promise.all([
-    getSupplierAnalyticsOverviewServer(),
-    getSupplierAnalyticsRevenueServer({ granularity: "day" }),
-    getSupplierListingStatisticsServer(),
-  ]);
+  const defaultRange = getDefaultAnalyticsDateRange();
+
+  const [user, initialOverview, initialRevenue, initialListingStats] =
+    await Promise.all([
+      getCurrentUser(),
+      getSupplierAnalyticsOverviewServer(defaultRange),
+      getSupplierAnalyticsRevenueServer({ ...defaultRange, granularity: "day" }),
+      getSupplierListingStatisticsServer(),
+    ]);
 
   return (
     <QueryProvider>
       <SupplierDashboardView
+        initialDateRange={defaultRange}
         initialListingStats={initialListingStats}
         initialOverview={initialOverview}
         initialRevenue={initialRevenue}
+        userId={user?.id}
       />
     </QueryProvider>
   );

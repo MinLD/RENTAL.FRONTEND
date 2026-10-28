@@ -1,15 +1,20 @@
+"use client";
+
 import {
+  AlertCircle,
   Banknote,
   CheckCircle2,
   Clock,
   Coins,
   FileCheck2,
   PackageCheck,
+  RefreshCw,
   ShoppingBag,
   TrendingUp,
   Truck,
   XCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   InventoryListingStatisticsResponse,
@@ -31,18 +36,49 @@ export function SupplierKpiCards({
   overview,
   listingStats,
   isLoading,
+  isError,
+  errorMessage,
+  onRetry,
+  isListingStatsLoading,
+  isListingStatsError,
+  onRetryListingStats,
 }: {
   overview?: SupplierAnalyticsOverviewResponse | null;
   listingStats?: InventoryListingStatisticsResponse | null;
   isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
+  isListingStatsLoading?: boolean;
+  isListingStatsError?: boolean;
+  onRetryListingStats?: () => void;
 }) {
-  const totalListings = listingStats ? calculateTotalListings(listingStats) : 0;
-  const paidItems = overview?.rental.paidItems ?? 0;
-  const rentedQuantity = overview?.rental.rentedQuantity ?? 0;
+  if (isError && !overview) {
+    return (
+      <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+        <AlertCircle className="size-8 text-destructive" />
+        <p className="text-sm font-medium text-foreground">
+          Không thể tải tổng quan kinh doanh của bạn
+        </p>
+        <p className="text-xs text-muted-foreground max-w-sm">
+          {errorMessage || "Đã xảy ra lỗi khi lấy số liệu tổng quan NCC. Vui lòng thử lại."}
+        </p>
+        {onRetry && (
+          <Button size="sm" variant="secondary" onClick={onRetry} className="gap-1.5 text-xs">
+            <RefreshCw className="size-3.5" /> Thử lại
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  const totalListings = listingStats ? calculateTotalListings(listingStats) : null;
+  const paidItems = overview?.rental?.paidItems;
+  const rentedQuantity = overview?.rental?.rentedQuantity;
 
   return (
     <div className="space-y-4">
-      {/* 4 Thẻ KPI chính của Nhà cung cấp (theo Mục 3.3) */}
+      {/* 4 Thẻ KPI chính của Nhà cung cấp */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Thẻ 1: Lượt thuê đã thanh toán */}
         <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm">
@@ -55,7 +91,7 @@ export function SupplierKpiCards({
             </div>
           </div>
           <div className="mt-3">
-            {isLoading ? (
+            {isLoading && !overview ? (
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="flex items-baseline gap-2">
@@ -63,9 +99,11 @@ export function SupplierKpiCards({
                   {formatNumber(paidItems)}
                   <span className="ml-1 text-sm font-normal text-muted-foreground">lượt</span>
                 </p>
-                <span className="text-xs text-muted-foreground">
-                  ({formatNumber(rentedQuantity)} máy)
-                </span>
+                {rentedQuantity != null && (
+                  <span className="text-xs text-muted-foreground">
+                    ({formatNumber(rentedQuantity)} máy)
+                  </span>
+                )}
               </div>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
@@ -85,11 +123,11 @@ export function SupplierKpiCards({
             </div>
           </div>
           <div className="mt-3">
-            {isLoading ? (
+            {isLoading && !overview ? (
               <Skeleton className="h-8 w-36" />
             ) : (
               <p className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">
-                {formatCurrency(overview?.financial.grossRentalValue)}
+                {formatCurrency(overview?.financial?.grossRentalValue)}
               </p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
@@ -109,11 +147,11 @@ export function SupplierKpiCards({
             </div>
           </div>
           <div className="mt-3">
-            {isLoading ? (
+            {isLoading && !overview ? (
               <Skeleton className="h-8 w-36" />
             ) : (
               <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-3xl">
-                {formatCurrency(overview?.financial.payoutCompleted)}
+                {formatCurrency(overview?.financial?.payoutCompleted)}
               </p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
@@ -126,19 +164,32 @@ export function SupplierKpiCards({
         <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Tổng listing hiện có
+              Tổng bài đăng (Listing)
             </span>
             <div className="grid size-9 place-items-center rounded-lg bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400">
               <PackageCheck className="size-4.5" />
             </div>
           </div>
           <div className="mt-3">
-            {isLoading ? (
+            {isListingStatsLoading && totalListings == null ? (
               <Skeleton className="h-8 w-24" />
+            ) : isListingStatsError && totalListings == null ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-destructive">Lỗi tải dữ liệu</span>
+                {onRetryListingStats && (
+                  <button
+                    type="button"
+                    onClick={onRetryListingStats}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Thử lại
+                  </button>
+                )}
+              </div>
             ) : (
               <p className="text-2xl font-bold tracking-tight text-violet-600 dark:text-violet-400 sm:text-3xl">
                 {formatNumber(totalListings)}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">bài đăng</span>
+                <span className="ml-1 text-sm font-normal text-muted-foreground">bài</span>
               </p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
@@ -155,7 +206,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Đơn đang chạy</p>
             <p className="text-sm font-semibold tabular-nums">
-              {isLoading ? "..." : formatNumber(overview?.orders.activeOrders)}
+              {isLoading && !overview ? "..." : formatNumber(overview?.orders?.activeOrders)}
             </p>
           </div>
         </div>
@@ -165,7 +216,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Lượt hoàn tất</p>
             <p className="text-sm font-semibold tabular-nums">
-              {isLoading ? "..." : formatNumber(overview?.rental.completedRentals)}
+              {isLoading && !overview ? "..." : formatNumber(overview?.rental?.completedRentals)}
             </p>
           </div>
         </div>
@@ -175,7 +226,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Máy đang cho thuê</p>
             <p className="text-sm font-semibold tabular-nums">
-              {isLoading ? "..." : `${formatNumber(rentedQuantity)} máy`}
+              {isLoading && !overview ? "..." : `${formatNumber(rentedQuantity)} máy`}
             </p>
           </div>
         </div>
@@ -185,7 +236,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Tiền cọc giữ</p>
             <p className="text-sm font-semibold tabular-nums truncate">
-              {isLoading ? "..." : formatCurrency(overview?.financial.depositCollected)}
+              {isLoading && !overview ? "..." : formatCurrency(overview?.financial?.depositCollected)}
             </p>
           </div>
         </div>
@@ -195,7 +246,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Sàn sắp trả NCC</p>
             <p className="text-sm font-semibold tabular-nums truncate">
-              {isLoading ? "..." : formatCurrency(overview?.financial.supplierPayable)}
+              {isLoading && !overview ? "..." : formatCurrency(overview?.financial?.supplierPayable)}
             </p>
           </div>
         </div>
@@ -205,7 +256,7 @@ export function SupplierKpiCards({
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground truncate">Mục bị từ chối</p>
             <p className="text-sm font-semibold tabular-nums">
-              {isLoading ? "..." : formatNumber(overview?.orders.rejectedItems)}
+              {isLoading && !overview ? "..." : formatNumber(overview?.orders?.rejectedItems)}
             </p>
           </div>
         </div>

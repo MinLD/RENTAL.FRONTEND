@@ -45,10 +45,28 @@ export async function register(
   });
 }
 
+type AuthEventListener = () => void;
+const logoutListeners = new Set<AuthEventListener>();
+
+export function onAuthLogout(listener: AuthEventListener): () => void {
+  logoutListeners.add(listener);
+  return () => {
+    logoutListeners.delete(listener);
+  };
+}
+
 export async function logout(): Promise<void> {
-  await apiClientJson<void>(API_ENDPOINTS.internal.auth.logout, {
-    method: "POST",
-  });
+  try {
+    await apiClientJson<void>(API_ENDPOINTS.internal.auth.logout, {
+      method: "POST",
+    });
+  } finally {
+    for (const listener of logoutListeners) {
+      try {
+        listener();
+      } catch {}
+    }
+  }
 }
 
 export async function refreshSession(): Promise<void> {

@@ -33,10 +33,77 @@ export function getDefaultAnalyticsDateRange(): { from: string; to: string } {
 }
 
 /**
- * Xác thực khoảng ngày theo hợp đồng mục 2 của spec:
+ * Kiểm tra định dạng yyyy-MM-dd và tính hợp lệ lịch (năm nhuận, ngày trong tháng).
+ */
+export function isValidDateString(dateString: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return false;
+  const [yearStr, monthStr, dayStr] = dateString.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+/**
+ * Validate khoảng ngày theo tiêu chuẩn:
+ * - Đủ cả hai đầu ngày
+ * - Đúng định dạng và hợp lệ lịch
+ * - to >= from
+ * - Khoảng cách tối đa 366 ngày (tính cả 2 đầu ngày)
+ */
+export function validateAnalyticsDateRange(
+  from?: string | null,
+  to?: string | null,
+): { valid: boolean; error?: string } {
+  if (!from || !to) {
+    return {
+      valid: false,
+      error: "Cần cung cấp đồng thời cả ngày bắt đầu và kết thúc.",
+    };
+  }
+  if (!isValidDateString(from)) {
+    return {
+      valid: false,
+      error: "Ngày bắt đầu không hợp lệ (định dạng YYYY-MM-DD).",
+    };
+  }
+  if (!isValidDateString(to)) {
+    return {
+      valid: false,
+      error: "Ngày kết thúc không hợp lệ (định dạng YYYY-MM-DD).",
+    };
+  }
+  if (to < from) {
+    return {
+      valid: false,
+      error: "Ngày kết thúc không được nhỏ hơn ngày bắt đầu.",
+    };
+  }
+
+  const diffDays = Math.round(
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000,
+  ) + 1;
+
+  if (diffDays > 366) {
+    return {
+      valid: false,
+      error: "Khoảng thời gian tối đa là 366 ngày.",
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Xác thực và giải quyết khoảng ngày:
  * - Nếu thiếu cả hai: áp dụng mặc định 30 ngày.
- * - Nếu chỉ có 1 trong 2: báo lỗi INVALID_DATE_RANGE.
- * - Nếu to < from hoặc khoảng cách > 366 ngày (to - from > 365 ngày): báo lỗi.
+ * - Nếu chỉ có 1 trong 2 hoặc vi phạm ràng buộc: báo lỗi INVALID_DATE_RANGE.
  */
 export function resolveAnalyticsDateRange(
   from?: string | null,
@@ -45,20 +112,37 @@ export function resolveAnalyticsDateRange(
   if (!from && !to) {
     return getDefaultAnalyticsDateRange();
   }
-  if (!from || !to) {
-    throw new Error("INVALID_DATE_RANGE: Cần cung cấp đồng thời cả 'from' và 'to', hoặc để trống cả hai.");
+  const validation = validateAnalyticsDateRange(from, to);
+  if (!validation.valid) {
+    throw new Error(`INVALID_DATE_RANGE: ${validation.error}`);
   }
-  if (to < from) {
-    throw new Error("INVALID_DATE_RANGE: Ngày kết thúc 'to' không được nhỏ hơn ngày bắt đầu 'from'.");
-  }
-  const diffDays = Math.floor(
-    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000,
-  ) + 1;
-  if (diffDays > 366) {
-    throw new Error("INVALID_DATE_RANGE: Khoảng thời gian tối đa là 366 ngày.");
-  }
-  return { from, to };
+  return { from: from!, to: to! };
 }
+
+/**
+ * Bộ Query Key chuẩn cho Analytics, phân tách theo userId, phạm vi và tham số báo cáo.
+ */
+export const analyticsQueryKeys = {
+  all: ["analytics"] as const,
+  admin: (userId?: string) => ["analytics", "admin", userId ?? "all"] as const,
+  adminOverview: (userId?: string, from?: string, to?: string) =>
+    [...analyticsQueryKeys.admin(userId), "overview", from ?? "", to ?? ""] as const,
+  adminRevenue: (userId?: string, from?: string, to?: string, granularity?: string) =>
+    [...analyticsQueryKeys.admin(userId), "revenue", from ?? "", to ?? "", granularity ?? "day"] as const,
+  adminOrders: (userId?: string, from?: string, to?: string) =>
+    [...analyticsQueryKeys.admin(userId), "orders", from ?? "", to ?? ""] as const,
+  adminEquipment: (userId?: string, from?: string, to?: string, limit?: number) =>
+    [...analyticsQueryKeys.admin(userId), "equipment", from ?? "", to ?? "", limit ?? 10] as const,
+  adminSuppliers: (userId?: string, from?: string, to?: string, page?: number, pageSize?: number) =>
+    [...analyticsQueryKeys.admin(userId), "suppliers", from ?? "", to ?? "", page ?? 1, pageSize ?? 20] as const,
+  supplier: (userId?: string) => ["analytics", "supplier", userId ?? "current"] as const,
+  supplierOverview: (userId?: string, from?: string, to?: string) =>
+    [...analyticsQueryKeys.supplier(userId), "overview", from ?? "", to ?? ""] as const,
+  supplierRevenue: (userId?: string, from?: string, to?: string, granularity?: string) =>
+    [...analyticsQueryKeys.supplier(userId), "revenue", from ?? "", to ?? "", granularity ?? "day"] as const,
+  supplierListingStats: (userId?: string) =>
+    [...analyticsQueryKeys.supplier(userId), "inventory-stats"] as const,
+};
 
 /**
  * Tính tổng số listing của Nhà cung cấp từ API Inventory.
