@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -56,6 +58,7 @@ export function ProductsManagementTable({
   initialBrands,
   initialEquipmentTypes,
 }: ProductsManagementTableProps) {
+  const router = useRouter();
   const {
     isCreateDrawerOpen,
     isCreatingProduct,
@@ -214,7 +217,7 @@ export function ProductsManagementTable({
         initialPageSize={20}
         initialFilterParams={{}}
         onRowDoubleClick={(product) => {
-          setEditingProduct(product);
+          router.push(`/own/products/${product.id}`);
         }}
         pageSizeOptions={[10, 20, 50, 100]}
         renderFilters={({ filters, setFilters }) => (
@@ -299,16 +302,17 @@ export function ProductsManagementTable({
         )}
         renderRowActions={(product) => (
           <Button
-            aria-label="Sửa thông tin sản phẩm"
-            onClick={() => {
-              setEditingProduct(product);
-            }}
+            asChild
             size="sm"
-            title="Sửa thông tin sản phẩm"
-            type="button"
+            title="Xem chi tiết sản phẩm"
             variant="default"
           >
-            Chi tiết
+            <Link
+              aria-label={`Xem chi tiết sản phẩm ${getEquipmentListingName(product)}`}
+              href={`/own/products/${product.id}`}
+            >
+              Chi tiết
+            </Link>
           </Button>
         )}
         renderToolbarActions={({ refresh }) => {

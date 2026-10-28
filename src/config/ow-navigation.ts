@@ -16,10 +16,6 @@ export const OW_NAVIGATION: DashboardNavigationItem[] = [
         label: "Danh sách sản phẩm",
       },
       {
-        href: "/own/products/assets",
-        label: "Máy vật lý",
-      },
-      {
         href: "/own/products/calendar",
         label: "Lịch sử dụng",
       },

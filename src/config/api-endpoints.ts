@@ -93,6 +93,14 @@ const rentalApiBase = process.env.NEXT_PUBLIC_MOCK_RENTAL_API === "true"
   ? "/api/mock/rental"
   : "/api/v1/rental";
 
+const analyticsApiBase = process.env.NEXT_PUBLIC_MOCK_ANALYTICS_API === "false"
+  ? "/api/v1/analytics"
+  : "/api/mock/analytics";
+
+const inventoryStatisticsEndpoint = process.env.NEXT_PUBLIC_MOCK_ANALYTICS_API === "false"
+  ? "/api/v1/inventory/equipment-listings/statistics"
+  : "/api/mock/inventory/equipment-listings/statistics";
+
 export const API_ENDPOINTS = {
   backend: {
     rental: {
@@ -132,6 +140,30 @@ export const API_ENDPOINTS = {
       itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
       itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
       itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+    },
+    analytics: {
+      overview: (params?: { from?: string; to?: string }) =>
+        buildQueryEndpoint(`${analyticsApiBase}/overview`, {
+          from: params?.from,
+          to: params?.to,
+        }),
+      revenue: (params?: { from?: string; to?: string; granularity?: string }) =>
+        buildQueryEndpoint(`${analyticsApiBase}/revenue`, {
+          from: params?.from,
+          to: params?.to,
+          granularity: params?.granularity,
+        }),
+      meOverview: (params?: { from?: string; to?: string }) =>
+        buildQueryEndpoint(`${analyticsApiBase}/me/overview`, {
+          from: params?.from,
+          to: params?.to,
+        }),
+      meRevenue: (params?: { from?: string; to?: string; granularity?: string }) =>
+        buildQueryEndpoint(`${analyticsApiBase}/me/revenue`, {
+          from: params?.from,
+          to: params?.to,
+          granularity: params?.granularity,
+        }),
     },
     payment: {
       invoice: (invoiceRef: string) =>
@@ -348,6 +380,7 @@ export const API_ENDPOINTS = {
       profile: "/api/v1/auth/users/profile",
     },
     inventory: {
+      statistics: inventoryStatisticsEndpoint,
       warehouse: {
         me: "/api/v1/inventory/warehouse/me",
       },

@@ -378,47 +378,16 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
         )}
       >
         <div className="shrink-0 border-b border-border p-4 md:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">{title}</h2>
-              {description ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {description}
-                </p>
-              ) : null}
-            </div>
-            {toolbarActions || renderToolbarActions ? (
-              <div className="flex flex-wrap gap-2">
-                {showCsvExport ? (
-                  <Button
-                    disabled={!activeData.length}
-                    onClick={handleCsvExport}
-                    type="button"
-                    variant="secondary"
-                  >
-                    <FileDown className="size-4" />
-                    Xuất CSV
-                  </Button>
-                ) : null}
-                {toolbarActions}
-                {renderToolbarActions?.({ refresh: triggerRefresh })}
-              </div>
-            ) : showCsvExport ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  disabled={!activeData.length}
-                  onClick={handleCsvExport}
-                  type="button"
-                  variant="secondary"
-                >
-                  <FileDown className="size-4" />
-                  Xuất CSV
-                </Button>
-              </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">{title}</h2>
+            {description ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {description}
+              </p>
             ) : null}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             {showSearch && (onSearchChange || fetchData) ? (
               <div className="relative w-full min-w-0 sm:w-[360px]">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -463,6 +432,23 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                 />
                 Làm mới
               </Button>
+            ) : null}
+            {showCsvExport || toolbarActions || renderToolbarActions ? (
+              <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                {showCsvExport ? (
+                  <Button
+                    disabled={!activeData.length}
+                    onClick={handleCsvExport}
+                    type="button"
+                    variant="secondary"
+                  >
+                    <FileDown className="size-4" />
+                    Xuất CSV
+                  </Button>
+                ) : null}
+                {toolbarActions}
+                {renderToolbarActions?.({ refresh: triggerRefresh })}
+              </div>
             ) : null}
           </div>
         </div>

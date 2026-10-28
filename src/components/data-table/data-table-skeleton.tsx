@@ -43,23 +43,21 @@ export function DataTableSkeleton({
     >
       {showToolbar ? (
         <div className="shrink-0 border-b border-border p-4 md:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="grid gap-2">
-              <Skeleton className="h-6 w-56" />
-              <Skeleton className="h-4 w-72 max-w-full" />
-            </div>
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-28" />
-              <Skeleton className="h-10 w-36" />
-            </div>
+          <div className="grid gap-2">
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-4 w-72 max-w-full" />
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <Skeleton className="h-10 w-full sm:w-[360px]" />
             {Array.from({ length: filterCount }, (_, index) => (
               <Skeleton className="h-10 w-28" key={index} />
             ))}
             <Skeleton className="h-10 w-28" />
+            <div className="flex gap-2 sm:ml-auto">
+              <Skeleton className="h-10 w-28" />
+              <Skeleton className="h-10 w-36" />
+            </div>
           </div>
         </div>
       ) : null}

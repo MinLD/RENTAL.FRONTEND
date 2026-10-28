@@ -36,11 +36,13 @@ type ProductAssetsFilterParams = {
 type ProductAssetsViewProps = {
   actions: ProductPageActions;
   initialProducts: EquipmentListing[];
+  fixedProduct?: EquipmentListing;
 };
 
 export function ProductAssetsView({
   actions,
   initialProducts,
+  fixedProduct,
 }: ProductAssetsViewProps) {
   const searchParams = useSearchParams();
   const queryProductId = searchParams.get("productId") ?? "";
@@ -49,11 +51,15 @@ export function ProductAssetsView({
   const [activeAsset, setActiveAsset] = useState<InventoryAsset | null>(null);
   const [drawerMode, setDrawerMode] = useState<"create" | "view" | "edit">("view");
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = useState(false);
-  const [createForProductId, setCreateForProductId] = useState<string>("");
+  const [createForProductId, setCreateForProductId] = useState<string>(
+    fixedProduct?.id ?? "",
+  );
   const [currentFilterProductId, setCurrentFilterProductId] = useState<string>(
-    queryProductId && initialProducts.some((p) => p.id === queryProductId)
-      ? queryProductId
-      : "",
+    fixedProduct
+      ? fixedProduct.id
+      : queryProductId && initialProducts.some((p) => p.id === queryProductId)
+        ? queryProductId
+        : "",
   );
   const [isPickProductOpen, setIsPickProductOpen] = useState(false);
   const [selectedProductForCreate, setSelectedProductForCreate] = useState<string>(
@@ -237,8 +243,9 @@ export function ProductAssetsView({
   );
 
   function handleOpenCreate(currentProductId?: string) {
-    if (currentProductId) {
-      setCreateForProductId(currentProductId);
+    const targetId = currentProductId || fixedProduct?.id;
+    if (targetId) {
+      setCreateForProductId(targetId);
       setActiveAsset(null);
       setDrawerMode("create");
       setIsAssetDrawerOpen(true);
@@ -287,7 +294,7 @@ export function ProductAssetsView({
       <DataTable<InventoryAsset, ProductAssetsFilterParams>
         bodyClassName="min-h-[260px]"
         className="h-full"
-        columns={columns}
+        columns={fixedProduct ? columns.filter((col) => col.header !== "Sản phẩm") : columns}
         csvColumns={[
           {
             header: "Sản phẩm",
@@ -313,14 +320,19 @@ export function ProductAssetsView({
           },
         ]}
         csvFilename="danh-sach-may-vat-ly.csv"
-        description="Quản lý danh sách máy móc thực tế, số serial và trạng thái nhận khách"
+        description={
+          fixedProduct
+            ? `Danh sách máy móc thực tế và số serial của sản phẩm "${getEquipmentListingName(fixedProduct)}"`
+            : "Quản lý danh sách máy móc thực tế, số serial và trạng thái nhận khách"
+        }
         emptyState="Không có máy vật lý nào phù hợp."
         fetchData={fetchAssetsData}
         fetchDependencies={[revision]}
         getRowId={(asset) => asset.id}
         initialFilterParams={{
-          productId:
-            queryProductId && productMap.has(queryProductId)
+          productId: fixedProduct
+            ? fixedProduct.id
+            : queryProductId && productMap.has(queryProductId)
               ? queryProductId
               : undefined,
         }}
@@ -331,27 +343,28 @@ export function ProductAssetsView({
         pageSizeOptions={[10, 20, 50, 100]}
         renderFilters={({ filters, setFilters }) => (
           <>
-            <select
-              aria-label="Lọc theo sản phẩm"
-              className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-64"
-              onChange={(event) => {
-                const val = event.target.value;
-                setCurrentFilterProductId(val);
-                setFilters({
-                  ...filters,
-                  productId: val || undefined,
-                });
-              }}
-              value={filters.productId ?? ""}
-            >
-              <option value="">Tất cả sản phẩm</option>
-              {initialProducts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {getEquipmentListingName(p)}
-                </option>
-              ))}
-            </select>
-
+            {!fixedProduct ? (
+              <select
+                aria-label="Lọc theo sản phẩm"
+                className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-64"
+                onChange={(event) => {
+                  const val = event.target.value;
+                  setCurrentFilterProductId(val);
+                  setFilters({
+                    ...filters,
+                    productId: val || undefined,
+                  });
+                }}
+                value={filters.productId ?? ""}
+              >
+                <option value="">Tất cả sản phẩm</option>
+                {initialProducts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {getEquipmentListingName(p)}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <select
               aria-label="Lọc trạng thái nhận khách"
               className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-56"
@@ -404,7 +417,7 @@ export function ProductAssetsView({
         }}
         searchDebounceMs={300}
         searchPlaceholder="Tìm kiếm theo số serial..."
-        title="Danh sách máy vật lý"
+        title={fixedProduct ? "Danh sách máy vật lý" : "Danh sách máy vật lý"}
       />
 
       {/* Product Asset Drawer */}
