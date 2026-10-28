@@ -306,7 +306,12 @@ export function SpecSchemaPanel({
         <SchemaSkeleton />
       ) : loadError ? (
         <div className="grid min-h-64 place-items-center">
-          <DataTableState filtered message={loadError} variant="error" />
+          <DataTableState
+            filtered
+            message={loadError}
+            onRetry={() => void loadVersions()}
+            variant="error"
+          />
         </div>
       ) : !selectedSchema && !isNewDraft ? (
         <div className="grid min-h-64 place-items-center">

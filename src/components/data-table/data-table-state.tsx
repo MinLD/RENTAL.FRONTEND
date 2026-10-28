@@ -2,6 +2,7 @@ import { FolderSearch } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { ErrorState } from "@/components/error-state";
+import { Button } from "@/components/ui/button";
 
 type DataTableStateProps = {
   filtered?: boolean;
@@ -13,14 +14,26 @@ type DataTableStateProps = {
 export function DataTableState({
   filtered = false,
   message,
+  onRetry,
   variant = "empty",
 }: DataTableStateProps) {
   if (variant === "error") {
     return (
       <div className="w-full max-w-lg" data-slot="data-table-state">
         <ErrorState
+          action={
+            onRetry ? (
+              <Button onClick={onRetry} size="sm" type="button">
+                Thử lại
+              </Button>
+            ) : undefined
+          }
           className="min-h-0 px-6 py-8 sm:px-8 sm:py-10"
-          description="Dữ liệu đang tạm thời không hiển thị. Vui lòng thử lại."
+          description={
+            typeof message === "string"
+              ? message
+              : "Dữ liệu đang tạm thời không hiển thị. Vui lòng thử lại."
+          }
           title="Không thể tải dữ liệu"
         />
       </div>

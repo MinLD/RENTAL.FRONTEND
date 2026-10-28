@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { ErrorState } from "@/components/error-state";
+import { PageRefreshButton } from "@/components/ui/page-refresh-button";
 import { OrderDetailHeader } from "@/components/orders/order-detail-header";
 import { OrderPaymentPanel } from "@/components/orders/order-payment-panel";
 import { OrderPaymentSummary } from "@/components/orders/order-payment-summary";
@@ -97,9 +98,12 @@ export default async function RenterOrderPage({
       <Container className="py-12">
         <ErrorState
           action={
-            <Button asChild>
-              <Link href="/orders">Về danh sách đơn</Link>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <PageRefreshButton />
+              <Button asChild size="sm" variant="secondary">
+                <Link href="/orders">Về danh sách đơn</Link>
+              </Button>
+            </div>
           }
           description="Đơn thuê không tồn tại hoặc hiện chưa tải được. Vui lòng thử lại sau ít phút."
           title="Không thể tải đơn thuê"

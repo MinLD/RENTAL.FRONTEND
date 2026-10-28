@@ -9,8 +9,8 @@ export function ProductRefreshButton() {
     <Button
       disabled={isPending}
       onClick={refresh}
+      size="sm"
       type="button"
-      variant="secondary"
     >
       {isPending ? "Đang tải..." : "Thử lại"}
     </Button>

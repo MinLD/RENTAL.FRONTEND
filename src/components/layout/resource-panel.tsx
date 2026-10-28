@@ -25,10 +25,7 @@ export function ResourcePanel({
   if (error)
     return (
       <div className="grid min-h-64 justify-items-center content-center">
-        <DataTableState message={error} variant="error" />
-        <Button onClick={onRetry} size="sm" type="button" variant="secondary">
-          Thử lại
-        </Button>
+        <DataTableState message={error} onRetry={onRetry} variant="error" />
       </div>
     );
   return children;

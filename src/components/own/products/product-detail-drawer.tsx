@@ -199,15 +199,11 @@ export function ProductEditDrawer(props: ProductDetailDrawerProps) {
         </div>
       ) : props.error ? (
         <div className="grid min-h-64 place-items-center">
-          <DataTableState message={props.error} variant="error" />
-          <Button
-            onClick={props.onRefresh}
-            size="sm"
-            type="button"
-            variant="secondary"
-          >
-            Thử lại
-          </Button>
+          <DataTableState
+            message={props.error}
+            onRetry={props.onRefresh}
+            variant="error"
+          />
         </div>
       ) : props.product ? (
         <ProductDetailForms

@@ -37,14 +37,11 @@ export function ProductCalendarPanel({
         errorState={
           calendar.error ? (
             <div className="grid min-h-64 place-items-center">
-              <DataTableState message={calendar.error} variant="error" />
-              <Button
-                onClick={() => void calendar.refresh()}
-                type="button"
-                variant="secondary"
-              >
-                Thử lại
-              </Button>
+              <DataTableState
+                message={calendar.error}
+                onRetry={() => void calendar.refresh()}
+                variant="error"
+              />
             </div>
           ) : undefined
         }

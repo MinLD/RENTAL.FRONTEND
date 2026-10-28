@@ -127,7 +127,7 @@ function HomeFilteredProductCarousel({
         ) : null}
         {query.isPending ? <HomeProductsSkeleton /> : query.isError && !products.length ? (
           <ErrorState
-            action={<Button onClick={() => void query.refetch()} size="sm" variant="secondary">Thử lại</Button>}
+            action={<Button disabled={query.isFetching} onClick={() => void query.refetch()} size="sm">Thử lại</Button>}
             className="min-h-56"
             description="Vui lòng thử tải lại sản phẩm."
             title="Không thể tải sản phẩm"
