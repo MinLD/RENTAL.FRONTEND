@@ -1,12 +1,28 @@
-export default function AdminPage() {
+import type { Metadata } from "next";
+import { QueryProvider } from "@/providers/query-provider";
+import { AdminDashboardView } from "@/components/admin/dashboard/admin-dashboard-view";
+import {
+  getAdminAnalyticsOverviewServer,
+  getAdminAnalyticsRevenueServer,
+} from "@/services/analytics-server-service";
+
+export const metadata: Metadata = {
+  title: "Dashboard Tổng quan - Admin | DPRental",
+  description: "Trang tổng quan quản trị số liệu, doanh số GMV và phí sàn DPRental.",
+};
+
+export default async function AdminPage() {
+  const [initialOverview, initialRevenue] = await Promise.all([
+    getAdminAnalyticsOverviewServer(),
+    getAdminAnalyticsRevenueServer({ granularity: "day" }),
+  ]);
+
   return (
-    <section className=" p-6 ">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-        Dashboard admin
-      </p>
-      <h1 className="mt-2 text-3xl font-bold text-foreground">
-        Tổng quan quản trị
-      </h1>
-    </section>
+    <QueryProvider>
+      <AdminDashboardView
+        initialOverview={initialOverview}
+        initialRevenue={initialRevenue}
+      />
+    </QueryProvider>
   );
 }

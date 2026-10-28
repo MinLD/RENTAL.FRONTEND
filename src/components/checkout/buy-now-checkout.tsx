@@ -40,6 +40,7 @@ import type {
   CheckoutRequest,
   RenterOrderSummary,
 } from "@/types/checkout";
+import type { CartItem } from "@/types/cart";
 import type { PublicEquipmentListingDetail } from "@/types/inventory";
 import type { RenterAddress } from "@/types/renter-address";
 import type { RenterBankAccount } from "@/types/renter-bank-account";
@@ -83,19 +84,21 @@ export function BuyNowCheckout({
   selection,
   termsVersion,
   userId,
+  cartItems,
 }: {
   addresses: RenterAddress[] | null;
   addressesError: string | null;
   bankAccounts: RenterBankAccount[] | null;
   bankAccountsError: string | null;
-  depositAmount: number;
-  estimate: RentalPriceEstimate;
+  depositAmount?: number;
+  estimate?: RentalPriceEstimate;
   profileCompleted: boolean;
   profileHref: string;
-  product: PublicEquipmentListingDetail;
-  selection: BuyNowSelection;
+  product?: PublicEquipmentListingDetail;
+  selection?: BuyNowSelection;
   termsVersion?: string;
   userId: string;
+  cartItems?: CartItem[];
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -186,9 +189,20 @@ export function BuyNowCheckout({
   const orderedBankAccounts = [...(bankAccounts ?? [])].sort(
     (a, b) => Number(b.isDefault) - Number(a.isDefault),
   );
-  const name = getEquipmentListingName(product);
-  const currency = product.rentalRate?.currency ?? "VND";
-  const totalAmount = estimate.total + depositAmount;
+  const isCartMode = Boolean(cartItems && cartItems.length > 0);
+  const name = isCartMode
+    ? `Đơn hàng (${cartItems!.length} thiết bị)`
+    : product ? getEquipmentListingName(product) : "Thiết bị thuê";
+  const currency = isCartMode
+    ? cartItems![0]?.currency || "VND"
+    : product?.rentalRate?.currency ?? "VND";
+  const effectiveRentalTotal = isCartMode
+    ? cartItems!.reduce((sum, item) => sum + (item.estimatedRentalAmount ?? 0), 0)
+    : (estimate?.total ?? 0);
+  const effectiveDepositTotal = isCartMode
+    ? cartItems!.reduce((sum, item) => sum + ((item.currentDeposit ?? 0) * item.quantity), 0)
+    : (depositAmount ?? 0);
+  const totalAmount = effectiveRentalTotal + effectiveDepositTotal;
   const price = (value: number) => formatEquipmentListingRate(value, currency);
   const addressLoadError = addressesQuery.error
     ? "Không thể tải địa chỉ nhận hàng."
@@ -273,7 +287,9 @@ export function BuyNowCheckout({
       return;
     }
     const request: CheckoutRequest = {
-      buyNow: selection,
+      ...(isCartMode
+        ? { cartItemIds: cartItems!.map((i) => i.cartItemId) }
+        : selection ? { buyNow: selection } : {}),
       addressId: values.addressId,
       deliveryNote: values.deliveryNote || undefined,
       refundAccount: {
@@ -336,12 +352,12 @@ export function BuyNowCheckout({
           aria-label="Đường dẫn thanh toán"
           className="mb-5 flex items-center gap-2 text-xs text-muted-foreground"
         >
-          <Link className="hover:text-primary" href={`/products/${product.id}`}>
-            Chi tiết thiết bị
+          <Link className="hover:text-primary" href={product ? `/products/${product.id}` : "/cart"}>
+            {product ? "Chi tiết thiết bị" : "Giỏ hàng"}
           </Link>
           <span>/</span>
           <span className="font-medium text-foreground">
-            Xác nhận thuê ngay
+            {isCartMode ? "Xác nhận đặt thuê giỏ hàng" : "Xác nhận thuê ngay"}
           </span>
         </nav>
         <div className="mb-6">
@@ -711,41 +727,77 @@ export function BuyNowCheckout({
 
           <aside className="rounded-lg border border-border bg-background p-5 shadow-sm sm:p-6 lg:sticky lg:top-6">
             <h2 className="text-lg font-semibold">Thông tin đơn thuê</h2>
-            <div className="mt-4 flex gap-3">
-              <div className="relative size-20 shrink-0 overflow-hidden rounded border border-border">
-                <ProductImage
-                  compact
-                  name={name}
-                  role="thumbnail"
-                  sizes="80px"
-                  src={product.thumbnailUrl}
-                />
+            {isCartMode ? (
+              <div className="mt-4 max-h-72 divide-y divide-border/60 overflow-y-auto pr-1">
+                {cartItems!.map((item) => (
+                  <div key={item.cartItemId} className="flex gap-3 py-2.5 first:pt-0">
+                    <div className="relative size-14 shrink-0 overflow-hidden rounded border border-border bg-muted">
+                      <ProductImage
+                        compact
+                        name={item.name}
+                        role="thumbnail"
+                        sizes="56px"
+                        src={item.thumbnailUrl}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 text-xs">
+                      <p className="font-semibold line-clamp-1">{item.name}</p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        {item.quantity} thiết bị · {getRentalDayCount(item.expectedStartDate, item.expectedEndDate)} ngày
+                      </p>
+                      <p className="text-muted-foreground">
+                        {formatRentalDate(item.expectedStartDate)} – {formatRentalDate(item.expectedEndDate)}
+                      </p>
+                      <p className="mt-0.5 font-semibold text-primary">
+                        {formatEquipmentListingRate(item.estimatedRentalAmount, item.currency)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold">{name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {selection.quantity} thiết bị ·{" "}
-                  {getRentalDayCount(
-                    selection.expectedStartDate,
-                    selection.expectedEndDate,
-                  )}{" "}
-                  ngày
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatRentalDate(selection.expectedStartDate)} –{" "}
-                  {formatRentalDate(selection.expectedEndDate)}
-                </p>
+            ) : (
+              <div className="mt-4 flex gap-3">
+                <div className="relative size-20 shrink-0 overflow-hidden rounded border border-border">
+                  <ProductImage
+                    compact
+                    name={name}
+                    role="thumbnail"
+                    sizes="80px"
+                    src={product?.thumbnailUrl ?? null}
+                  />
+                </div>
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold">{name}</p>
+                  {selection ? (
+                    <>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {selection.quantity} thiết bị ·{" "}
+                        {getRentalDayCount(
+                          selection.expectedStartDate,
+                          selection.expectedEndDate,
+                        )}{" "}
+                        ngày
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatRentalDate(selection.expectedStartDate)} –{" "}
+                        {formatRentalDate(selection.expectedEndDate)}
+                      </p>
+                    </>
+                  ) : null}
+                </div>
               </div>
-            </div>
-            <Separator className="my-5" />
-            <dl className="space-y-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted-foreground">Tiền thuê</dt>
-                <dd>{price(estimate.total)}</dd>
+            )}
+            <Separator className="my-4" />
+            <dl className="space-y-2.5 text-sm">
+              <div className="flex justify-between gap-3 text-xs sm:text-sm">
+                <dt className="text-muted-foreground">
+                  {isCartMode ? `Tiền thuê (${cartItems!.length} mục)` : "Tiền thuê"}
+                </dt>
+                <dd className="font-medium">{price(effectiveRentalTotal)}</dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex justify-between gap-3 text-xs sm:text-sm">
                 <dt className="text-muted-foreground">Tiền cọc</dt>
-                <dd>{price(depositAmount)}</dd>
+                <dd className="font-medium">{price(effectiveDepositTotal)}</dd>
               </div>
               <div className="flex justify-between gap-3 border-t border-border pt-3 font-semibold">
                 <dt>Tổng dự kiến</dt>
@@ -802,8 +854,8 @@ export function BuyNowCheckout({
                   : "Hoàn thiện hồ sơ để tiếp tục"}
             </Button>
             <Button asChild className="mt-2 w-full" variant="default">
-              <Link href={`/products/${product.id}`}>
-                <ArrowLeft className="size-4" /> Quay lại thiết bị
+              <Link href={product ? `/products/${product.id}` : "/cart"}>
+                <ArrowLeft className="size-4" /> {product ? "Quay lại thiết bị" : "Quay lại giỏ hàng"}
               </Link>
             </Button>
           </aside>

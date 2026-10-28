@@ -9,6 +9,7 @@ import { QueryProvider } from "@/providers/query-provider";
 import { getPublicEquipmentListing } from "@/services/queries/inventory-queries";
 import { getRenterAddressesForServer } from "@/services/renter-address-server-service";
 import { getRenterBankAccountsForServer } from "@/services/renter-bank-account-server-service";
+import { getRentalCartForServer } from "@/services/rental-cart-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import type { BuyNowSelection } from "@/types/checkout";
 import { validateCartItem } from "@/utils/cart";
@@ -54,6 +55,49 @@ export default async function CheckoutPage({
   searchParams: Promise<CheckoutSearchParams>;
 }) {
   const params = await searchParams;
+  const cartItemIdsParam = first(params.cartItemIds) || first(params.items);
+
+  if (cartItemIdsParam) {
+    const targetIds = cartItemIdsParam.split(",").map((id) => id.trim()).filter(Boolean);
+    const checkoutHref = `/checkout?cartItemIds=${encodeURIComponent(cartItemIdsParam)}`;
+    const user = await getCurrentUser();
+    if (!user) redirect(withReturnTo("/login", checkoutHref));
+
+    const [cartItemsResult, addressResult, bankAccountsResult] = await Promise.all([
+      getRentalCartForServer(),
+      getRenterAddressesForServer(),
+      getRenterBankAccountsForServer(),
+    ]);
+
+    const cartItems = (cartItemsResult ?? []).filter((item) => targetIds.includes(item.cartItemId));
+
+    if (!cartItems.length) {
+      return (
+        <CheckoutUnavailable
+          description="Không tìm thấy các thiết bị đã chọn trong giỏ hàng hoặc giỏ hàng đã thay đổi."
+          href="/cart"
+          title="Không thể tiếp tục đặt thuê"
+        />
+      );
+    }
+
+    return (
+      <QueryProvider>
+        <BuyNowCheckout
+          addresses={addressResult.addresses}
+          addressesError={addressResult.error}
+          bankAccounts={bankAccountsResult.bankAccounts}
+          bankAccountsError={bankAccountsResult.error}
+          cartItems={cartItems}
+          profileCompleted={user.isProfileCompleted}
+          profileHref={withReturnTo("/account", checkoutHref)}
+          termsVersion={process.env.RENTAL_TERMS_VERSION?.trim() || undefined}
+          userId={user.id}
+        />
+      </QueryProvider>
+    );
+  }
+
   const selection = parseSelection(params);
   if (!selection) {
     return <CheckoutUnavailable
@@ -62,7 +106,6 @@ export default async function CheckoutPage({
       title="Không thể tiếp tục đặt thuê"
     />;
   }
-
   const query = new URLSearchParams({
     listingId: selection.equipmentListingId,
     quantity: String(selection.quantity),

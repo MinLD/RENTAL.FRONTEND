@@ -12,7 +12,8 @@ export type RefundAccount = {
 };
 
 export type CheckoutRequest = {
-  buyNow: BuyNowSelection;
+  buyNow?: BuyNowSelection;
+  cartItemIds?: string[];
   addressId?: string;
   delivery?: {
     province: string;
@@ -22,7 +23,8 @@ export type CheckoutRequest = {
     note?: string;
   };
   deliveryNote?: string;
-  refundAccount: RefundAccount;
+  refundAccount?: RefundAccount;
+  refundAccountId?: string;
   expectedTotalAmount: number;
   termsAccepted: true;
   termsVersion?: string;

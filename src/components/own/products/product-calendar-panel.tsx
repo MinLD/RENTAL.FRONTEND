@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { MonthCalendar } from "@/components/calendar/month-calendar";
 import { DataTableState } from "@/components/data-table";
-import { Button } from "@/components/ui/button";
 import { useApiResource } from "@/hooks/use-api-resource";
 import { getMonthRange, getTodayDate } from "@/utils/calendar";
 import type { ProductPageActions } from "./product-management-types";
@@ -37,14 +36,11 @@ export function ProductCalendarPanel({
         errorState={
           calendar.error ? (
             <div className="grid min-h-64 place-items-center">
-              <DataTableState message={calendar.error} variant="error" />
-              <Button
-                onClick={() => void calendar.refresh()}
-                type="button"
-                variant="secondary"
-              >
-                Thử lại
-              </Button>
+              <DataTableState
+                message={calendar.error}
+                onRetry={() => void calendar.refresh()}
+                variant="error"
+              />
             </div>
           ) : undefined
         }

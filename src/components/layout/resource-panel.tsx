@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { DataTableState } from "@/components/data-table";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ResourcePanel({
@@ -25,10 +24,7 @@ export function ResourcePanel({
   if (error)
     return (
       <div className="grid min-h-64 justify-items-center content-center">
-        <DataTableState message={error} variant="error" />
-        <Button onClick={onRetry} size="sm" type="button" variant="secondary">
-          Thử lại
-        </Button>
+        <DataTableState message={error} onRetry={onRetry} variant="error" />
       </div>
     );
   return children;

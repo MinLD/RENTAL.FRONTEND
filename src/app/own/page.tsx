@@ -1,12 +1,31 @@
-export default function OwPage() {
+import type { Metadata } from "next";
+import { QueryProvider } from "@/providers/query-provider";
+import { SupplierDashboardView } from "@/components/own/dashboard/supplier-dashboard-view";
+import {
+  getSupplierAnalyticsOverviewServer,
+  getSupplierAnalyticsRevenueServer,
+  getSupplierListingStatisticsServer,
+} from "@/services/analytics-server-service";
+
+export const metadata: Metadata = {
+  title: "Dashboard Nhà cung cấp | DPRental",
+  description: "Tổng quan kinh doanh, doanh số cho thuê thiết bị và tiền nhận Payout.",
+};
+
+export default async function OwPage() {
+  const [initialOverview, initialRevenue, initialListingStats] = await Promise.all([
+    getSupplierAnalyticsOverviewServer(),
+    getSupplierAnalyticsRevenueServer({ granularity: "day" }),
+    getSupplierListingStatisticsServer(),
+  ]);
+
   return (
-    <section className=" p-6 ">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-        Dashboard OW
-      </p>
-      <h1 className="mt-2 text-3xl font-bold text-foreground">
-        Tổng quan quản trị
-      </h1>
-    </section>
+    <QueryProvider>
+      <SupplierDashboardView
+        initialListingStats={initialListingStats}
+        initialOverview={initialOverview}
+        initialRevenue={initialRevenue}
+      />
+    </QueryProvider>
   );
 }

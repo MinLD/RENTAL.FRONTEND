@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { PageRefreshButton } from "@/components/ui/page-refresh-button";
 
 import {
   AllEquipmentTileContent,
@@ -60,8 +61,9 @@ async function HomeCategoryItems() {
   if (!result.success) {
     return (
       <ErrorState
+        action={<PageRefreshButton />}
         className="min-h-28"
-        description="Vui lòng tải lại trang hoặc thử lại sau."
+        description="Vui lòng thử tải lại danh mục thiết bị."
         title="Không thể tải danh mục thiết bị"
       />
     );

@@ -1,3 +1,16 @@
+export type RentalCartLineStatus =
+  | "AVAILABLE"
+  | "INSUFFICIENT_QUANTITY"
+  | "UNAVAILABLE"
+  | "LISTING_DISABLED"
+  | "VALIDATION_FAILED"
+  | "DATE_PASSED";
+
+export type RentalCartItemInteractionStatus =
+  | "ENABLED"
+  | "DISABLED_EDITABLE"
+  | "DISABLED_READ_ONLY";
+
 export type AddCartItem = {
   equipmentListingId: string;
   quantity: number;
@@ -13,7 +26,8 @@ export type CartItem = AddCartItem & {
   currentDailyRate: number | null;
   currentDeposit: number | null;
   estimatedRentalAmount: number | null;
-  status: string;
+  status: RentalCartLineStatus | string;
+  interactionStatus?: RentalCartItemInteractionStatus;
   message: string | null;
   availableQuantity?: number;
   mergeIdempotencyKey?: string;
@@ -26,7 +40,8 @@ export type RentalCartLine = AddCartItem & {
   currentDeposit: number | null;
   estimatedRentalAmount: number | null;
   currentPriceVersion: string | null;
-  status: string;
+  status: RentalCartLineStatus | string;
+  interactionStatus?: RentalCartItemInteractionStatus;
   message: string | null;
 };
 

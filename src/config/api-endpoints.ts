@@ -93,6 +93,7 @@ const rentalApiBase = process.env.NEXT_PUBLIC_MOCK_RENTAL_API === "true"
   ? "/api/mock/rental"
   : "/api/v1/rental";
 
+
 export const API_ENDPOINTS = {
   backend: {
     rental: {
@@ -132,6 +133,48 @@ export const API_ENDPOINTS = {
       itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
       itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
       itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+    },
+    analytics: {
+      overview: (params?: { from?: string; to?: string }) =>
+        buildQueryEndpoint("/api/v1/analytics/overview", {
+          from: params?.from,
+          to: params?.to,
+        }),
+      revenue: (params?: { from?: string; to?: string; granularity?: string }) =>
+        buildQueryEndpoint("/api/v1/analytics/revenue", {
+          from: params?.from,
+          to: params?.to,
+          granularity: params?.granularity,
+        }),
+      orders: (params: { from: string; to: string }) =>
+        buildQueryEndpoint("/api/v1/analytics/orders", {
+          from: params.from,
+          to: params.to,
+        }),
+      equipment: (params: { from: string; to: string; limit?: number }) =>
+        buildQueryEndpoint("/api/v1/analytics/equipment", {
+          from: params.from,
+          to: params.to,
+          limit: params.limit,
+        }),
+      suppliers: (params: { from: string; to: string; page?: number; pageSize?: number }) =>
+        buildQueryEndpoint("/api/v1/analytics/suppliers", {
+          from: params.from,
+          to: params.to,
+          page: params.page,
+          pageSize: params.pageSize,
+        }),
+      meOverview: (params?: { from?: string; to?: string }) =>
+        buildQueryEndpoint("/api/v1/analytics/me/overview", {
+          from: params?.from,
+          to: params?.to,
+        }),
+      meRevenue: (params?: { from?: string; to?: string; granularity?: string }) =>
+        buildQueryEndpoint("/api/v1/analytics/me/revenue", {
+          from: params?.from,
+          to: params?.to,
+          granularity: params?.granularity,
+        }),
     },
     payment: {
       invoice: (invoiceRef: string) =>
@@ -348,6 +391,7 @@ export const API_ENDPOINTS = {
       profile: "/api/v1/auth/users/profile",
     },
     inventory: {
+      statistics: "/api/v1/inventory/equipment-listings/statistics",
       warehouse: {
         me: "/api/v1/inventory/warehouse/me",
       },

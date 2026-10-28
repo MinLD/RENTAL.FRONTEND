@@ -9,7 +9,6 @@ import { PaymentHubProvider } from "@/providers/payment-hub-provider";
 import { getStoredPublicArea } from "@/services/public-area-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import { getRentalCartForServer } from "@/services/rental-cart-server-service";
-import { CART_ENABLED } from "@/config/features";
 
 type SiteLayoutProps = Readonly<{
   children: ReactNode;
@@ -17,11 +16,10 @@ type SiteLayoutProps = Readonly<{
 
 export default async function SiteLayout({ children }: SiteLayoutProps) {
   const [initialArea, user] = await Promise.all([getStoredPublicArea(), getCurrentUser()]);
-  const initialCart = CART_ENABLED && user ? await getRentalCartForServer() : undefined;
+  const initialCart = user ? await getRentalCartForServer() : undefined;
   return (
     <PublicAreaProvider initialArea={initialArea}>
       <CartProvider
-        enabled={CART_ENABLED}
         key={user?.id ?? "guest"}
         initialItems={initialCart ?? undefined}
         userId={user?.id ?? null}

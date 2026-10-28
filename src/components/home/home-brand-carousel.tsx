@@ -131,14 +131,15 @@ export function HomeBrandCarousel({
         <ErrorState
           action={
             <Button
+              disabled={query.isFetching}
               onClick={() => void query.refetch()}
               size="sm"
-              variant="secondary"
             >
               Thử lại
             </Button>
           }
           className="min-h-28"
+          description="Vui lòng thử tải lại thương hiệu."
           title="Không thể tải thương hiệu"
         />
       ) : !brands.length && !hasNextPage ? (
