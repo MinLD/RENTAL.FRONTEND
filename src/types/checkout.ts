@@ -1,3 +1,5 @@
+import type { ReturnRequestResponse } from "@/types/rental-returns";
+
 export type BuyNowSelection = {
   equipmentListingId: string;
   quantity: number;
@@ -178,6 +180,23 @@ export type RenterOrderDetail = RenterOrderPayment & {
         note: string | null;
         renterAcknowledgedAt: string | null;
         renterAcknowledgementNote: string | null;
+      } | null;
+      units?: Array<{
+        assignmentId: string;
+        status: string;
+        hasOpenReturnRequest: boolean;
+        canRequestReturn: boolean;
+      }> | null;
+      returnRequests?: ReturnRequestResponse[] | null;
+      settlement?: {
+        returnsCompletedAt: string | null;
+        deductionDeadline: string | null;
+        deductionStatus: string | null;
+        proposedDeductionAmount: number | null;
+        renterResponseDeadline: string | null;
+        finalDeductionAmount: number | null;
+        depositRefundAmount: number | null;
+        settledAt: string | null;
       } | null;
     }> | null;
   }> | null;

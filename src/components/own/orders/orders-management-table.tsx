@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { DataTable } from "@/components/data-table";
 import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
@@ -11,17 +12,42 @@ import {
   getSupplierOrders,
   rejectSupplierOrder,
 } from "@/services/supplier-orders-service";
-import type { SupplierOrdersFilters, SupplierOrderSummary } from "@/types/supplier-orders";
+import type {
+  SupplierOrderItem,
+  SupplierOrdersFilters,
+  SupplierOrderSummary,
+} from "@/types/supplier-orders";
 import { SUPPLIER_ORDER_STATUS_LABELS, isOrderPendingSupplierConfirmation } from "@/utils/supplier-orders";
 import { OrderDecisionDialog } from "./order-decision-dialog";
 import { OrderDetailDrawer } from "./order-detail-drawer";
 import { orderColumns } from "./order-table-columns";
+import { SupplierHandoverDrawer } from "./supplier-handover-drawer";
 
 export function OrdersManagementTable({ userId }: { userId: string }) {
   const listRefreshRef = useRef<(() => void) | null>(null);
   const onRefreshReady = useCallback((refresh: () => void) => {
     listRefreshRef.current = refresh;
   }, []);
+
+  const [tableHandoverItem, setTableHandoverItem] = useState<SupplierOrderItem | null>(null);
+  const [tableHandoverSubOrderCode, setTableHandoverSubOrderCode] = useState<string | null>(null);
+  const [isTableHandoverOpen, setIsTableHandoverOpen] = useState(false);
+
+  const handleOpenHandoverFromRow = async (order: SupplierOrderSummary) => {
+    try {
+      const res = await getSupplierOrder(order.subOrderId);
+      if (res.success && res.data.items?.length) {
+        setTableHandoverItem(res.data.items[0]);
+        setTableHandoverSubOrderCode(order.subOrderCode || order.subOrderId);
+        setIsTableHandoverOpen(true);
+      } else {
+        toast.error("Không thể tải thông tin thiết bị để bàn giao.");
+      }
+    } catch {
+      toast.error("Đã xảy ra lỗi khi tải đơn.");
+    }
+  };
+
   const controller = useOwnOrdersController({
     userId,
     fetchOrder: getSupplierOrder,
@@ -116,6 +142,22 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
                   </Button>
                 </>
               )}
+              {order.status === "AWAITING_HANDOVER" && (
+                <Button
+                  aria-label={`Bàn giao đơn ${order.subOrderCode || order.subOrderId}`}
+                  disabled={controller.isSubmitting}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void handleOpenHandoverFromRow(order);
+                  }}
+                  size="sm"
+                  title="Bằng chứng bàn giao"
+                  type="button"
+                  variant="default"
+                >
+                  Bàn giao
+                </Button>
+              )}
               <Button
                 aria-label={`Xem chi tiết đơn ${order.subOrderCode || order.subOrderId}`}
                 disabled={controller.isSubmitting}
@@ -165,6 +207,17 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
           orderCode={controller.order.subOrderCode || controller.order.subOrderId}
         />
       ) : null}
+
+      <SupplierHandoverDrawer
+        item={tableHandoverItem}
+        onOpenChange={setIsTableHandoverOpen}
+        onSuccess={() => {
+          listRefreshRef.current?.();
+          controller.refreshOrder();
+        }}
+        open={isTableHandoverOpen}
+        subOrderCode={tableHandoverSubOrderCode}
+      />
     </div>
   );
 }

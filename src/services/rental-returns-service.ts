@@ -4,6 +4,8 @@ import { ApiError, type ApiResult } from "@/services/api-error";
 import type {
   AdminResolveReturnRequest,
   CreateReturnRequest,
+  HandoverItemRequest,
+  HandoverItemResponse,
   RecordReturnRequest,
   RecordReturnResponse,
   ReportReturnIssueRequest,
@@ -14,6 +16,34 @@ function getIdempotencyHeader(key?: string): Record<string, string> {
   const finalKey = key?.trim() || crypto.randomUUID();
   return { "Idempotency-Key": finalKey };
 }
+export async function handoverItem(
+  itemId: string,
+  payload: HandoverItemRequest,
+  idempotencyKey?: string,
+): Promise<ApiResult<HandoverItemResponse>> {
+  try {
+    const response = await authApiClientJson<HandoverItemResponse>(
+      API_ENDPOINTS.backend.rental.itemHandover(itemId),
+      {
+        method: "POST",
+        headers: getIdempotencyHeader(idempotencyKey),
+        json: payload,
+      },
+    );
+    return { success: true, data: response };
+  } catch (error) {
+    if (error instanceof ApiError) return { success: false, error: error.details };
+    return {
+      success: false,
+      error: {
+        status: 500,
+        message: "Không thể gửi bằng chứng bàn giao thiết bị.",
+        fieldErrors: {},
+      },
+    };
+  }
+}
+
 
 export async function createReturnRequest(
   itemId: string,

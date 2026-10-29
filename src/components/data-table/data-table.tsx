@@ -218,7 +218,9 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
       (value) => value !== undefined && value !== null && value !== "",
     );
   const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(activeTotalItems / activePageSize));
+    const size = Number(activePageSize) > 0 ? Number(activePageSize) : 20;
+    const total = Number(activeTotalItems) > 0 ? Number(activeTotalItems) : 0;
+    return Math.max(1, Math.ceil(total / size));
   }, [activePageSize, activeTotalItems]);
   const tableMinWidth = useMemo(() => {
     const columnsWidth = columns.reduce((totalWidth, column) => {
@@ -422,13 +424,13 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
             })}
             {fetchData ? (
               <Button
-                disabled={isTableLoading}
+                disabled={isLoading}
                 onClick={triggerRefresh}
                 type="button"
                 variant="secondary"
               >
                 <RefreshCw
-                  className={cn("size-4", isTableLoading && "animate-spin")}
+                  className={cn("size-4", isLoading && "animate-spin")}
                 />
                 Làm mới
               </Button>
@@ -723,6 +725,8 @@ export function DataTablePaginationBar({
   pageSizeOptions = [10, 25, 50, 100],
   totalPages,
 }: DataTablePaginationBarProps) {
+  const safeTotalPages = Number(totalPages) > 0 ? Number(totalPages) : 1;
+  const safePage = Number(page) > 0 ? Number(page) : 1;
   return (
     <div
       className={cn(
@@ -752,8 +756,9 @@ export function DataTablePaginationBar({
           <PaginationItem>
             <PaginationPrevious
               aria-label="Trang trước"
-              disabled={page <= 1}
-              onClick={() => onPageChange?.(page - 1)}
+              disabled={safePage <= 1}
+              onClick={() => onPageChange?.(safePage - 1)}
+              suppressHydrationWarning
               type="button"
             >
               <span></span>
@@ -761,14 +766,15 @@ export function DataTablePaginationBar({
           </PaginationItem>
           <PaginationItem>
             <span className="whitespace-nowrap px-4 text-sm font-semibold text-muted-foreground ">
-              Trang {page} / {totalPages}
+              Trang {safePage} / {safeTotalPages}
             </span>
           </PaginationItem>
           <PaginationItem>
             <PaginationNext
               aria-label="Trang sau"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange?.(page + 1)}
+              disabled={safePage >= safeTotalPages}
+              onClick={() => onPageChange?.(safePage + 1)}
+              suppressHydrationWarning
               type="button"
             >
               <span></span>

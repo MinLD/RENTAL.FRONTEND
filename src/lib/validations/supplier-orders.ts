@@ -75,6 +75,17 @@ export const supplierOrderItemSchema = z.object({
     // An assigned machine has no return condition until it is returned.
     returnCondition: z.string().nullable(),
   })).nullable().optional(),
+  returnRequests: z.array(z.any()).nullable().optional(),
+  settlement: z.object({
+    returnsCompletedAt: z.string().nullable(),
+    deductionDeadline: z.string().nullable(),
+    deductionStatus: z.string().nullable(),
+    proposedDeductionAmount: z.number().nullable(),
+    renterResponseDeadline: z.string().nullable(),
+    finalDeductionAmount: z.number().nullable(),
+    depositRefundAmount: z.number().nullable(),
+    settledAt: z.string().nullable(),
+  }).nullable().optional(),
 });
 
 export const supplierOrderDetailSchema = z.object({

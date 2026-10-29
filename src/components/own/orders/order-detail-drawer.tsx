@@ -1,9 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   CalendarDays,
   CheckCircle2,
+  FileCheck,
   MapPin,
   Package,
   RefreshCw,
@@ -20,6 +21,7 @@ import type {
 import { formatEquipmentListingRate } from "@/utils/inventory";
 import { formatSupplierOrderDate, isOrderPendingSupplierConfirmation } from "@/utils/supplier-orders";
 import { OrderStatusBadge } from "./order-status-badge";
+import { SupplierHandoverDrawer } from "./supplier-handover-drawer";
 
 export function OrderDetailDrawer({
   selectedOrder,
@@ -46,7 +48,14 @@ export function OrderDetailDrawer({
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const [handoverItem, setHandoverItem] = useState<SupplierOrderItem | null>(null);
+  const [isHandoverOpen, setIsHandoverOpen] = useState(false);
+
   const pending = isOrderPendingSupplierConfirmation(order?.status);
+  const isAwaitingHandover = order?.status === "AWAITING_HANDOVER";
+  const firstHandoverItem = order?.items?.find(
+    (it) => it.status === "AWAITING_HANDOVER",
+  ) ?? order?.items?.[0] ?? null;
   return (
     <FormDrawer
       className="sm:max-w-2xl"
@@ -69,6 +78,20 @@ export function OrderDetailDrawer({
             />
             Tải lại
           </Button>
+          {isAwaitingHandover && firstHandoverItem ? (
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary-hover"
+              disabled={isLoading || isSubmitting}
+              onClick={() => {
+                setHandoverItem(firstHandoverItem);
+                setIsHandoverOpen(true);
+              }}
+              size="sm"
+              type="button"
+            >
+              <FileCheck className="size-4" /> Bằng chứng bàn giao
+            </Button>
+          ) : null}
           {pending ? (
             <>
               <Button
@@ -198,6 +221,10 @@ export function OrderDetailDrawer({
                       currency={order.currency}
                       item={item}
                       key={item.rentalItemId}
+                      onOpenHandover={(it) => {
+                        setHandoverItem(it);
+                        setIsHandoverOpen(true);
+                      }}
                     />
                   ))
                 ) : (
@@ -239,6 +266,13 @@ export function OrderDetailDrawer({
           ) : null}
         </div>
       )}
+      <SupplierHandoverDrawer
+        item={handoverItem}
+        onOpenChange={setIsHandoverOpen}
+        onSuccess={onRefresh}
+        open={isHandoverOpen}
+        subOrderCode={order?.subOrderCode || order?.subOrderId}
+      />
     </FormDrawer>
   );
 }
@@ -246,9 +280,11 @@ export function OrderDetailDrawer({
 function OrderEquipmentItem({
   item,
   currency,
+  onOpenHandover,
 }: {
   item: SupplierOrderItem;
   currency: string | null;
+  onOpenHandover?: (item: SupplierOrderItem) => void;
 }) {
   const price = (value: number) => formatEquipmentListingRate(value, currency);
   return (
@@ -286,6 +322,20 @@ function OrderEquipmentItem({
           />
         ) : null}
       </dl>
+      {item.status === "AWAITING_HANDOVER" && onOpenHandover && (
+        <div className="pt-2 border-t border-border">
+          <Button
+            className="border-primary text-primary hover:bg-primary/5"
+            onClick={() => onOpenHandover(item)}
+            size="sm"
+            type="button"
+            variant="secondary"
+          >
+            <FileCheck className="mr-1.5 size-3.5" />
+            Bằng chứng bàn giao
+          </Button>
+        </div>
+      )}
     </article>
   );
 }
