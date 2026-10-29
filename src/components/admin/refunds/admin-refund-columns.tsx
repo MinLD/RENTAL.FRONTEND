@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import type { AdminRefundQueueItemResponse } from "@/types/rental-returns";
 import { formatEquipmentListingRate } from "@/utils/inventory";
 import { formatSupplierOrderDate } from "@/utils/supplier-orders";
-import { CheckCircle2, Clock } from "lucide-react";
 
 export function getAdminRefundColumns(
   onConfirmRefund: (item: AdminRefundQueueItemResponse) => void
@@ -99,15 +98,9 @@ export function getAdminRefundColumns(
       width: 150,
       cell: (item) => (
         item.state === "COMPLETED" ? (
-          <Badge variant="success" className="flex items-center gap-1 w-fit font-semibold">
-            <CheckCircle2 className="size-3.5" />
-            Đã hoàn tất
-          </Badge>
+          <Badge variant="success">Đã hoàn tất</Badge>
         ) : (
-          <Badge variant="warning" className="flex items-center gap-1 w-fit font-semibold">
-            <Clock className="size-3.5" />
-            Chờ hoàn tiền
-          </Badge>
+          <Badge variant="warning">Chờ hoàn tiền</Badge>
         )
       ),
     },
