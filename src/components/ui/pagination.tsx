@@ -47,6 +47,7 @@ function PaginationButton({
       className={cn("whitespace-nowrap", className)}
       data-slot="pagination-button"
       size={size}
+      suppressHydrationWarning
       variant={variant}
       {...props}
     />

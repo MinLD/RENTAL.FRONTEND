@@ -177,12 +177,12 @@ export const API_ENDPOINTS = {
         orderId?: string;
       }) =>
         buildQueryEndpoint(`${rentalApiBase}/admin/return-requests`, {
-          page: params?.page,
-          pageSize: params?.pageSize,
-          disputed: params?.disputed !== undefined ? String(params.disputed) : undefined,
-          overdue: params?.overdue !== undefined ? String(params.overdue) : undefined,
-          itemId: params?.itemId,
-          orderId: params?.orderId,
+          Page: params?.page,
+          PageSize: params?.pageSize,
+          Disputed: params?.disputed !== undefined ? String(params.disputed) : undefined,
+          Overdue: params?.overdue !== undefined ? String(params.overdue) : undefined,
+          ItemId: params?.itemId,
+          OrderId: params?.orderId,
         }),
       adminReturnRequestDetail: (requestId: string) =>
         `${rentalApiBase}/admin/return-requests/${encodeURIComponent(requestId)}`,
