@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   CalendarDays,
+  CheckCircle2,
+  Clock,
   MapPin,
   Package,
   UserRound,
@@ -157,6 +159,44 @@ export default async function RenterOrderPage({
           <OrderDetailHeader createdAtLabel={formatDate(order.createdAt, true)} />
           <OrderPaymentPanel />
 
+          {order.refundState === "REFUNDED" && (
+            <div className="mb-5 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-4 text-emerald-900 shadow-sm">
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+              <div className="text-sm space-y-1">
+                <h3 className="font-semibold text-emerald-950">Đã hoàn tiền cho đơn thuê</h3>
+                <p className="text-emerald-800">
+                  Hệ thống đã chuyển khoản hoàn tất số tiền{" "}
+                  <strong className="font-semibold text-emerald-950">
+                    {formatEquipmentListingRate(order.refundedAmount || 0, currency)}
+                  </strong>{" "}
+                  vào tài khoản ngân hàng của bạn.
+                </p>
+                {order.refundAccount && (
+                  <p className="text-xs text-emerald-700">
+                    Tài khoản nhận: {order.refundAccount.bankCode} · {maskAccountNumber(order.refundAccount.accountNumber)} ({order.refundAccount.accountHolderName})
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {order.refundState === "PENDING" && (
+            <div className="mb-5 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-amber-900 shadow-sm">
+              <Clock className="mt-0.5 size-5 shrink-0 text-amber-600" />
+              <div className="text-sm space-y-1">
+                <h3 className="font-semibold text-amber-950">Đơn thuê đang chờ hoàn tiền</h3>
+                <p className="text-amber-800">
+                  Đơn thuê đã phát sinh khoản hoàn. Quản trị viên đang xử lý chuyển khoản trực tiếp về tài khoản ngân hàng của bạn.
+                </p>
+                {order.refundAccount && (
+                  <p className="text-xs text-amber-700">
+                    Tài khoản nhận: {order.refundAccount.bankCode} · {maskAccountNumber(order.refundAccount.accountNumber)} ({order.refundAccount.accountHolderName})
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid scroll-mt-36 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]" id="order-details">
             <div className="space-y-5">
               <section className="rounded-lg border border-border bg-background p-5 shadow-sm sm:p-6">
@@ -246,12 +286,43 @@ export default async function RenterOrderPage({
                                   )}
                                   {item.refund &&
                                     item.refund.state !== "NONE" && (
-                                      <p className="mt-2 text-sm text-muted-foreground">
-                                        Hoàn tiền:{" "}
-                                        {item.refund.state === "COMPLETED"
-                                          ? "Đã hoàn tất"
-                                          : "Đang xử lý"}
-                                      </p>
+                                      <div className="mt-2.5 rounded-md border border-border bg-muted/40 p-2.5 text-xs space-y-1">
+                                        <div className="flex items-center justify-between font-semibold">
+                                          <span>
+                                            {item.refund.kind === "FULL_REFUND"
+                                              ? "Hoàn toàn bộ tiền thuê & cọc"
+                                              : "Hoàn tiền cọc"}
+                                          </span>
+                                          <span
+                                            className={
+                                              item.refund.state === "COMPLETED"
+                                                ? "text-emerald-700 font-semibold"
+                                                : "text-amber-700 font-semibold"
+                                            }
+                                          >
+                                            {item.refund.state === "COMPLETED"
+                                              ? "Đã chuyển khoản"
+                                              : "Chờ chuyển khoản"}
+                                          </span>
+                                        </div>
+                                        {item.refund.refundAmount != null && (
+                                          <div className="text-muted-foreground">
+                                            Số tiền hoàn:{" "}
+                                            <strong className="text-foreground">
+                                              {formatEquipmentListingRate(
+                                                item.refund.refundAmount,
+                                                currency,
+                                              )}
+                                            </strong>
+                                          </div>
+                                        )}
+                                        {item.refund.refundedAt && (
+                                          <div className="text-muted-foreground">
+                                            Ngày hoàn:{" "}
+                                            {formatDate(item.refund.refundedAt, true)}
+                                          </div>
+                                        )}
+                                      </div>
                                     )}
                                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
                                     <span>

@@ -1,13 +1,12 @@
 import type {
   SupplierDecisionAction,
   SupplierOrderDetail,
-  SupplierOrderStatus,
   SupplierRejectRequest,
 } from "@/types/supplier-orders";
 
-export const SUPPLIER_ORDER_STATUS_LABELS: Record<SupplierOrderStatus, string> = {
+export const SUPPLIER_ORDER_STATUS_LABELS: Record<string, string> = {
   PENDING_PAYMENT: "Chờ thanh toán",
-  PENDING_SUPPLIER_CONFIRMATION: "Chờ xác nhận",
+  PAID: "Chờ xác nhận",
   AWAITING_HANDOVER: "Chờ bàn giao",
   IN_RENTAL: "Đang thuê",
   PENDING_SETTLEMENT: "Chờ quyết toán",
@@ -16,6 +15,10 @@ export const SUPPLIER_ORDER_STATUS_LABELS: Record<SupplierOrderStatus, string> =
   EXPIRED: "Hết hạn",
   CANCELLED: "Đã hủy",
 };
+
+export function isOrderPendingSupplierConfirmation(status?: string | null): boolean {
+  return status === "PAID" || status === "PENDING_SUPPLIER_CONFIRMATION";
+}
 
 export function formatSupplierOrderDate(value: string | null | undefined, withTime = true) {
   if (!value) return "—";
@@ -37,13 +40,13 @@ export function getSupplierOrderDecisionState(order: SupplierOrderDetail, now: n
   });
   const deadline = deadlines.length ? Math.min(...deadlines) : null;
   let reason: string | null = null;
-  if (order.status !== "PENDING_SUPPLIER_CONFIRMATION") {
+  if (!isOrderPendingSupplierConfirmation(order.status)) {
     reason = order.status === "PENDING_PAYMENT"
       ? "Đơn đang chờ người thuê thanh toán."
       : "Đơn thuê đã chuyển trạng thái, không còn chờ xác nhận.";
   } else if (!order.paidAt) {
     reason = "Chưa có xác nhận thanh toán của người thuê. Vui lòng tải lại đơn.";
-  } else if (!items.length || items.some((item) => item.status !== "PENDING_SUPPLIER_CONFIRMATION")) {
+  } else if (!items.length || items.some((item) => !isOrderPendingSupplierConfirmation(item.status))) {
     reason = "Thông tin thiết bị đã thay đổi. Vui lòng tải lại đơn trước khi xác nhận.";
   } else if (deadline !== null && now >= deadline) {
     reason = "Đơn thuê đã hết hạn xác nhận. Vui lòng tải lại trạng thái.";

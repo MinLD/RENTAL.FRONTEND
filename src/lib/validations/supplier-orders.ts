@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const supplierOrderStatusSchema = z.enum([
   "PENDING_PAYMENT",
+  "PAID",
   "PENDING_SUPPLIER_CONFIRMATION",
   "AWAITING_HANDOVER",
   "IN_RENTAL",

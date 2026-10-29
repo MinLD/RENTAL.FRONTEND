@@ -122,7 +122,36 @@ export const API_ENDPOINTS = {
       supplierSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}`,
       supplierAcceptSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/accept`,
       supplierRejectSubOrder: (id: string) => `${rentalApiBase}/supplier/sub-orders/${encodeURIComponent(id)}/reject`,
-      adminOrders: `${rentalApiBase}/admin/orders`,
+      adminOrders: (params?: {
+        orderCode?: string;
+        subOrderCode?: string;
+        rentalItemId?: string;
+        listingId?: string;
+        assetId?: string;
+        supplierId?: string;
+        renterId?: string;
+        status?: string;
+        itemStatus?: string;
+        createdFrom?: string;
+        createdTo?: string;
+        page?: number;
+        pageSize?: number;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/orders`, {
+          OrderCode: params?.orderCode,
+          SubOrderCode: params?.subOrderCode,
+          RentalItemId: params?.rentalItemId,
+          ListingId: params?.listingId,
+          AssetId: params?.assetId,
+          SupplierId: params?.supplierId,
+          RenterId: params?.renterId,
+          Status: params?.status,
+          ItemStatus: params?.itemStatus,
+          CreatedFrom: params?.createdFrom,
+          CreatedTo: params?.createdTo,
+          Page: params?.page,
+          PageSize: params?.pageSize,
+        }),
       adminOrder: (id: string) => `${rentalApiBase}/admin/orders/${encodeURIComponent(id)}`,
       adminDisputes: `${rentalApiBase}/admin/disputes`,
       itemHandover: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/handover`,
@@ -133,6 +162,42 @@ export const API_ENDPOINTS = {
       itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
       itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
       itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+      itemReturnRequests: (itemId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests`,
+      itemReportIssue: (itemId: string, requestId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests/${encodeURIComponent(requestId)}/report-issue`,
+      itemResolveReturnRequest: (itemId: string, requestId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests/${encodeURIComponent(requestId)}/resolve`,
+      adminReturnRequests: (params?: {
+        page?: number;
+        pageSize?: number;
+        disputed?: boolean;
+        overdue?: boolean;
+        itemId?: string;
+        orderId?: string;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/return-requests`, {
+          page: params?.page,
+          pageSize: params?.pageSize,
+          disputed: params?.disputed !== undefined ? String(params.disputed) : undefined,
+          overdue: params?.overdue !== undefined ? String(params.overdue) : undefined,
+          itemId: params?.itemId,
+          orderId: params?.orderId,
+        }),
+      adminReturnRequestDetail: (requestId: string) =>
+        `${rentalApiBase}/admin/return-requests/${encodeURIComponent(requestId)}`,
+      adminRefunds: (params?: {
+        status?: "PENDING" | "COMPLETED";
+        page?: number;
+        pageSize?: number;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/refunds`, {
+          status: params?.status,
+          page: params?.page,
+          pageSize: params?.pageSize,
+        }),
+      adminCompleteRefund: (rentalItemId: string) =>
+        `${rentalApiBase}/admin/refunds/${encodeURIComponent(rentalItemId)}/complete`,
     },
     analytics: {
       overview: (params?: { from?: string; to?: string }) =>

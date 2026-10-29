@@ -14,6 +14,7 @@ import {
   clearSupplierDecisionAttempt,
   getSupplierDecisionAttempt,
   getSupplierOrderDecisionState,
+  isOrderPendingSupplierConfirmation,
   type SupplierDecisionAttempt,
 } from "@/utils/supplier-orders";
 
@@ -60,7 +61,7 @@ export function useOwnOrdersController({
 
   useEffect(() => () => { ++requestId.current; }, []);
 
-  const pending = order?.status === "PENDING_SUPPLIER_CONFIRMATION";
+  const pending = isOrderPendingSupplierConfirmation(order?.status);
   useEffect(() => {
     if (!selectedOrder || !pending) return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
