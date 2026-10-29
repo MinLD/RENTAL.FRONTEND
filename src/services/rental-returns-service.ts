@@ -2,7 +2,11 @@ import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { authApiClientJson } from "@/services/api-client";
 import { ApiError, type ApiResult } from "@/services/api-error";
 import type {
+  AcknowledgeReceiptRequest,
+  AcknowledgeReceiptResponse,
   AdminResolveReturnRequest,
+  CancelNotDeliveredRequest,
+  CancelNotDeliveredResponse,
   CreateReturnRequest,
   HandoverItemRequest,
   HandoverItemResponse,
@@ -43,6 +47,60 @@ export async function handoverItem(
     };
   }
 }
+export async function acknowledgeReceipt(
+  itemId: string,
+  payload: AcknowledgeReceiptRequest,
+): Promise<ApiResult<AcknowledgeReceiptResponse>> {
+  try {
+    const response = await authApiClientJson<AcknowledgeReceiptResponse>(
+      API_ENDPOINTS.backend.rental.itemAcknowledgeReceipt(itemId),
+      {
+        method: "POST",
+        json: payload,
+      },
+    );
+    return { success: true, data: response };
+  } catch (error) {
+    if (error instanceof ApiError) return { success: false, error: error.details };
+    return {
+      success: false,
+      error: {
+        status: 500,
+        message: "Không thể xác nhận đã nhận máy.",
+        fieldErrors: {},
+      },
+    };
+  }
+}
+
+export async function cancelNotDelivered(
+  itemId: string,
+  payload: CancelNotDeliveredRequest,
+  idempotencyKey?: string,
+): Promise<ApiResult<CancelNotDeliveredResponse>> {
+  try {
+    const response = await authApiClientJson<CancelNotDeliveredResponse>(
+      API_ENDPOINTS.backend.rental.itemCancelNotDelivered(itemId),
+      {
+        method: "POST",
+        headers: getIdempotencyHeader(idempotencyKey),
+        json: payload,
+      },
+    );
+    return { success: true, data: response };
+  } catch (error) {
+    if (error instanceof ApiError) return { success: false, error: error.details };
+    return {
+      success: false,
+      error: {
+        status: 500,
+        message: "Không thể gửi yêu cầu hủy đơn do chưa nhận máy.",
+        fieldErrors: {},
+      },
+    };
+  }
+}
+
 
 
 export async function createReturnRequest(

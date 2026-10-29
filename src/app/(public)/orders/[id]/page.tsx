@@ -14,6 +14,7 @@ import { PageRefreshButton } from "@/components/ui/page-refresh-button";
 import { OrderDetailHeader } from "@/components/orders/order-detail-header";
 import { OrderPaymentPanel } from "@/components/orders/order-payment-panel";
 import { OrderPaymentSummary } from "@/components/orders/order-payment-summary";
+import { RenterItemActions } from "@/components/orders/renter-item-actions";
 import { OrderPaymentProvider } from "@/providers/order-payment-provider";
 import { Container } from "@/components/layout/container";
 import { ProductImage } from "@/components/products/product-image";
@@ -347,6 +348,17 @@ export default async function RenterOrderPage({
                                       )}
                                     </span>
                                   </div>
+                                  <RenterItemActions
+                                    currency={currency}
+                                    handover={item.handover}
+                                    itemId={item.rentalItemId}
+                                    itemName={name}
+                                    itemStatus={item.status}
+                                    returnRequests={item.returnRequests}
+                                    settlement={item.settlement}
+                                    startDate={item.startDate}
+                                    units={item.units}
+                                  />
                                 </div>
                               </li>
                             );
