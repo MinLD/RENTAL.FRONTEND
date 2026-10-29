@@ -44,11 +44,17 @@ function formatRentalPeriod(startDate: string, endDate: string) {
   return `${format(startDate)} – ${format(endDate)}`;
 }
 
-function statusHref(status: string | null, refundState: string | null = null, page = 1) {
+function statusHref(
+  status: string | null,
+  refundStateOrPage: string | number | null = null,
+  page = 1,
+) {
+  const refundState = typeof refundStateOrPage === "string" ? refundStateOrPage : null;
+  const actualPage = typeof refundStateOrPage === "number" ? refundStateOrPage : page;
   const query = new URLSearchParams();
   if (status) query.set("status", status);
   if (refundState) query.set("refundState", refundState);
-  if (page > 1) query.set("page", String(page));
+  if (actualPage > 1) query.set("page", String(actualPage));
   return query.size ? `/orders?${query}` : "/orders";
 }
 
@@ -80,7 +86,7 @@ export default async function RenterOrdersPage({
     return (
       <Container className="flex-1 py-12">
         <ErrorState
-          action={<Button asChild><Link href={statusHref(selectedStatus, page)}>Thử lại</Link></Button>}
+          action={<Button asChild><Link href={statusHref(selectedStatus, selectedRefundState, page)}>Thử lại</Link></Button>}
           description="Vui lòng thử tải lại danh sách đơn thuê."
           title="Không thể tải đơn thuê"
         />
@@ -222,11 +228,11 @@ export default async function RenterOrdersPage({
         {totalPages > 1 && (
           <div className="mt-5 flex items-center justify-center gap-3">
             <Button asChild disabled={page <= 1} size="sm" variant="secondary">
-              <Link aria-disabled={page <= 1} href={statusHref(selectedStatus, Math.max(1, page - 1))}>Trước</Link>
+              <Link aria-disabled={page <= 1} href={statusHref(selectedStatus, selectedRefundState, Math.max(1, page - 1))}>Trước</Link>
             </Button>
             <span className="text-sm text-muted-foreground">Trang {page} / {totalPages}</span>
             <Button asChild disabled={page >= totalPages} size="sm" variant="secondary">
-              <Link aria-disabled={page >= totalPages} href={statusHref(selectedStatus, Math.min(totalPages, page + 1))}>Sau</Link>
+              <Link aria-disabled={page >= totalPages} href={statusHref(selectedStatus, selectedRefundState, Math.min(totalPages, page + 1))}>Sau</Link>
             </Button>
           </div>
         )}

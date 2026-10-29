@@ -174,7 +174,7 @@ export function ConfirmRefundDialog({
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={handleClose}
               disabled={isSubmitting}
             >

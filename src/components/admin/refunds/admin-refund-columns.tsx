@@ -47,11 +47,11 @@ export function getAdminRefundColumns(
       width: 140,
       cell: (item) => (
         item.kind === "FULL_REFUND" ? (
-          <Badge variant="secondary" className="font-medium bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="default" className="font-medium bg-blue-50 text-blue-700 border-blue-200">
             Hoàn toàn bộ
           </Badge>
         ) : (
-          <Badge variant="outline" className="font-medium border-orange-200 bg-orange-50 text-orange-700">
+          <Badge variant="muted" className="font-medium border-orange-200 bg-orange-50 text-orange-700">
             Hoàn tiền cọc
           </Badge>
         )
@@ -99,12 +99,12 @@ export function getAdminRefundColumns(
       width: 150,
       cell: (item) => (
         item.state === "COMPLETED" ? (
-          <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 flex items-center gap-1 w-fit font-semibold">
+          <Badge variant="success" className="flex items-center gap-1 w-fit font-semibold">
             <CheckCircle2 className="size-3.5" />
             Đã hoàn tất
           </Badge>
         ) : (
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/20 flex items-center gap-1 w-fit font-semibold">
+          <Badge variant="warning" className="flex items-center gap-1 w-fit font-semibold">
             <Clock className="size-3.5" />
             Chờ hoàn tiền
           </Badge>
