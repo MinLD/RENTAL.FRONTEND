@@ -46,23 +46,28 @@ export function AdminRefundsTable() {
         getRowId={(item) => item.rentalItemId}
         initialPageSize={20}
         pageSizeOptions={[10, 20, 50, 100]}
-        filterConfig={{
-          filters: [
-            {
-              id: "status",
-              label: "Trạng thái hoàn tiền",
-              type: "select",
-              options: [
-                { label: "Tất cả", value: "" },
-                { label: "Chờ hoàn tiền (PENDING)", value: "PENDING" },
-                { label: "Đã hoàn tất (COMPLETED)", value: "COMPLETED" },
-              ],
-            },
-          ],
-        }}
-        onRefreshReady={(refresh) => {
+        renderFilters={({ filters, setFilters }) => (
+          <select
+            aria-label="Lọc trạng thái hoàn tiền"
+            className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-60"
+            onChange={(event) => {
+              setFilters({
+                ...filters,
+                status: (event.target.value as "PENDING" | "COMPLETED") || undefined,
+              });
+            }}
+            value={filters.status ?? ""}
+          >
+            <option value="">Tất cả trạng thái hoàn tiền</option>
+            <option value="PENDING">Chờ hoàn tiền (PENDING)</option>
+            <option value="COMPLETED">Đã hoàn tất (COMPLETED)</option>
+          </select>
+        )}
+        renderToolbarActions={({ refresh }) => {
           tableRefreshRef.current = refresh;
+          return null;
         }}
+        title="Yêu cầu hoàn tiền"
       />
 
       <ConfirmRefundDialog
