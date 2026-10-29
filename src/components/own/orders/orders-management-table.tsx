@@ -29,7 +29,7 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
     listRefreshRef.current = refresh;
   }, []);
 
-  const [tableHandoverItem, setTableHandoverItem] = useState<SupplierOrderItem | null>(null);
+  const [tableHandoverItems, setTableHandoverItems] = useState<SupplierOrderItem[]>([]);
   const [tableHandoverSubOrderCode, setTableHandoverSubOrderCode] = useState<string | null>(null);
   const [isTableHandoverOpen, setIsTableHandoverOpen] = useState(false);
 
@@ -37,7 +37,7 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
     try {
       const res = await getSupplierOrder(order.subOrderId);
       if (res.success && res.data.items?.length) {
-        setTableHandoverItem(res.data.items[0]);
+        setTableHandoverItems(res.data.items);
         setTableHandoverSubOrderCode(order.subOrderCode || order.subOrderId);
         setIsTableHandoverOpen(true);
       } else {
@@ -209,7 +209,7 @@ export function OrdersManagementTable({ userId }: { userId: string }) {
       ) : null}
 
       <SupplierHandoverDrawer
-        item={tableHandoverItem}
+        items={tableHandoverItems}
         onOpenChange={setIsTableHandoverOpen}
         onSuccess={() => {
           listRefreshRef.current?.();

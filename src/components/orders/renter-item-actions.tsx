@@ -7,18 +7,16 @@ import {
   CheckCircle2,
   PackageCheck,
   RotateCcw,
-  ShieldAlert,
   XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ReturnRequestResponse } from "@/types/rental-returns";
-import { formatActorRole, formatReturnDecision, formatReturnRequestStatus } from "@/utils/rental-returns";
+import { formatReturnDecision, formatReturnRequestStatus } from "@/utils/rental-returns";
 import { AcknowledgeReceiptDialog } from "./acknowledge-receipt-dialog";
 import { CancelNotDeliveredDialog } from "./cancel-not-delivered-dialog";
 import { ItemDeductionCard } from "./item-deduction-card";
-import { ReportIssueDialog } from "./report-issue-dialog";
 import { ReturnRequestDialog } from "./return-request-dialog";
 
 type AvailableUnit = {
@@ -88,7 +86,6 @@ export function RenterItemActions({
   const [isAckDialogOpen, setIsAckDialogOpen] = useState(false);
   const [isCancelNotDeliveredOpen, setIsCancelNotDeliveredOpen] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
-  const [reportingRequest, setReportingRequest] = useState<ReturnRequestResponse | null>(null);
 
   // Condition 1: Can acknowledge receipt if Supplier handed over and Renter has not acknowledged yet
   const canAcknowledge = Boolean(handover?.actualHandoverAt && !handover?.renterAcknowledgedAt);
@@ -96,9 +93,11 @@ export function RenterItemActions({
   // Condition 2: Can cancel not delivered if AWAITING_HANDOVER and past D+1 VN time
   const canCancel = canCancelNotDelivered(startDate, itemStatus);
 
-  // Condition 3: Can declare return if IN_RENTAL and has eligible units
+  // Condition 3: Can declare return ONLY AFTER Renter has acknowledged receipt of machines
+  const hasAcknowledgedReceipt = Boolean(handover?.renterAcknowledgedAt);
   const availableUnits = units ?? [];
   const canDeclareReturn =
+    hasAcknowledgedReceipt &&
     itemStatus === "IN_RENTAL" &&
     availableUnits.some(
       (u) =>
@@ -167,9 +166,6 @@ export function RenterItemActions({
           <div className="space-y-2.5">
             {requests.map((request) => {
               const statusInfo = formatReturnRequestStatus(request.status);
-              const isActionable =
-                request.status === "PendingSupplierConfirmation" ||
-                request.units.some((u) => u.closedAt === null && u.rejectedAt === null);
 
               return (
                 <div
@@ -185,19 +181,6 @@ export function RenterItemActions({
                         </Badge>
                       )}
                     </div>
-
-                    {isActionable && (
-                      <Button
-                        className="h-7 text-xs text-amber-700 hover:text-amber-800"
-                        onClick={() => setReportingRequest(request)}
-                        size="sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <ShieldAlert className="mr-1 size-3.5" />
-                        Báo sự cố
-                      </Button>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-muted-foreground text-[11px]">
@@ -254,26 +237,6 @@ export function RenterItemActions({
                     </div>
                   )}
 
-                  {/* Issues reported */}
-                  {request.issues && request.issues.length > 0 && (
-                    <div className="border-t border-amber-200 bg-amber-50/50 p-2.5 rounded text-[11px] space-y-1.5">
-                      <span className="font-semibold text-amber-950 flex items-center gap-1">
-                        <AlertTriangle className="size-3 text-amber-600" />
-                        Sự cố đã báo cáo ({request.issues.length}):
-                      </span>
-                      {request.issues.map((issue) => (
-                        <div className="space-y-0.5 text-amber-900 border-l-2 border-amber-400 pl-2" key={issue.issueId}>
-                          <p className="font-semibold">
-                            [{formatActorRole(String(issue.reporterRole))}]: {issue.reason}
-                          </p>
-                          {issue.note && <p className="italic text-muted-foreground">&quot;{issue.note}&quot;</p>}
-                          <p className="text-[10px] text-amber-800">
-                            Báo lúc: {formatDate(issue.reportedAt, true)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
                   {/* Resolutions */}
                   {request.resolutions && request.resolutions.length > 0 && (
@@ -328,17 +291,6 @@ export function RenterItemActions({
         units={availableUnits}
       />
 
-      {reportingRequest && (
-        <ReportIssueDialog
-          itemId={itemId}
-          onOpenChange={(open) => {
-            if (!open) setReportingRequest(null);
-          }}
-          open={Boolean(reportingRequest)}
-          requestId={reportingRequest.returnRequestId}
-          units={reportingRequest.units}
-        />
-      )}
     </div>
   );
 }
