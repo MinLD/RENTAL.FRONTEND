@@ -156,7 +156,7 @@ export function AdminDashboardView({
   const isFetching = overviewQuery.isFetching || revenueQuery.isFetching;
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="h-full overflow-y-auto space-y-6 p-4 sm:p-6 lg:p-8 pb-12">
       {/* Tiêu đề & Trạng thái kết nối */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
