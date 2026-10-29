@@ -162,6 +162,42 @@ export const API_ENDPOINTS = {
       itemDeductionResponse: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/response`,
       itemDeductionDispute: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute`,
       itemDeductionResolution: (id: string) => `${rentalApiBase}/items/${encodeURIComponent(id)}/deductions/dispute/resolution`,
+      itemReturnRequests: (itemId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests`,
+      itemReportIssue: (itemId: string, requestId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests/${encodeURIComponent(requestId)}/report-issue`,
+      itemResolveReturnRequest: (itemId: string, requestId: string) =>
+        `${rentalApiBase}/items/${encodeURIComponent(itemId)}/return-requests/${encodeURIComponent(requestId)}/resolve`,
+      adminReturnRequests: (params?: {
+        page?: number;
+        pageSize?: number;
+        disputed?: boolean;
+        overdue?: boolean;
+        itemId?: string;
+        orderId?: string;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/return-requests`, {
+          page: params?.page,
+          pageSize: params?.pageSize,
+          disputed: params?.disputed !== undefined ? String(params.disputed) : undefined,
+          overdue: params?.overdue !== undefined ? String(params.overdue) : undefined,
+          itemId: params?.itemId,
+          orderId: params?.orderId,
+        }),
+      adminReturnRequestDetail: (requestId: string) =>
+        `${rentalApiBase}/admin/return-requests/${encodeURIComponent(requestId)}`,
+      adminRefunds: (params?: {
+        status?: "PENDING" | "COMPLETED";
+        page?: number;
+        pageSize?: number;
+      }) =>
+        buildQueryEndpoint(`${rentalApiBase}/admin/refunds`, {
+          status: params?.status,
+          page: params?.page,
+          pageSize: params?.pageSize,
+        }),
+      adminCompleteRefund: (rentalItemId: string) =>
+        `${rentalApiBase}/admin/refunds/${encodeURIComponent(rentalItemId)}/complete`,
     },
     analytics: {
       overview: (params?: { from?: string; to?: string }) =>

@@ -56,7 +56,7 @@ function OrderCancelActionContent({ orderId }: { orderId: string }) {
       if (error instanceof ApiError && error.status === 409) {
         setAttempt(null);
         setOpen(false);
-        toast.error(error.message || "Đơn không còn ở trạng thái chờ thanh toán.");
+        toast.error(error.message || "Không thể hủy đơn thuê ở trạng thái hiện tại.");
         router.refresh();
       } else if (error instanceof ApiError && error.status === 400) {
         setAttempt(null);
@@ -93,7 +93,7 @@ function OrderCancelActionContent({ orderId }: { orderId: string }) {
           <DialogHeader>
             <DialogTitle>Hủy đơn thuê này?</DialogTitle>
             <DialogDescription>
-              Chỉ hủy được đơn đang chờ thanh toán. Sau khi hủy, bạn cần tạo đơn mới nếu vẫn muốn thuê thiết bị.
+              Sau khi hủy, nếu đơn đã thanh toán thì hệ thống sẽ tự động tạo yêu cầu hoàn tiền vào tài khoản ngân hàng của bạn. Bạn cần tạo đơn mới nếu vẫn muốn thuê thiết bị.
             </DialogDescription>
           </DialogHeader>
           <div>

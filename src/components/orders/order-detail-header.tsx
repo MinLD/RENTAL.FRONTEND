@@ -18,7 +18,10 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 
 export function OrderDetailHeader({ createdAtLabel }: { createdAtLabel: string }) {
   const { order, isPaid, needsOrderSync } = useOrderPayment();
-  const pending = normalizeOrderStatus(order.status) === "PENDING_PAYMENT";
+  const normalizedStatus = normalizeOrderStatus(order.status);
+  const isPendingPayment = normalizedStatus === "PENDING_PAYMENT";
+  const isWaitingConfirmation = normalizedStatus === "PAID";
+  const canCancel = isWaitingConfirmation || (isPendingPayment && !isPaid);
   return (
     <header className="mb-5 flex flex-wrap items-end justify-between gap-4 rounded-lg border border-border bg-background p-5 shadow-sm sm:p-7">
       <div>
@@ -27,10 +30,10 @@ export function OrderDetailHeader({ createdAtLabel }: { createdAtLabel: string }
         <p className="mt-2 text-sm text-muted-foreground">Đặt ngày {createdAtLabel}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${pending && !isPaid ? "border-primary/30 text-primary" : "border-border text-foreground"}`}>
-          {needsOrderSync ? "Đang cập nhật đơn" : ORDER_STATUS_LABELS[normalizeOrderStatus(order.status)] ?? order.status}
+        <span className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${isPendingPayment && !isPaid ? "border-primary/30 text-primary" : "border-border text-foreground"}`}>
+          {needsOrderSync ? "Đang cập nhật đơn" : ORDER_STATUS_LABELS[normalizedStatus] ?? order.status}
         </span>
-        {pending && !isPaid && <OrderCancelAction orderId={order.orderId} />}
+        {canCancel && <OrderCancelAction orderId={order.orderId} />}
       </div>
     </header>
   );

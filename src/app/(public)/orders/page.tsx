@@ -44,9 +44,10 @@ function formatRentalPeriod(startDate: string, endDate: string) {
   return `${format(startDate)} – ${format(endDate)}`;
 }
 
-function statusHref(status: string | null, page = 1) {
+function statusHref(status: string | null, refundState: string | null = null, page = 1) {
   const query = new URLSearchParams();
   if (status) query.set("status", status);
+  if (refundState) query.set("refundState", refundState);
   if (page > 1) query.set("page", String(page));
   return query.size ? `/orders?${query}` : "/orders";
 }
@@ -60,13 +61,17 @@ export default async function RenterOrdersPage({
   const selectedStatus = typeof params.status === "string" && ORDER_STATUSES.some((item) => item.value === params.status)
     ? params.status
     : null;
+  const selectedRefundState = typeof params.refundState === "string" && ["PENDING", "REFUNDED"].includes(params.refundState)
+    ? params.refundState
+    : null;
   const requestedPage = typeof params.page === "string" ? Number(params.page) : 1;
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const user = await getCurrentUser();
-  if (!user) redirect(withReturnTo("/login", statusHref(selectedStatus, page)));
+  if (!user) redirect(withReturnTo("/login", statusHref(selectedStatus, selectedRefundState, page)));
 
   const query = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
   if (selectedStatus) query.set("status", selectedStatus);
+  if (selectedRefundState) query.set("refundState", selectedRefundState);
   const result = await serverApiResult(() => serverApiJson<RenterOrdersPage>(
     `${API_ENDPOINTS.backend.rental.orders}?${query}`,
     "Không thể tải danh sách đơn thuê.",
@@ -88,9 +93,11 @@ export default async function RenterOrdersPage({
   const orders = result.data.items ?? [];
 
   const totalPages = Math.max(1, result.data.totalPages || 1);
-  const currentLabel = selectedStatus
-    ? ORDER_STATUSES.find((item) => item.value === selectedStatus)?.label
-    : "Tất cả";
+  const currentLabel = selectedRefundState
+    ? selectedRefundState === "REFUNDED" ? "Đã hoàn tiền" : "Chờ hoàn tiền"
+    : selectedStatus
+      ? ORDER_STATUSES.find((item) => item.value === selectedStatus)?.label
+      : "Tất cả";
 
   return (
     <div className="flex-1 bg-[#f5f7fa] py-6 sm:py-8">
@@ -106,11 +113,25 @@ export default async function RenterOrdersPage({
 
         <nav aria-label="Lọc đơn theo trạng thái" className="mb-4 flex gap-2 overflow-x-auto pb-2">
           <Link
-            aria-current={!selectedStatus ? "page" : undefined}
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${!selectedStatus ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary hover:text-primary"}`}
+            aria-current={!selectedStatus && !selectedRefundState ? "page" : undefined}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${!selectedStatus && !selectedRefundState ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary hover:text-primary"}`}
             href="/orders"
           >
             Tất cả
+          </Link>
+          <Link
+            aria-current={selectedRefundState === "PENDING" ? "page" : undefined}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${selectedRefundState === "PENDING" ? "border-amber-500 bg-amber-50 text-amber-800 font-semibold" : "border-border bg-background hover:border-primary hover:text-primary"}`}
+            href="/orders?refundState=PENDING"
+          >
+            Chờ hoàn tiền
+          </Link>
+          <Link
+            aria-current={selectedRefundState === "REFUNDED" ? "page" : undefined}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${selectedRefundState === "REFUNDED" ? "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold" : "border-border bg-background hover:border-primary hover:text-primary"}`}
+            href="/orders?refundState=REFUNDED"
+          >
+            Đã hoàn tiền
           </Link>
           {ORDER_STATUSES.map((status) => (
             <Link
@@ -138,6 +159,7 @@ export default async function RenterOrdersPage({
           ) : orders.map((order) => {
             const items = order.items ?? [];
             const pending = order.status === "PENDING_PAYMENT";
+            const waitingConfirmation = order.status === "PAID";
             return (
               <article className="overflow-hidden rounded-lg border border-border bg-background shadow-sm" key={order.orderId}>
                 <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
@@ -145,9 +167,21 @@ export default async function RenterOrdersPage({
                     <span className="font-semibold">Đơn {order.orderCode ?? order.orderId}</span>
                     <span className="text-muted-foreground">{formatCreatedAt(order.createdAt)}</span>
                   </div>
-                  <span className={`text-sm font-semibold ${pending ? "text-primary" : "text-foreground"}`}>
-                    {ORDER_STATUSES.find((status) => status.value === order.status)?.label ?? order.status}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {order.refundState === "REFUNDED" && (
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                        Đã hoàn tiền{order.refundedAmount ? `: ${formatEquipmentListingRate(order.refundedAmount, order.currency)}` : ""}
+                      </span>
+                    )}
+                    {order.refundState === "PENDING" && (
+                      <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                        Đang chờ hoàn tiền
+                      </span>
+                    )}
+                    <span className={`text-sm font-semibold ${pending ? "text-primary" : "text-foreground"}`}>
+                      {ORDER_STATUSES.find((status) => status.value === order.status)?.label ?? order.status}
+                    </span>
+                  </div>
                 </header>
 
                 <div className="divide-y divide-border px-4 sm:px-5">
@@ -176,7 +210,7 @@ export default async function RenterOrdersPage({
                   <p className="text-sm">Tổng cộng <strong className="ml-2 text-base text-primary">{formatEquipmentListingRate(order.totalAmount, order.currency ?? "VND")}</strong></p>
                   <div className="flex flex-wrap gap-2">
                     {pending && <Button asChild size="sm"><Link href={`/orders/${encodeURIComponent(order.orderId)}`}>Thanh toán</Link></Button>}
-                    {pending && <OrderCancelAction orderId={order.orderId} />}
+                    {(waitingConfirmation || pending) && <OrderCancelAction orderId={order.orderId} />}
                     <Button asChild size="sm" variant="secondary"><Link href={`/orders/${encodeURIComponent(order.orderId)}`}>Xem chi tiết</Link></Button>
                   </div>
                 </footer>

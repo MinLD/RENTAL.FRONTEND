@@ -90,6 +90,8 @@ export type RenterOrderSummary = {
   subOrderCount: number;
   paymentDeadline: string;
   createdAt: string;
+  refundState?: "NONE" | "PENDING" | "REFUNDED" | null;
+  refundedAmount?: number | null;
   items: Array<{
     rentalItemId: string;
     equipmentListingId: string;
@@ -120,6 +122,8 @@ export type RenterOrderDetail = RenterOrderPayment & {
   paidAt: string | null;
   totalRentalAmount: number;
   totalDepositAmount: number;
+  refundState?: "NONE" | "PENDING" | "REFUNDED" | null;
+  refundedAmount?: number | null;
   delivery: {
     method: string | null;
     recipientName: string | null;
@@ -162,7 +166,13 @@ export type RenterOrderDetail = RenterOrderPayment & {
       supplierConfirmationDeadline: string | null;
       supplierDecisionAt: string | null;
       rejectReason: string | null;
-      refund: { state: string; refundRef: string | null } | null;
+      refund: {
+        state: string;
+        refundRef: string | null;
+        kind?: string | null;
+        refundAmount?: number | null;
+        refundedAt?: string | null;
+      } | null;
       handover: {
         actualHandoverAt: string;
         note: string | null;
