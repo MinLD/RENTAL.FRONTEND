@@ -177,7 +177,7 @@ export type AdminReturnRequestSummary = {
   returnRequestId: string;
   itemId: string;
   orderId: string;
-  orderCode: string;
+  orderCode: string | null;
   renterId: string;
   supplierId: string;
   submittedAt: string;
@@ -189,6 +189,21 @@ export type AdminReturnRequestSummary = {
   disputedUnits: number;
   confirmedUnits: number;
   rejectedUnits: number;
+};
+
+export type AdminReturnRequestsPage = {
+  items: AdminReturnRequestSummary[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+export type AdminReturnRequestsFilters = {
+  disputed?: boolean;
+  overdue?: boolean;
+  itemId?: string;
+  orderId?: string;
 };
 
 export type InventoryUnitTracking = {
