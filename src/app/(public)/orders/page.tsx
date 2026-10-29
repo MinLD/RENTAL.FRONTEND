@@ -115,7 +115,7 @@ export default async function RenterOrdersPage({
           <p className="mt-1 text-sm text-muted-foreground">Theo dõi thiết bị, thanh toán và trạng thái các đơn thuê.</p>
         </div>
 
-        <nav aria-label="Lọc đơn theo trạng thái" className="mb-4 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav aria-label="Lọc đơn theo trạng thái" className="mb-4 flex gap-2 overflow-x-auto pb-2">
           <Link
             aria-current={!selectedStatus && !selectedRefundState ? "page" : undefined}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${!selectedStatus && !selectedRefundState ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary hover:text-primary"}`}
