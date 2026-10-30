@@ -618,14 +618,30 @@ function EquipmentTypeMediaField({
     );
   }
 
+  const maxImages = 10;
+  const isFull = value.length >= maxImages;
+  const remainingSlots = Math.max(0, maxImages - value.length);
+
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-xs font-semibold uppercase text-foreground">Media</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase text-foreground">Media</p>
+          <span
+            className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+              isFull
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {value.length}/{maxImages}
+          </span>
+        </div>
         <div className="mt-3">
           <MediaAvatarUpload
             accept={IMAGE_CONTENT_TYPES.join(",")}
-            disabled={disabled}
+            disabled={disabled || isFull}
+            maxFiles={remainingSlots}
             mode="multiple"
             onChange={(_, upload) => {
               const uploads = Array.isArray(upload) ? upload : [upload];
@@ -634,14 +650,14 @@ function EquipmentTypeMediaField({
                 ...uploads.map((item, index) =>
                   toMediaFormItem(item, value.length + index),
                 ),
-              ];
+              ].slice(0, maxImages);
 
               onChange(ensureMediaThumbnail(nextItems));
             }}
             onUploadingChange={onUploadingChange}
             size="md"
             uploadFiles={uploadEquipmentTypeImages}
-            uploadLabel="Thêm ảnh thiết bị"
+            uploadLabel={isFull ? "Đã đạt tối đa 10 ảnh" : "Thêm ảnh thiết bị"}
             variant="add"
           />
         </div>
@@ -882,8 +898,10 @@ async function uploadEquipmentTypeImages(files: File[]) {
       `Ảnh "${oversized.name}" vượt quá dung lượng tối đa cho phép (20MB).`,
     );
   }
-
-  const uploads = await uploadMediaFiles(files);
+  if (files.length > 10) {
+    throw new Error("Chỉ được tải lên tối đa 10 ảnh thiết bị trong một lần.");
+  }
+  const uploads = await uploadMediaFiles(files, { maxFiles: 10 });
 
   for (const upload of uploads) {
     if (upload.status.toLowerCase() !== "ready") {

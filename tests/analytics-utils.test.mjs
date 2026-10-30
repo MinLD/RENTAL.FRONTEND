@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 
 const {
   calculateTotalListings,
+  getDateRangeForPreset,
   getDefaultAnalyticsDateRange,
   offsetDate,
+  resolveActiveDatePreset,
   resolveAnalyticsDateRange,
 } = await import("../src/utils/analytics.ts");
 
@@ -112,5 +114,75 @@ test("API_ENDPOINTS.backend.analytics generates correct real backend URLs", () =
   assert.equal(
     API_ENDPOINTS.backend.inventory.statistics,
     "/api/v1/inventory/equipment-listings/statistics",
+  );
+});
+
+test("getDateRangeForPreset calculates expected bounds", () => {
+  const today = "2026-10-30";
+  assert.deepEqual(getDateRangeForPreset("7d", today), {
+    from: "2026-10-24",
+    to: "2026-10-30",
+  });
+  assert.deepEqual(getDateRangeForPreset("30d", today), {
+    from: "2026-10-01",
+    to: "2026-10-30",
+  });
+  assert.deepEqual(getDateRangeForPreset("this-month", today), {
+    from: "2026-10-01",
+    to: "2026-10-30",
+  });
+});
+
+test("resolveActiveDatePreset resolves mutual exclusivity on 30th of month (prevents double highlight)", () => {
+  const today = "2026-10-30";
+  const from = "2026-10-01";
+  const to = "2026-10-30";
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today }),
+    "30d",
+  );
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today, selectedPreset: "this-month" }),
+    "this-month",
+  );
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today, selectedPreset: "30d" }),
+    "30d",
+  );
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today, selectedPreset: "custom" }),
+    "custom",
+  );
+});
+
+test("resolveActiveDatePreset resolves mutual exclusivity on 7th of month (7d vs this-month)", () => {
+  const today = "2026-10-07";
+  const from = "2026-10-01";
+  const to = "2026-10-07";
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today, selectedPreset: "7d" }),
+    "7d",
+  );
+
+  assert.equal(
+    resolveActiveDatePreset({ from, to, today, selectedPreset: "this-month" }),
+    "this-month",
+  );
+});
+
+test("resolveActiveDatePreset handles arbitrary custom date ranges", () => {
+  const today = "2026-10-30";
+  assert.equal(
+    resolveActiveDatePreset({
+      from: "2026-10-05",
+      to: "2026-10-20",
+      today,
+    }),
+    "custom",
   );
 });

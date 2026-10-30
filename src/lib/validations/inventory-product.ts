@@ -58,7 +58,8 @@ export const productCreateFormSchema = z.object({
   manufactureYear: manufactureYearInputSchema,
   mediaIds: z
     .array(uuidSchema)
-    .min(1, "Vui lòng tải lên ít nhất 1 ảnh sản phẩm."),
+    .min(1, "Vui lòng tải lên ít nhất 1 ảnh sản phẩm.")
+    .max(10, "Tối đa 10 ảnh sản phẩm."),
   dailyRate: rateInputSchema,
   weeklyRate: rateInputSchema,
   monthlyRate: rateInputSchema,
