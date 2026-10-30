@@ -1,11 +1,16 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Calendar, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTodayDateString, offsetDate } from "@/utils/analytics";
+import {
+  type AnalyticsDatePreset,
+  getDateRangeForPreset,
+  getTodayDateString,
+  resolveActiveDatePreset,
+} from "@/utils/analytics";
 
-export type DatePreset = "7d" | "30d" | "this-month" | "custom";
+export type DatePreset = AnalyticsDatePreset;
 
 export function AdminDateFilter({
   from,
@@ -23,22 +28,26 @@ export function AdminDateFilter({
   const fromInputId = useId();
   const toInputId = useId();
   const today = getTodayDateString();
+  const [selectedPreset, setSelectedPreset] = useState<AnalyticsDatePreset | null>(() =>
+    resolveActiveDatePreset({ from, to, today }),
+  );
 
-  const handlePreset = (preset: DatePreset) => {
-    if (preset === "7d") {
-      onDateChange(offsetDate(today, -6), today);
-    } else if (preset === "30d") {
-      onDateChange(offsetDate(today, -29), today);
-    } else if (preset === "this-month") {
-      const firstDay = `${today.slice(0, 7)}-01`;
-      onDateChange(firstDay, today);
-    }
+  const handlePreset = (preset: Exclude<AnalyticsDatePreset, "custom">) => {
+    setSelectedPreset(preset);
+    const range = getDateRangeForPreset(preset, today);
+    onDateChange(range.from, range.to);
   };
 
-  const is7d = from === offsetDate(today, -6) && to === today;
-  const is30d = from === offsetDate(today, -29) && to === today;
-  const isThisMonth = from === `${today.slice(0, 7)}-01` && to === today;
+  const activePreset = resolveActiveDatePreset({
+    from,
+    to,
+    today,
+    selectedPreset,
+  });
 
+  const is7d = activePreset === "7d";
+  const is30d = activePreset === "30d";
+  const isThisMonth = activePreset === "this-month";
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-xs md:flex-row md:items-center md:justify-between">
       {/* Các nút chọn nhanh */}
@@ -93,7 +102,10 @@ export function AdminDateFilter({
             type="date"
             max={to || today}
             value={from}
-            onChange={(e) => onDateChange(e.target.value, to)}
+            onChange={(e) => {
+              setSelectedPreset("custom");
+              onDateChange(e.target.value, to);
+            }}
             className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
           />
           <span>đến</span>
@@ -106,7 +118,10 @@ export function AdminDateFilter({
             min={from}
             max={today}
             value={to}
-            onChange={(e) => onDateChange(from, e.target.value)}
+            onChange={(e) => {
+              setSelectedPreset("custom");
+              onDateChange(from, e.target.value);
+            }}
             className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>

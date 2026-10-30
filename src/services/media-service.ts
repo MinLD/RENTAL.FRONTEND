@@ -3,14 +3,16 @@ import { authApiClient } from "@/services/api-client";
 import type { MediaUploadResponse, MediaUploadResult } from "@/types/media";
 import { compressImageFile } from "@/utils/image-compression";
 
+export const MAX_MEDIA_FILES_PER_BATCH = 10;
+
 type UploadMediaOptions = {
   fieldName?: string;
   idempotencyKey?: string;
   skipCompression?: boolean;
+  maxFiles?: number;
 };
 
 const DEFAULT_MEDIA_FILE_FIELD_NAME = "Files";
-const MEDIA_CHECKSUM_FIELD_NAME = "Sha256Checksums";
 const IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
 
 export async function uploadMediaFile(
@@ -33,6 +35,10 @@ export async function uploadMediaFiles(
   if (!files.length) {
     return [];
   }
+  const maxFiles = options.maxFiles ?? MAX_MEDIA_FILES_PER_BATCH;
+  if (files.length > maxFiles) {
+    throw new Error(`Chỉ được tải lên tối đa ${maxFiles} tệp trong một lần.`);
+  }
   const processedFiles = options.skipCompression
     ? files
     : await Promise.all(files.map((file) => compressImageFile(file)));
@@ -41,7 +47,6 @@ export async function uploadMediaFiles(
 
   for (const file of processedFiles) {
     formData.append(options.fieldName ?? DEFAULT_MEDIA_FILE_FIELD_NAME, file);
-    formData.append(MEDIA_CHECKSUM_FIELD_NAME, await getFileSha256Checksum(file));
   }
 
   const response = await authApiClient(API_ENDPOINTS.backend.media.upload, {
@@ -87,13 +92,3 @@ function normalizeUploadResults(results: MediaUploadResult[]) {
     });
 }
 
-async function getFileSha256Checksum(file: File) {
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    await file.arrayBuffer(),
-  );
-
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}

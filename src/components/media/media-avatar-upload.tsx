@@ -18,6 +18,7 @@ type MediaAvatarUploadProps = {
   emptyLabel?: string;
   fallbackText?: string;
   fieldName?: string;
+  maxFiles?: number;
   maxSizeBytes?: number;
   mode?: MediaUploadMode;
   onAvatarButtonClick?: () => void;
@@ -56,6 +57,7 @@ export function MediaAvatarUpload({
   emptyLabel,
   fallbackText = "DP",
   fieldName,
+  maxFiles = 10,
   maxSizeBytes = 20 * 1024 * 1024,
   mode = "single",
   onAvatarButtonClick,
@@ -93,6 +95,14 @@ export function MediaAvatarUpload({
     const selectedFiles = Array.from(files ?? []);
 
     if (!selectedFiles.length) {
+      return;
+    }
+    const limit = isMultiple ? maxFiles : 1;
+    if (selectedFiles.length > limit) {
+      toast.error(`Chỉ được tải lên tối đa ${limit} ảnh.`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
     const oversized = selectedFiles.find((file) => file.size > maxSizeBytes);

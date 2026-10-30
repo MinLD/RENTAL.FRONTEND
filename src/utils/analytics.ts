@@ -32,6 +32,71 @@ export function getDefaultAnalyticsDateRange(): { from: string; to: string } {
   };
 }
 
+export type AnalyticsDatePreset = "7d" | "30d" | "this-month" | "custom";
+
+/**
+ * Tính dải ngày tương ứng với từng preset thống kê.
+ */
+export function getDateRangeForPreset(
+  preset: Exclude<AnalyticsDatePreset, "custom">,
+  today: string = getTodayDateString(),
+): { from: string; to: string } {
+  if (preset === "7d") {
+    return {
+      from: offsetDate(today, -6),
+      to: today,
+    };
+  }
+  if (preset === "30d") {
+    return {
+      from: offsetDate(today, -29),
+      to: today,
+    };
+  }
+  return {
+    from: `${today.slice(0, 7)}-01`,
+    to: today,
+  };
+}
+
+/**
+ * Xác định preset đang active duy nhất, tránh va chạm khi hai preset có cùng dải ngày
+ * (ví dụ ngày 30 của tháng: 30 ngày qua trùng với Tháng này; hoặc ngày 7: 7 ngày qua trùng Tháng này).
+ */
+export function resolveActiveDatePreset({
+  from,
+  to,
+  today = getTodayDateString(),
+  selectedPreset,
+}: {
+  from: string;
+  to: string;
+  today?: string;
+  selectedPreset?: AnalyticsDatePreset | null;
+}): AnalyticsDatePreset {
+  const range7d = getDateRangeForPreset("7d", today);
+  const range30d = getDateRangeForPreset("30d", today);
+  const rangeThisMonth = getDateRangeForPreset("this-month", today);
+
+  const is7dMatch = from === range7d.from && to === range7d.to;
+  const is30dMatch = from === range30d.from && to === range30d.to;
+  const isThisMonthMatch = from === rangeThisMonth.from && to === rangeThisMonth.to;
+
+  // Ưu tiên preset mà người dùng đã bấm nếu dải ngày hiện tại vẫn khớp
+  if (selectedPreset === "7d" && is7dMatch) return "7d";
+  if (selectedPreset === "30d" && is30dMatch) return "30d";
+  if (selectedPreset === "this-month" && isThisMonthMatch) return "this-month";
+  if (selectedPreset === "custom") return "custom";
+
+  // Phân giải tự động khi chưa bấm nút nào hoặc preset cũ không còn khớp:
+  // 30 ngày qua là mặc định toàn hệ thống nên ưu tiên trước "tháng này" khi trùng
+  if (is30dMatch) return "30d";
+  if (is7dMatch) return "7d";
+  if (isThisMonthMatch) return "this-month";
+
+  return "custom";
+}
+
 /**
  * Xác thực khoảng ngày theo hợp đồng mục 2 của spec:
  * - Nếu thiếu cả hai: áp dụng mặc định 30 ngày.

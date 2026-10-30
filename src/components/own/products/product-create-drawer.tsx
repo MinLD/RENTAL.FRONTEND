@@ -739,16 +739,20 @@ export function SchemaLoadState({
   return null;
 }
 
+export const MAX_PRODUCT_IMAGES = 10;
+
 async function uploadProductImages(files: File[]) {
   if (files.some((file) => !IMAGE_CONTENT_TYPES.includes(file.type)))
     throw new Error("Ảnh sản phẩm chỉ hỗ trợ JPG, PNG hoặc WEBP.");
+  if (files.length > MAX_PRODUCT_IMAGES)
+    throw new Error(`Chỉ được tải lên tối đa ${MAX_PRODUCT_IMAGES} ảnh sản phẩm trong một lần.`);
   const oversized = files.find((file) => file.size > 20 * 1024 * 1024);
   if (oversized) {
     throw new Error(
       `Ảnh "${oversized.name}" vượt quá dung lượng tối đa cho phép (20MB).`,
     );
   }
-  const uploads = await uploadMediaFiles(files);
+  const uploads = await uploadMediaFiles(files, { maxFiles: MAX_PRODUCT_IMAGES });
   if (uploads.some((upload) => upload.status.toLowerCase() !== "ready"))
     throw new Error(
       "Ảnh sản phẩm chưa sẵn sàng sử dụng. Vui lòng thử lại sau.",
@@ -771,13 +775,30 @@ export function ProductImageField({
   thumbnailMediaId: string;
   value: EquipmentListingMedia[];
 }) {
+  const isFull = value.length >= MAX_PRODUCT_IMAGES;
+  const remainingSlots = Math.max(0, MAX_PRODUCT_IMAGES - value.length);
+
   return (
     <div className="space-y-3 rounded border border-border bg-muted/40 p-4">
-      <p className="text-xs font-semibold uppercase">Ảnh sản phẩm <span className="ml-1 text-error">*</span></p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase">
+          Ảnh sản phẩm <span className="ml-1 text-error">*</span>
+        </p>
+        <span
+          className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+            isFull
+              ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {value.length}/{MAX_PRODUCT_IMAGES}
+        </span>
+      </div>
       <div className="flex flex-wrap items-center gap-4">
         <MediaAvatarUpload
           accept={IMAGE_CONTENT_TYPES.join(",")}
-          disabled={disabled}
+          disabled={disabled || isFull}
+          maxFiles={remainingSlots}
           mode="multiple"
           onChange={(_, upload) => {
             const uploads = Array.isArray(upload) ? upload : [upload];
@@ -795,20 +816,22 @@ export function ProductImageField({
                     ] as const,
                 ),
               ]).values(),
-            );
+            ).slice(0, MAX_PRODUCT_IMAGES);
             onChange(media, thumbnailMediaId || media[0]?.id || "");
           }}
           onUploadingChange={onUploadingChange}
           uploadFiles={uploadProductImages}
-          uploadLabel="Thêm ảnh sản phẩm"
+          uploadLabel={isFull ? "Đã đạt tối đa 10 ảnh" : "Thêm ảnh sản phẩm"}
           variant="add"
         />
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            JPG, PNG hoặc WEBP. Không bắt buộc.
+            JPG, PNG hoặc WEBP. Tối đa 10 ảnh ({value.length}/{MAX_PRODUCT_IMAGES}).
           </p>
           <p className="text-xs text-muted-foreground">
-            Có thể chọn nhiều ảnh. Chọn ngôi sao để đặt ảnh đại diện.
+            {isFull
+              ? "Đã đạt giới hạn tối đa 10 ảnh sản phẩm. Xóa bớt ảnh nếu muốn thêm mới."
+              : `Có thể chọn thêm tối đa ${remainingSlots} ảnh. Chọn ngôi sao để đặt ảnh đại diện.`}
           </p>
         </div>
       </div>
