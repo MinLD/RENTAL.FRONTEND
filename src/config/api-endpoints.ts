@@ -243,9 +243,9 @@ export const API_ENDPOINTS = {
     },
     payment: {
       invoice: (invoiceRef: string) =>
-        `/api/v1/invoices/${encodeURIComponent(invoiceRef)}`,
+        `/api/v1/payment/invoices/${encodeURIComponent(invoiceRef)}`,
       invoiceStatus: (invoiceRef: string) =>
-        `/api/v1/invoices/${encodeURIComponent(invoiceRef)}/status`,
+        `/api/v1/payment/invoices/${encodeURIComponent(invoiceRef)}/status`,
     },
     organizations: {
       register: "/api/v1/auth/organizations/register",
