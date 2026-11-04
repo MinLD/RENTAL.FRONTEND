@@ -1,12 +1,23 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  Building2,
+  CalendarDays,
   CheckCircle2,
   Gavel,
+  Mail,
+  Package,
+  Phone,
   RefreshCw,
+  User,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
+import {
+  getReturnRequestEntitiesDetailsAction,
+  type ResolvedReturnRequestEntities,
+} from "@/services/actions/admin-financial-details-actions";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
 import { Badge } from "@/components/ui/badge";
@@ -41,16 +52,6 @@ function formatDate(value: string | null | undefined, withTime = true) {
   }).format(date);
 }
 
-function InfoRow({ label, value }: { label: string; value?: ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-1.5 text-xs">
-      <dt className="w-40 shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 flex-1 text-right font-medium text-foreground">
-        {value || "—"}
-      </dd>
-    </div>
-  );
-}
 
 export function AdminReturnRequestDetailDrawer({
   requestId,
@@ -76,6 +77,34 @@ export function AdminReturnRequestDetailDrawer({
   );
 
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
+  const [entities, setEntities] = useState<ResolvedReturnRequestEntities | null>(null);
+
+  useEffect(() => {
+    if (!open || !data) return;
+
+    let isMounted = true;
+    void getReturnRequestEntitiesDetailsAction({
+      renterId: data.renterId,
+      supplierId: data.supplierId,
+      orderId: data.orderId,
+      itemId: data.request?.itemId,
+    }).then((res) => {
+      if (isMounted) {
+        setEntities(res.success ? res.data : null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, data]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setEntities(null);
+    }
+    onOpenChange(isOpen);
+  };
 
   const handleRefresh = () => {
     void refresh();
@@ -91,7 +120,6 @@ export function AdminReturnRequestDetailDrawer({
 
   const statusInfo = formatReturnRequestStatus(req?.status);
   const itemStatusLabel = formatRentalItemStatus(data?.itemStatus);
-
   return (
     <>
       <FormDrawer
@@ -132,7 +160,7 @@ export function AdminReturnRequestDetailDrawer({
             </div>
           </div>
         }
-        onOpenChange={onOpenChange}
+        onOpenChange={handleOpenChange}
         onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
         open={open}
         tabs={[
@@ -180,39 +208,172 @@ export function AdminReturnRequestDetailDrawer({
                   </div>
                 </div>
 
-                {/* Chi tiết yêu cầu */}
-                <div className="space-y-2 px-1">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Thông tin chi tiết yêu cầu
-                  </h4>
-                  <dl className="space-y-1">
-                    <InfoRow
-                      label="Thời điểm trả (khai báo)"
-                      value={formatDate(req.actualReturnAt, true)}
-                    />
-                    <InfoRow
-                      label="Thời điểm gửi yêu cầu"
-                      value={formatDate(req.submittedAt, true)}
-                    />
-                    <InfoRow
-                      label="Hạn nhà cung cấp xác nhận"
-                      value={formatDate(req.confirmationDeadlineAt, true)}
-                    />
-                    <InfoRow
-                      label="Mã khách thuê"
-                      value={<span className="font-mono text-muted-foreground">{data.renterId}</span>}
-                    />
-                    <InfoRow
-                      label="Mã nhà cung cấp"
-                      value={<span className="font-mono text-muted-foreground">{data.supplierId}</span>}
-                    />
-                    {req.note && (
-                      <InfoRow
-                        label="Ghi chú của khách"
-                        value={<span className="italic text-foreground">&quot;{req.note}&quot;</span>}
+                {/* Thẻ thiết bị đang yêu cầu trả */}
+                {entities?.order?.device ? (
+                  <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-3.5 shadow-xs">
+                    {entities.order.device.thumbnailUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        alt={entities.order.device.name}
+                        className="size-14 shrink-0 rounded-lg border border-border bg-background object-contain"
+                        src={entities.order.device.thumbnailUrl}
                       />
+                    ) : (
+                      <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-border bg-background text-muted-foreground">
+                        <Package className="size-6 text-primary/60" />
+                      </div>
                     )}
-                  </dl>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                        Thiết bị trong yêu cầu
+                      </span>
+                      <h4 className="font-bold text-sm text-foreground">
+                        {entities.order.device.name}
+                      </h4>
+                      {entities.order.device.startDate && entities.order.device.endDate ? (
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <CalendarDays className="size-3.5 text-muted-foreground shrink-0" />
+                          <span>
+                            {formatDate(entities.order.device.startDate, false)} – {formatDate(entities.order.device.endDate, false)} ({entities.order.device.rentalDays || 1} ngày · {entities.order.device.quantity || 1} máy)
+                          </span>
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Thẻ Khách thuê & Nhà cung cấp */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Khách thuê */}
+                  <div className="rounded-xl border border-border bg-card p-3.5 shadow-xs">
+                    <div className="mb-2.5 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                      <User className="size-4 text-primary" />
+                      <span>Khách thuê</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Avatar className="size-10 shrink-0 rounded-full border border-border shadow-xs">
+                        {entities?.renter?.avatarUrl ? (
+                          <AvatarImage alt={entities.renter.name} src={entities.renter.avatarUrl} />
+                        ) : null}
+                        <AvatarFallback className="rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {entities?.renter?.name?.slice(0, 2).toUpperCase() || <User className="size-4" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm">
+                        <h4 className="font-bold text-foreground text-sm">
+                          {entities?.renter?.name || "Khách thuê"}
+                        </h4>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <span>ID:</span>
+                          <ClickToCopy display={data.renterId.slice(0, 8) + "..."} text={data.renterId} />
+                        </div>
+                        {entities?.renter?.phoneNumber ? (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Phone className="size-3.5 text-primary shrink-0" />
+                            <a className="font-medium text-foreground hover:text-primary hover:underline" href={`tel:${entities.renter.phoneNumber}`}>
+                              {entities.renter.phoneNumber}
+                            </a>
+                          </div>
+                        ) : null}
+                        {entities?.renter?.email ? (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Mail className="size-3.5 text-primary shrink-0" />
+                            <a className="hover:text-primary hover:underline break-all" href={`mailto:${entities.renter.email}`}>
+                              {entities.renter.email}
+                            </a>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nhà cung cấp */}
+                  <div className="rounded-xl border border-border bg-card p-3.5 shadow-xs">
+                    <div className="mb-2.5 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                      <Building2 className="size-4 text-primary" />
+                      <span>Nhà cung cấp</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Avatar className="size-10 shrink-0 rounded-lg border border-border shadow-xs">
+                        {entities?.supplier?.logoUrl ? (
+                          <AvatarImage alt={entities.supplier.name} src={entities.supplier.logoUrl} />
+                        ) : null}
+                        <AvatarFallback className="rounded-lg bg-primary/10 text-xs font-bold text-primary">
+                          {entities?.supplier?.name?.slice(0, 2).toUpperCase() || <Building2 className="size-4" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm">
+                        <h4 className="font-bold text-foreground text-sm">
+                          {entities?.supplier?.name || "Nhà cung cấp"}
+                        </h4>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <span>ID:</span>
+                          <ClickToCopy display={data.supplierId.slice(0, 8) + "..."} text={data.supplierId} />
+                        </div>
+                        {entities?.supplier?.contactPhone ? (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Phone className="size-3.5 text-primary shrink-0" />
+                            <a className="font-medium text-foreground hover:text-primary hover:underline" href={`tel:${entities.supplier.contactPhone}`}>
+                              {entities.supplier.contactPhone}
+                            </a>
+                          </div>
+                        ) : null}
+                        {entities?.supplier?.contactEmail ? (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Mail className="size-3.5 text-primary shrink-0" />
+                            <a className="hover:text-primary hover:underline break-all" href={`mailto:${entities.supplier.contactEmail}`}>
+                              {entities.supplier.contactEmail}
+                            </a>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chi tiết yêu cầu */}
+                <div className="space-y-2.5 rounded-xl border border-border bg-card p-4 shadow-xs">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    Thông tin thời gian & Địa chỉ
+                  </h4>
+                  <div className="space-y-2 text-xs sm:text-sm">
+                    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-muted-foreground">Thời điểm trả (khai báo):</span>
+                      <span className="font-medium text-foreground">{formatDate(req.actualReturnAt, true)}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-muted-foreground">Thời điểm gửi yêu cầu:</span>
+                      <span className="font-medium text-foreground">{formatDate(req.submittedAt, true)}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-muted-foreground">Hạn nhà cung cấp xác nhận:</span>
+                      <span className="font-medium text-foreground">{formatDate(req.confirmationDeadlineAt, true)}</span>
+                    </div>
+                    {entities?.order?.recipientName ? (
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-muted-foreground">Người nhận máy:</span>
+                        <span className="font-semibold text-foreground">
+                          {entities.order.recipientName} {entities.order.recipientPhone ? `(${entities.order.recipientPhone})` : ""}
+                        </span>
+                      </div>
+                    ) : null}
+                    {entities?.order?.address ? (
+                      <div className="flex flex-col gap-1 pt-1 border-t border-border/40">
+                        <span className="text-muted-foreground text-xs">Địa chỉ công trình giao nhận:</span>
+                        <p className="font-medium text-foreground leading-relaxed break-words bg-muted/40 p-2.5 rounded-lg border border-border/50 text-xs sm:text-sm">
+                          {entities.order.address}
+                        </p>
+                      </div>
+                    ) : null}
+                    {req.note && (
+                      <div className="flex flex-col gap-1 pt-1 border-t border-border/40">
+                        <span className="text-muted-foreground text-xs">Ghi chú của khách:</span>
+                        <p className="italic text-foreground bg-muted/30 p-2 rounded text-xs">
+                          &quot;{req.note}&quot;
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Danh sách máy trong yêu cầu */}

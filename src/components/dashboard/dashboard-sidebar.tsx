@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Home, LogOut } from "lucide-react";
+import { ChevronDown, Home, LogOut, UserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -82,7 +82,10 @@ export function DashboardSidebar({
       </SidebarContent>
 
       <SidebarFooter className=" p-3">
-        <SidebarUserMenu user={user} />
+        <SidebarUserMenu
+          accountHref={homeHref === "/own" ? "/own/account" : undefined}
+          user={user}
+        />
       </SidebarFooter>
     </Sidebar>
   );
@@ -205,8 +208,10 @@ function isChildItemActive(
 }
 
 function SidebarUserMenu({
+  accountHref,
   user,
 }: {
+  accountHref?: string;
   user?: {
     avatarUrl?: string | null;
     canNavigateHome?: boolean;
@@ -315,6 +320,16 @@ function SidebarUserMenu({
             </span>
           </div>
           <div className="py-1">
+            {accountHref ? (
+              <Link
+                className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                href={accountHref}
+                onClick={() => setIsOpen(false)}
+              >
+                <UserRound size={16} />
+                Quản lý tài khoản
+              </Link>
+            ) : null}
             {user?.canNavigateHome ? (
               <Link
                 className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

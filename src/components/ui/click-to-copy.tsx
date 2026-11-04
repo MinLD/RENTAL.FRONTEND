@@ -33,7 +33,7 @@ export function ClickToCopy({
   return (
     <button
       className={cn(
-        "group/copy inline-flex max-w-full items-center gap-1.5 cursor-pointer rounded px-1 -mx-1 py-0.5 text-left transition-colors hover:bg-muted/70 hover:text-primary",
+        "group/copy inline-flex max-w-full min-w-0 items-center gap-1.5 cursor-pointer rounded px-1 -mx-1 py-0.5 text-left transition-colors hover:bg-muted/70 hover:text-primary",
         className,
       )}
       onClick={handleCopy}

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Building2,
   Calendar,
-  CalendarDays,
   Check,
   Copy,
   CreditCard,
@@ -124,9 +123,11 @@ export function AdminPayoutDetailDrawer({
       onOpenChange={handleOpenChange}
       open={open}
       title={
-        <div className="flex items-center gap-2">
-          <span>Chi tiết quyết toán</span>
-          <span className="font-mono font-bold text-primary">#{displayRef}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0">Chi tiết quyết toán</span>
+          <span className="truncate font-mono font-bold text-primary" title={`#${displayRef}`}>
+            #{displayRef}
+          </span>
         </div>
       }
     >
@@ -274,9 +275,9 @@ export function AdminPayoutDetailDrawer({
           {payout.externalTransferReference || payout.completedBy ? (
             <div className="mt-2.5 space-y-1.5 text-xs sm:text-sm">
               {payout.externalTransferReference ? (
-                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between min-w-0 gap-2">
                   <span className="text-muted-foreground shrink-0">Mã tham chiếu ngân hàng:</span>
-                  <ClickToCopy className="font-mono text-foreground" text={payout.externalTransferReference} />
+                  <ClickToCopy className="font-mono text-xs text-foreground min-w-0" text={payout.externalTransferReference} />
                 </div>
               ) : null}
               {payout.completedBy ? (
@@ -318,7 +319,7 @@ export function AdminPayoutDetailDrawer({
                   <h4 className="font-bold text-foreground text-sm sm:text-base">{entities?.supplier?.name || "Nhà cung cấp"}</h4>
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                     <span>ID:</span>
-                    <ClickToCopy text={payout.supplierId} />
+                    <ClickToCopy display={payout.supplierId.slice(0, 8) + "..."} text={payout.supplierId} />
                   </div>
                 </div>
                 {entities?.supplier?.contactPhone ? (
@@ -332,7 +333,7 @@ export function AdminPayoutDetailDrawer({
                 {entities?.supplier?.contactEmail ? (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="size-3.5 text-primary shrink-0" />
-                    <a className="hover:text-primary hover:underline" href={`mailto:${entities.supplier.contactEmail}`}>
+                    <a className="hover:text-primary hover:underline break-all" href={`mailto:${entities.supplier.contactEmail}`}>
                       {entities.supplier.contactEmail}
                     </a>
                   </div>

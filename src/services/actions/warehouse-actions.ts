@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import {
   warehouseRequestSchema,
@@ -50,6 +52,9 @@ export async function saveOwnWarehouseAction(
       "Không thể lưu địa chỉ kho.",
       { method: "PUT", json: parsed.data },
     );
-    return warehouseResponseSchema.parse(response);
+    const updated = warehouseResponseSchema.parse(response);
+    revalidatePath("/own/warehouse");
+    revalidatePath("/own/account");
+    return updated;
   });
 }

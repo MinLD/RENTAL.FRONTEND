@@ -9,8 +9,8 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "orderCode",
     header: "Mã đơn thuê",
-    minWidth: 170,
-    width: 190,
+    minWidth: 150,
+    width: 160,
     cell: (order) => (
       <ClickToCopy
         className="font-bold text-foreground"
@@ -22,13 +22,13 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "status",
     header: "Trạng thái",
-    width: 170,
+    width: 140,
     cell: (order) => <OrderStatusBadge status={order.status} />,
   },
   {
     id: "itemCount",
     header: "Số thiết bị",
-    width: 120,
+    width: 100,
     cell: (order) => (
       <span className="tabular-nums font-medium text-foreground">
         {order.itemCount} thiết bị
@@ -38,7 +38,7 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "totalAmount",
     header: "Tổng tiền",
-    width: 170,
+    width: 140,
     cell: (order) => (
       <span className="font-bold text-primary tabular-nums">
         {formatEquipmentListingRate(order.totalAmount, order.currency)}
@@ -48,8 +48,8 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "invoiceRef",
     header: "Mã hóa đơn",
-    minWidth: 170,
-    width: 190,
+    minWidth: 150,
+    width: 160,
     cell: (order) => (
       <ClickToCopy
         className="font-mono text-xs text-muted-foreground"
@@ -60,8 +60,7 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "createdAt",
     header: "Ngày đặt",
-    minWidth: 160,
-    width: 170,
+    width: 130,
     cell: (order) => (
       <span className="whitespace-nowrap font-medium text-muted-foreground">
         {formatSupplierOrderDate(order.createdAt)}
@@ -71,8 +70,7 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "paidAt",
     header: "Ngày thanh toán",
-    minWidth: 160,
-    width: 170,
+    width: 130,
     cell: (order) => (
       <span className="whitespace-nowrap font-medium text-muted-foreground">
         {formatSupplierOrderDate(order.paidAt)}

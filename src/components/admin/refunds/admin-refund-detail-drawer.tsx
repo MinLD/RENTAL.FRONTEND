@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Building2,
   Calendar,
-  CalendarDays,
   Check,
   Copy,
   CreditCard,
@@ -114,9 +113,11 @@ export function AdminRefundDetailDrawer({
       onOpenChange={handleOpenChange}
       open={open}
       title={
-        <div className="flex items-center gap-2">
-          <span>Chi tiết hoàn tiền cọc</span>
-          <span className="font-mono font-bold text-primary">#{displayRef}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0">Chi tiết hoàn tiền cọc</span>
+          <span className="truncate font-mono font-bold text-primary" title={`#${displayRef}`}>
+            #{displayRef}
+          </span>
         </div>
       }
     >
@@ -286,7 +287,7 @@ export function AdminRefundDetailDrawer({
                   </h4>
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                     <span>ID:</span>
-                    <ClickToCopy text={item.renterId} />
+                    <ClickToCopy display={item.renterId.slice(0, 8) + "..."} text={item.renterId} />
                   </div>
                 </div>
                 {entities?.renter?.phoneNumber ? (
@@ -300,7 +301,7 @@ export function AdminRefundDetailDrawer({
                 {entities?.renter?.email ? (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="size-3.5 text-primary shrink-0" />
-                    <a className="hover:text-primary hover:underline" href={`mailto:${entities.renter.email}`}>
+                    <a className="hover:text-primary hover:underline break-all" href={`mailto:${entities.renter.email}`}>
                       {entities.renter.email}
                     </a>
                   </div>
@@ -381,28 +382,39 @@ export function AdminRefundDetailDrawer({
               </div>
             ) : null}
             {item.rentalItemId ? (
-              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-muted-foreground">Mã thiết bị thuê:</span>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between min-w-0 gap-2">
+                <span className="text-muted-foreground shrink-0">Mã thiết bị thuê:</span>
                 <ClickToCopy
-                  className="font-mono text-xs text-foreground"
+                  className="font-mono text-xs text-foreground min-w-0"
+                  display={item.rentalItemId.slice(0, 8) + "..."}
                   text={item.rentalItemId}
                 />
               </div>
             ) : null}
             {item.settlementRef ? (
-              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-muted-foreground">Mã quyết toán:</span>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between min-w-0 gap-2">
+                <span className="text-muted-foreground shrink-0">Mã quyết toán:</span>
                 <ClickToCopy
-                  className="font-mono text-xs text-foreground"
+                  className="font-mono text-xs text-foreground min-w-0"
+                  display={
+                    item.settlementRef.length > 20
+                      ? `${item.settlementRef.slice(0, 16)}...`
+                      : item.settlementRef
+                  }
                   text={item.settlementRef}
                 />
               </div>
             ) : null}
             {item.externalTransferReference ? (
-              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between min-w-0 gap-2">
                 <span className="text-muted-foreground shrink-0">Mã tham chiếu ngân hàng:</span>
                 <ClickToCopy
-                  className="font-mono text-foreground"
+                  className="font-mono text-xs text-foreground min-w-0"
+                  display={
+                    item.externalTransferReference.length > 24
+                      ? `${item.externalTransferReference.slice(0, 20)}...`
+                      : item.externalTransferReference
+                  }
                   text={item.externalTransferReference}
                 />
               </div>
@@ -416,6 +428,7 @@ export function AdminRefundDetailDrawer({
                   </span>
                   <ClickToCopy
                     className="font-mono text-xs text-muted-foreground"
+                    display={item.completedBy.slice(0, 8) + "..."}
                     text={item.completedBy}
                   />
                 </div>
