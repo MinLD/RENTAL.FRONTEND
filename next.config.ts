@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
       throw new Error("PAYMENT_API_BASE_URL must be an HTTP(S) base URL without credentials, query or fragment.");
     }
     return [{
-      source: "/hubs/payments/:path*",
-      destination: `${paymentApiBaseUrl.replace(/\/+$/, "")}/hubs/payments/:path*`,
+      source: "/api/v1/payment/hubs/payments/:path*",
+      destination: `${paymentApiBaseUrl.replace(/\/+$/, "")}/api/v1/payment/hubs/payments/:path*`,
     }];
   },
   async redirects() {
