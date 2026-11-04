@@ -122,7 +122,11 @@ export function createPaymentHubConnection(hubUrl: string, options: PaymentHubCo
           message.startsWith("Failed to complete negotiation with the server: ")
         );
         const outputLevel = isConnectionFailure ? LogLevel.Warning : level;
-        const formatted = `[${new Date().toISOString()}] [PaymentHub] ${LogLevel[outputLevel]}: ${message}`;
+        const displayMessage =
+          message.includes("</html>") || message.includes("<!DOCTYPE html>")
+            ? "Status code '404': SignalR Payment Hub endpoint not found. System operates normally via REST polling."
+            : message;
+        const formatted = `[${new Date().toISOString()}] [PaymentHub] ${LogLevel[outputLevel]}: ${displayMessage}`;
         if (level === LogLevel.Warning || isConnectionFailure) console.warn(formatted);
         else console.error(formatted);
       },

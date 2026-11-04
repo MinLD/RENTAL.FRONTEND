@@ -7,6 +7,8 @@ import { organizationResponseSchema } from "@/lib/validations/organization";
 import { ApiError, readResponseJson } from "@/services/api-error";
 import { serverApi } from "@/services/server-api";
 
+import type { SupplierContactResponse } from "@/types/organization";
+
 export const getMyOrganizationOnServer = cache(async () => {
   try {
     const response = await serverApi(API_ENDPOINTS.backend.organizations.mine);
@@ -24,3 +26,22 @@ export const getMyOrganizationOnServer = cache(async () => {
     throw error;
   }
 });
+
+export const getOrganizationSupplierContact = cache(
+  async (organizationId?: string | null): Promise<SupplierContactResponse | null> => {
+    if (!organizationId) {
+      return null;
+    }
+    try {
+      const response = await serverApi(
+        API_ENDPOINTS.backend.organizations.supplierContact(organizationId),
+      );
+      if (response.ok) {
+        return (await response.json()) as SupplierContactResponse;
+      }
+    } catch {
+      // Return null when unauthenticated, 404 or backend unavailable
+    }
+    return null;
+  },
+);

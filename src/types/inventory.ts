@@ -54,6 +54,8 @@ export type EquipmentListing = {
   totalQuantity: number;
   createdAt: string;
   updatedAt: string | null;
+  organizationId?: string | null;
+  categoryIds?: string[] | null;
 };
 
 export type EquipmentListingListResponse = {
@@ -82,6 +84,8 @@ export type PublicEquipmentListing = Pick<
 > & {
   availableQuantity: number;
   warehouseArea?: WarehouseArea | null;
+  organizationId?: string | null;
+  categoryIds?: string[] | null;
 };
 
 export type PublicEquipmentListingListResponse = Omit<

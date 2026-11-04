@@ -254,6 +254,8 @@ export const API_ENDPOINTS = {
         `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
       profile: (id: string) =>
         `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
+      supplierContact: (organizationId: string) =>
+        `/api/v1/auth/organizations/${encodeURIComponent(organizationId)}/supplier-contact`,
     },
     adminOrganizations: {
       approve: (id: string) =>
