@@ -1,13 +1,23 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
+  Building2,
   CalendarDays,
   History,
+  Mail,
+  Phone,
   RefreshCw,
   Truck,
+  User,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  getOrderEntitiesDetailsAction,
+  type ResolvedOrderEntities,
+} from "@/services/actions/admin-financial-details-actions";
 import { FormDrawer } from "@/components/forms/form-drawer";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -125,6 +135,32 @@ export function AdminOrderDetailDrawer({
   onRefresh: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"overview" | "sub-orders" | "history">("overview");
+  const [entities, setEntities] = useState<ResolvedOrderEntities | null>(null);
+
+  useEffect(() => {
+    if (!order) return;
+
+    let isMounted = true;
+    const supplierIds = order.subOrders?.map((s) => s.supplierId) || [];
+
+    void getOrderEntitiesDetailsAction({
+      renterId: order.renterId,
+      supplierIds,
+    }).then((res) => {
+      if (isMounted) {
+        setEntities(res.success ? res.data : null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [order]);
+
+  const handleClose = () => {
+    setEntities(null);
+    onClose();
+  };
 
   return (
     <FormDrawer
@@ -147,13 +183,13 @@ export function AdminOrderDetailDrawer({
             <RefreshCw className={isLoading ? "size-4 animate-spin" : "size-4"} />
             Tải lại
           </Button>
-          <Button onClick={onClose} size="sm" type="button" variant="secondary">
+          <Button onClick={handleClose} size="sm" type="button" variant="secondary">
             Đóng
           </Button>
         </div>
       }
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open) handleClose();
       }}
       onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
       open={Boolean(selectedOrder)}
@@ -186,9 +222,12 @@ export function AdminOrderDetailDrawer({
               <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-bold text-foreground">
-                      {order.orderCode || order.orderId}
-                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-base font-bold text-foreground">
+                        {order.orderCode || order.orderId}
+                      </h3>
+                      <ClickToCopy text={order.orderCode || order.orderId} display="" />
+                    </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Đặt lúc {formatSupplierOrderDate(order.createdAt)}
                     </p>
@@ -222,8 +261,24 @@ export function AdminOrderDetailDrawer({
                   ) : null}
                   <InfoRow label="Hạn thanh toán" value={formatSupplierOrderDate(order.paymentDeadline)} />
                   <InfoRow label="Người nhận hàng" value={order.delivery?.recipientName} />
-                  <InfoRow label="Số điện thoại" value={order.delivery?.recipientPhone} />
-                  <InfoRow label="Địa chỉ công trình" value={order.delivery?.address} />
+                  <InfoRow
+                    label="Số điện thoại"
+                    value={
+                      order.delivery?.recipientPhone ? (
+                        <ClickToCopy text={order.delivery.recipientPhone} />
+                      ) : (
+                        "—"
+                      )
+                    }
+                  />
+                  {order.delivery?.address ? (
+                    <div className="flex flex-col gap-1 pt-1 border-t border-border/40">
+                      <span className="text-muted-foreground text-xs">Địa chỉ công trình giao nhận:</span>
+                      <p className="font-medium text-foreground leading-relaxed break-words bg-background p-2 rounded border border-border/40 text-xs">
+                        {order.delivery.address}
+                      </p>
+                    </div>
+                  ) : null}
                   {order.delivery?.note ? (
                     <InfoRow label="Ghi chú giao hàng" value={order.delivery?.note} />
                   ) : null}
@@ -251,14 +306,74 @@ export function AdminOrderDetailDrawer({
                 </dl>
               </div>
 
+              {/* Thông tin Khách thuê */}
+              {order.renterId ? (
+                <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <User className="size-3.5 text-primary" />
+                    <span>Khách thuê</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Avatar className="size-10 shrink-0 rounded-full border border-border shadow-xs">
+                      {entities?.renter?.avatarUrl ? (
+                        <AvatarImage alt={entities.renter.name} src={entities.renter.avatarUrl ?? undefined} />
+                      ) : null}
+                      <AvatarFallback className="rounded-full bg-primary/10 text-xs font-bold text-primary">
+                        {entities?.renter?.name?.slice(0, 2).toUpperCase() || <User className="size-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1 space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="font-bold text-foreground text-sm">
+                          {entities?.renter?.name || "Khách thuê"}
+                        </h4>
+                        <ClickToCopy
+                          className="font-mono text-xs text-muted-foreground"
+                          display={order.renterId.slice(0, 8) + "..."}
+                          text={order.renterId}
+                        />
+                      </div>
+                      {entities?.renter?.phoneNumber ? (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Phone className="size-3 text-primary shrink-0" />
+                          <a
+                            className="font-medium text-foreground hover:text-primary hover:underline"
+                            href={`tel:${entities.renter.phoneNumber}`}
+                          >
+                            {entities.renter.phoneNumber}
+                          </a>
+                        </div>
+                      ) : null}
+                      {entities?.renter?.email ? (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Mail className="size-3 text-primary shrink-0" />
+                          <a
+                            className="hover:text-primary hover:underline break-all"
+                            href={`mailto:${entities.renter.email}`}
+                          >
+                            {entities.renter.email}
+                          </a>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {/* Mã đối soát */}
               <div className="space-y-2 px-1 pt-3 border-t border-border/50">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Mã đối soát hệ thống
                 </h4>
                 <dl className="space-y-1 text-[11px]">
-                  <InfoRow label="Mã hóa đơn (Invoice)" value={<span className="font-mono text-muted-foreground select-all break-all">{order.invoiceRef || "—"}</span>} />
-                  <InfoRow label="Khách thuê ID" value={<span className="font-mono text-muted-foreground select-all break-all">{order.renterId}</span>} />
+                  <InfoRow
+                    label="Mã hóa đơn (Invoice)"
+                    value={<span className="font-mono text-muted-foreground select-all break-all">{order.invoiceRef || "—"}</span>}
+                  />
+                  <InfoRow
+                    label="Mã đơn hàng ID"
+                    value={<span className="font-mono text-muted-foreground select-all break-all">{order.orderId}</span>}
+                  />
                 </dl>
               </div>
             </div>
@@ -270,19 +385,71 @@ export function AdminOrderDetailDrawer({
               {order.subOrders?.length ? (
                 order.subOrders.map((subOrder: AdminSubOrder) => (
                   <div key={subOrder.subOrderId} className="rounded-xl border border-border bg-card p-4 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-                      <div>
+                    <div className="flex flex-col gap-2 border-b border-border pb-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <Truck className="size-4 text-primary" />
-                          <h4 className="font-bold text-sm text-foreground">
-                            Đơn con: {subOrder.subOrderCode || subOrder.subOrderId}
+                          <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
+                            <span>Đơn con:</span>
+                            <ClickToCopy text={subOrder.subOrderCode || subOrder.subOrderId} />
                           </h4>
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Nhà cung cấp: <span className="font-mono font-medium text-foreground">{subOrder.supplierId}</span>
-                        </p>
+                        <OrderStatusBadge status={subOrder.status} />
                       </div>
-                      <OrderStatusBadge status={subOrder.status} />
+
+                      {/* Thông tin Nhà cung cấp */}
+                      <div className="mt-1 flex items-start gap-2.5 rounded-lg border border-border/50 bg-background p-2.5">
+                        <Avatar className="size-8 shrink-0 rounded-lg border border-border">
+                          {entities?.suppliersMap?.[subOrder.supplierId]?.logoUrl ? (
+                            <AvatarImage
+                              alt={entities.suppliersMap[subOrder.supplierId].name}
+                              src={entities.suppliersMap[subOrder.supplierId].logoUrl ?? undefined}
+                            />
+                          ) : null}
+                          <AvatarFallback className="rounded-lg bg-primary/10 text-xs font-bold text-primary">
+                            {entities?.suppliersMap?.[subOrder.supplierId]?.name?.slice(0, 2).toUpperCase() || (
+                              <Building2 className="size-3.5" />
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1 space-y-0.5 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-foreground truncate">
+                              {entities?.suppliersMap?.[subOrder.supplierId]?.name || "Nhà cung cấp"}
+                            </span>
+                            <ClickToCopy
+                              className="font-mono text-xs text-muted-foreground shrink-0"
+                              display={subOrder.supplierId.slice(0, 8) + "..."}
+                              text={subOrder.supplierId}
+                            />
+                          </div>
+                          {entities?.suppliersMap?.[subOrder.supplierId]?.contactPhone ||
+                          entities?.suppliersMap?.[subOrder.supplierId]?.contactEmail ? (
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                              {entities.suppliersMap[subOrder.supplierId].contactPhone ? (
+                                <a
+                                  className="inline-flex items-center gap-1 hover:text-primary hover:underline text-foreground"
+                                  href={`tel:${entities.suppliersMap[subOrder.supplierId].contactPhone}`}
+                                >
+                                  <Phone className="size-2.5 text-primary" />
+                                  <span>{entities.suppliersMap[subOrder.supplierId].contactPhone}</span>
+                                </a>
+                              ) : null}
+                              {entities.suppliersMap[subOrder.supplierId].contactEmail ? (
+                                <a
+                                  className="inline-flex items-center gap-1 hover:text-primary hover:underline"
+                                  href={`mailto:${entities.suppliersMap[subOrder.supplierId].contactEmail}`}
+                                >
+                                  <Mail className="size-2.5 text-primary shrink-0" />
+                                  <span className="break-all">
+                                    {entities.suppliersMap[subOrder.supplierId].contactEmail}
+                                  </span>
+                                </a>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Danh sách thiết bị */}

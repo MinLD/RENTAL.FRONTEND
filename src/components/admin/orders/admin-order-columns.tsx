@@ -1,4 +1,5 @@
 import type { DataTableColumn } from "@/components/data-table";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { AdminOrderSummary } from "@/types/admin-orders";
 import { formatEquipmentListingRate } from "@/utils/inventory";
 import { formatSupplierOrderDate } from "@/utils/supplier-orders";
@@ -8,23 +9,26 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "orderCode",
     header: "Mã đơn thuê",
-    width: 190,
+    minWidth: 150,
+    width: 160,
     cell: (order) => (
-      <span className="block truncate font-bold text-foreground" title={order.orderCode ?? order.orderId}>
-        {order.orderCode || order.orderId.slice(0, 8)}
-      </span>
+      <ClickToCopy
+        className="font-bold text-foreground"
+        display={order.orderCode || order.orderId}
+        text={order.orderCode || order.orderId}
+      />
     ),
   },
   {
     id: "status",
     header: "Trạng thái",
-    width: 170,
+    width: 140,
     cell: (order) => <OrderStatusBadge status={order.status} />,
   },
   {
     id: "itemCount",
     header: "Số thiết bị",
-    width: 120,
+    width: 100,
     cell: (order) => (
       <span className="tabular-nums font-medium text-foreground">
         {order.itemCount} thiết bị
@@ -34,7 +38,7 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "totalAmount",
     header: "Tổng tiền",
-    width: 170,
+    width: 140,
     cell: (order) => (
       <span className="font-bold text-primary tabular-nums">
         {formatEquipmentListingRate(order.totalAmount, order.currency)}
@@ -44,25 +48,19 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "invoiceRef",
     header: "Mã hóa đơn",
+    minWidth: 150,
     width: 160,
-    cell: (order) => {
-      const ref = order.invoiceRef;
-      if (!ref) return <span className="text-muted-foreground">—</span>;
-      return (
-        <span
-          className="block max-w-[150px] truncate font-mono text-xs text-muted-foreground"
-          title={ref}
-        >
-          {ref}
-        </span>
-      );
-    },
+    cell: (order) => (
+      <ClickToCopy
+        className="font-mono text-xs text-muted-foreground"
+        text={order.invoiceRef}
+      />
+    ),
   },
   {
     id: "createdAt",
     header: "Ngày đặt",
-    minWidth: 160,
-    width: 170,
+    width: 130,
     cell: (order) => (
       <span className="whitespace-nowrap font-medium text-muted-foreground">
         {formatSupplierOrderDate(order.createdAt)}
@@ -72,8 +70,7 @@ export const adminOrderColumns: DataTableColumn<AdminOrderSummary>[] = [
   {
     id: "paidAt",
     header: "Ngày thanh toán",
-    minWidth: 160,
-    width: 170,
+    width: 130,
     cell: (order) => (
       <span className="whitespace-nowrap font-medium text-muted-foreground">
         {formatSupplierOrderDate(order.paidAt)}

@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import {
   Dialog,
   DialogContent,
@@ -113,9 +114,10 @@ export function ProductAssetsView({
       },
       {
         cell: (asset) => (
-          <span className="font-mono font-semibold text-foreground">
-            {asset.serialNumber || "—"}
-          </span>
+          <ClickToCopy
+            className="font-mono font-semibold text-foreground"
+            text={asset.serialNumber}
+          />
         ),
         header: "Số serial",
         id: "serialNumber",

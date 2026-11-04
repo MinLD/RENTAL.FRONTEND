@@ -246,6 +246,56 @@ export const API_ENDPOINTS = {
         `/api/v1/payment/invoices/${encodeURIComponent(invoiceRef)}`,
       invoiceStatus: (invoiceRef: string) =>
         `/api/v1/payment/invoices/${encodeURIComponent(invoiceRef)}/status`,
+      settlement: (id: string) =>
+        `/api/v1/payment/settlements/${encodeURIComponent(id)}`,
+    },
+    manualRefunds: {
+      list: (params?: {
+        status?: number | string;
+        cursor?: string;
+        limit?: number;
+      }) =>
+        buildQueryEndpoint("/api/v1/payment/manual-refunds", {
+          status: params?.status,
+          cursor: params?.cursor,
+          limit: params?.limit,
+        }),
+      adminList: (params?: {
+        page?: number;
+        pageSize?: number;
+        status?: string;
+        from?: string;
+        to?: string;
+      }) =>
+        buildQueryEndpoint("/api/v1/payment/admin/manual-refunds", {
+          Page: params?.page,
+          PageSize: params?.pageSize,
+          Status: params?.status,
+          From: params?.from,
+          To: params?.to,
+        }),
+      complete: (requirementId: string) =>
+        `/api/v1/payment/manual-refunds/${encodeURIComponent(requirementId)}/complete`,
+    },
+    adminPayouts: {
+      list: (params?: {
+        supplierId?: string;
+        page?: number;
+        pageSize?: number;
+        status?: string;
+        from?: string;
+        to?: string;
+      }) =>
+        buildQueryEndpoint("/api/v1/payment/admin/payouts", {
+          supplierId: params?.supplierId,
+          Page: params?.page,
+          PageSize: params?.pageSize,
+          Status: params?.status,
+          From: params?.from,
+          To: params?.to,
+        }),
+      complete: (payoutId: string) =>
+        `/api/v1/payment/admin/payouts/${encodeURIComponent(payoutId)}/complete`,
     },
     organizations: {
       register: "/api/v1/auth/organizations/register",
@@ -254,6 +304,8 @@ export const API_ENDPOINTS = {
         `/api/v1/auth/organizations/${encodeURIComponent(id)}`,
       profile: (id: string) =>
         `/api/v1/auth/organizations/${encodeURIComponent(id)}/profile`,
+      supplierContact: (organizationId: string) =>
+        `/api/v1/auth/organizations/${encodeURIComponent(organizationId)}/supplier-contact`,
     },
     adminOrganizations: {
       approve: (id: string) =>

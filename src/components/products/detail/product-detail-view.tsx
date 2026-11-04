@@ -6,7 +6,10 @@ import { HomeLink } from "@/components/layout/home-link";
 import { QueryProvider } from "@/providers/query-provider";
 import type { PublicEquipmentListingDetail } from "@/types/inventory";
 import type { CatalogSpecField } from "@/types/catalog";
-import { formatWarehouseArea, getEquipmentListingName } from "@/utils/inventory";
+import {
+  formatWarehouseArea,
+  getEquipmentListingName,
+} from "@/utils/inventory";
 import {
   getProductDetailImages,
   getProductSpecifications,
@@ -15,17 +18,25 @@ import {
 import { ProductDetailTabs } from "./product-detail-tabs";
 import { ProductGallery } from "./product-gallery";
 import { ProductRentalPanel } from "./product-rental-panel";
+import type { PublicEquipmentListing } from "@/types/inventory";
+import { ProductRelatedCarousel } from "./product-related-carousel";
+import type { SupplierContactResponse } from "@/types/organization";
+import { ProductOrganizationCard } from "./product-organization-card";
 
 export function ProductDetailView({
   isAuthenticated,
   isProfileCompleted,
   product,
   specificationFields,
+  organization,
+  relatedProducts,
 }: {
   isAuthenticated: boolean;
   isProfileCompleted: boolean;
   product: PublicEquipmentListingDetail;
   specificationFields?: CatalogSpecField[] | null;
+  organization?: SupplierContactResponse | null;
+  relatedProducts?: PublicEquipmentListing[];
 }) {
   const name = getEquipmentListingName(product);
   return (
@@ -35,9 +46,7 @@ export function ProductDetailView({
           aria-label="Đường dẫn thiết bị"
           className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground"
         >
-          <HomeLink className="hover:text-primary">
-            Trang chủ
-          </HomeLink>
+          <HomeLink className="hover:text-primary">Trang chủ</HomeLink>
           <span aria-hidden="true">/</span>
           <Link className="hover:text-primary" href="/search">
             Tìm kiếm thiết bị cho thuê
@@ -77,7 +86,10 @@ export function ProductDetailView({
                 </span>
               </div>
               <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
+                <MapPin
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-primary"
+                />
                 <span>{formatWarehouseArea(product.warehouseArea)}</span>
               </p>
               <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
@@ -100,7 +112,10 @@ export function ProductDetailView({
               thumbnailUrl={product.thumbnailUrl}
             />
           </QueryProvider>
-          <div className="min-w-0 lg:col-start-1">
+          <div className="min-w-0 space-y-6 lg:col-start-1">
+            {organization ? (
+              <ProductOrganizationCard organization={organization} />
+            ) : null}
             <ProductDetailTabs
               description={product.description}
               name={name}
@@ -113,6 +128,11 @@ export function ProductDetailView({
             />
           </div>
         </div>
+        {relatedProducts?.length ? (
+          <div className="mt-10  border-border pt-8 sm:mt-12">
+            <ProductRelatedCarousel products={relatedProducts} />
+          </div>
+        ) : null}
       </Container>
     </div>
   );

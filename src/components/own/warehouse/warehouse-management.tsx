@@ -36,6 +36,7 @@ import type { MapCoordinates } from "@/types/map";
 import { parseMapCoordinates } from "@/utils/map-coordinates";
 
 type WarehouseManagementProps = {
+  embedded?: boolean;
   fetchWarehouse: () => Promise<ApiResult<Warehouse | null>>;
   saveWarehouse: (request: WarehouseRequest) => Promise<ApiResult<Warehouse>>;
 };
@@ -56,6 +57,7 @@ function getFormValues(warehouse: Warehouse | null): WarehouseFormValues {
 }
 
 export function WarehouseManagement({
+  embedded = false,
   fetchWarehouse,
   saveWarehouse,
 }: WarehouseManagementProps) {
@@ -67,9 +69,9 @@ export function WarehouseManagement({
     setData,
   } = useApiResource(fetchWarehouse);
 
-  return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-6">
+  const content = (
+    <>
+      {!embedded ? (
         <header className="space-y-1">
           <h1 className="text-xl font-bold text-foreground">
             Quản lý địa chỉ kho
@@ -79,8 +81,9 @@ export function WarehouseManagement({
             bạn.
           </p>
         </header>
+      ) : null}
 
-        {isLoading ? (
+      {isLoading ? (
           <div
             aria-label="Đang tải địa chỉ kho"
             className="space-y-5 rounded-lg border border-border p-5"
@@ -115,6 +118,17 @@ export function WarehouseManagement({
             warehouse={warehouse}
           />
         )}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-6">{content}</div>;
+  }
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-6">
+        {content}
       </div>
     </div>
   );

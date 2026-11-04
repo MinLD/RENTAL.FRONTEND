@@ -1,5 +1,6 @@
 import type { DataTableColumn } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { AdminUserRow, AdminUserStatus } from "@/types/admin-users";
 
 import { formatShortId } from "@/utils/string";
@@ -20,9 +21,10 @@ export const userColumns: DataTableColumn<AdminUserRow>[] = [
   },
   {
     cell: (user) => (
-      <span className="block truncate font-medium text-muted-foreground">
-        {user.email}
-      </span>
+      <ClickToCopy
+        className="font-medium text-muted-foreground"
+        text={user.email}
+      />
     ),
     header: "Email",
     id: "email",
@@ -31,9 +33,11 @@ export const userColumns: DataTableColumn<AdminUserRow>[] = [
   },
   {
     cell: (user) => (
-      <span className="block truncate font-medium text-muted-foreground">
-        {formatShortId(user.id)}
-      </span>
+      <ClickToCopy
+        className="font-mono font-medium text-muted-foreground"
+        display={formatShortId(user.id)}
+        text={user.id}
+      />
     ),
     header: "ID",
     id: "id",

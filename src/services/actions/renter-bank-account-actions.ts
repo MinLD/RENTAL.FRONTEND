@@ -45,6 +45,7 @@ export async function createRenterBankAccountAction(
     );
 
     revalidatePath("/account");
+    revalidatePath("/own/account");
     return created;
   });
 }
@@ -59,6 +60,7 @@ export async function deleteRenterBankAccountAction(
       { method: "DELETE" },
     );
     revalidatePath("/account");
+    revalidatePath("/own/account");
   });
 }
 
@@ -72,6 +74,7 @@ export async function setDefaultRenterBankAccountAction(
       { method: "POST" },
     );
     revalidatePath("/account");
+    revalidatePath("/own/account");
     return result;
   });
 }
@@ -104,6 +107,7 @@ export async function updateRenterBankAccountAction(
     );
 
     revalidatePath("/account");
+    revalidatePath("/own/account");
     return updated;
   });
 }

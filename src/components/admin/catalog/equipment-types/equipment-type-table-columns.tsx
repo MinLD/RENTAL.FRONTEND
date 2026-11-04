@@ -1,6 +1,7 @@
 import type { DataTableColumn } from "@/components/data-table";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import {
   CATALOG_EQUIPMENT_TYPE_STATUS,
   type CatalogEquipmentTypeListItem,
@@ -26,9 +27,10 @@ export const equipmentTypeColumns: DataTableColumn<CatalogEquipmentTypeListItem>
             <span className="block truncate font-semibold text-foreground">
               {equipmentType.name}
             </span>
-            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
-              {equipmentType.id}
-            </span>
+            <ClickToCopy
+              className="mt-0.5 font-mono text-xs font-medium text-muted-foreground"
+              text={equipmentType.id}
+            />
           </div>
         </div>
       ),
@@ -39,9 +41,10 @@ export const equipmentTypeColumns: DataTableColumn<CatalogEquipmentTypeListItem>
     },
     {
       cell: (equipmentType) => (
-        <span className="block truncate font-semibold text-foreground">
-          {equipmentType.code || "-"}
-        </span>
+        <ClickToCopy
+          className="font-semibold text-foreground"
+          text={equipmentType.code}
+        />
       ),
       header: "Code",
       id: "code",

@@ -1,6 +1,7 @@
 import type { DataTableColumn } from "@/components/data-table";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { CatalogCategoryDetail } from "@/types/catalog";
 
 export const categoryColumns: DataTableColumn<CatalogCategoryDetail>[] = [
@@ -20,9 +21,10 @@ export const categoryColumns: DataTableColumn<CatalogCategoryDetail>[] = [
           <span className="block truncate font-semibold text-foreground">
             {category.name}
           </span>
-          <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
-            {category.id}
-          </span>
+          <ClickToCopy
+            className="mt-0.5 font-mono text-xs font-medium text-muted-foreground"
+            text={category.id}
+          />
         </div>
       </div>
     ),
@@ -33,9 +35,10 @@ export const categoryColumns: DataTableColumn<CatalogCategoryDetail>[] = [
   },
   {
     cell: (category) => (
-      <span className="block truncate font-medium text-muted-foreground">
-        {category.slug || "-"}
-      </span>
+      <ClickToCopy
+        className="font-mono text-xs text-muted-foreground"
+        text={category.slug}
+      />
     ),
     header: "Slug",
     id: "slug",

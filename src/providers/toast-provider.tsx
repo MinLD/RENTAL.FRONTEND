@@ -6,7 +6,7 @@ export function ToastProvider() {
   return (
     <Toaster
       closeButton
-      position="top-right"
+      position="top-center"
       richColors
       toastOptions={{
         classNames: {

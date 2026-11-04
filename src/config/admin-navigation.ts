@@ -44,13 +44,18 @@ export const ADMIN_NAVIGATION: DashboardNavigationItem[] = [
         href: "/admin/orders",
         label: "Tất cả đơn thuê",
       },
-      {
-        href: "/admin/refunds",
-        label: "Yêu cầu hoàn tiền",
-      },
+
       {
         href: "/admin/return-requests",
         label: "Yêu cầu trả máy",
+      },
+      {
+        href: "/admin/refunds",
+        label: "Hoàn tiền cọc",
+      },
+      {
+        href: "/admin/payouts",
+        label: "Quyết toán tiền",
       },
     ],
   },

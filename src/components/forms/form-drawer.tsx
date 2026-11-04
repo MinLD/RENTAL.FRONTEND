@@ -46,11 +46,11 @@ export function FormDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className={cn("w-full gap-0 p-0 sm:max-w-lg", className)}>
         <div className="flex h-full min-h-0 flex-col">
-          <SheetHeader className="shrink-0 border-b border-border px-6 py-5">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-5 pr-14">
             <SheetTitle className="truncate">{title}</SheetTitle>
             {description ? (
-              <SheetDescription className="truncate">
-                {description}
+              <SheetDescription asChild className="truncate">
+                <div>{description}</div>
               </SheetDescription>
             ) : null}
           </SheetHeader>
@@ -86,7 +86,7 @@ export function FormDrawer({
 
           <div
             className={cn(
-              "min-h-0 flex-1 overflow-y-auto px-6 py-5",
+              "min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-5",
               bodyClassName,
             )}
           >

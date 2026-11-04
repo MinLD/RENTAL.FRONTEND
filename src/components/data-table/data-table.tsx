@@ -231,8 +231,8 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
       return totalWidth + (column.minWidth ?? 160);
     }, 0);
 
-    return columnsWidth;
-  }, [columns]);
+    return columnsWidth + (hasActions ? 90 : 0);
+  }, [columns, hasActions]);
   const dependencyKey = JSON.stringify(fetchDependencies);
   const filterKey = JSON.stringify(activeFilterParams);
   const searchTypesKey = searchTypes?.join("\u001F") ?? "";
@@ -501,7 +501,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                     </TableHead>
                   ))}
                   {hasActions ? (
-                    <TableHead className="sticky top-0 z-20 whitespace-nowrap bg-[#f8fafc] text-right">
+                    <TableHead className="sticky top-0 right-0 z-30 whitespace-nowrap bg-[#f8fafc] text-right">
                       {actionsHeader}
                     </TableHead>
                   ) : null}
@@ -532,7 +532,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                   activeData.map((row) => (
                     <TableRow
                       className={cn(
-                        "group",
+                        "group transition-none",
                         canInteractWithRow && "cursor-pointer",
                       )}
                       key={getRowId(row)}
@@ -553,7 +553,7 @@ export function DataTable<TData, TFilters = Record<string, unknown>>({
                         </TableCell>
                       ))}
                       {hasActions ? (
-                        <TableCell className="whitespace-nowrap text-right">
+                        <TableCell className="sticky right-0 z-10 whitespace-nowrap bg-background text-right group-hover:bg-[#f1f5f9] group-data-[state=selected]:bg-[#e2e8f0]">
                           <div className="inline-flex w-max items-center justify-end gap-1">
                             {renderRowActions?.(row, {
                               refresh: triggerRefresh,

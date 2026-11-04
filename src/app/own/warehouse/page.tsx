@@ -1,14 +1,5 @@
-import { WarehouseManagement } from "@/components/own/warehouse/warehouse-management";
-import {
-  getOwnWarehouseAction,
-  saveOwnWarehouseAction,
-} from "@/services/actions/warehouse-actions";
+import { redirect } from "next/navigation";
 
 export default function OwnWarehousePage() {
-  return (
-    <WarehouseManagement
-      fetchWarehouse={getOwnWarehouseAction}
-      saveWarehouse={saveOwnWarehouseAction}
-    />
-  );
+  redirect("/own/account?section=warehouse");
 }

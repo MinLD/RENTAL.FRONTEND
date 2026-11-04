@@ -43,6 +43,15 @@ export type OrganizationApplication = {
   rejectionReason?: string | null;
 };
 
+export interface SupplierContactResponse {
+  name?: string | null;
+  contactPhone?: string | null;
+  logoUrl?: string | null;
+  website?: string | null;
+  contactEmail?: string | null;
+  address?: string | null;
+}
+
 export type OrganizationResponse = OrganizationApplication & {
   name?: string | null;
   slug?: string | null;
@@ -65,4 +74,9 @@ export type OrganizationResponse = OrganizationApplication & {
   logoMediaId?: string | null;
   logoUrl?: string | null;
   description?: string | null;
+  suspensionReason?: string | null;
+  reviewedAtUtc?: string | null;
+  reviewDueAtUtc?: string | null;
+  canRemindAtUtc?: string | null;
+  lastRemindedAtUtc?: string | null;
 };

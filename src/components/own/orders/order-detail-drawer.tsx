@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { FormDrawer } from "@/components/forms/form-drawer";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -223,12 +224,17 @@ export function OrderDetailDrawer({
                 <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-base font-bold text-foreground">
-                        {order.subOrderCode || order.subOrderId}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Đơn cha: {order.orderCode || "—"} · Đặt lúc {formatSupplierOrderDate(order.createdAt)}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-base font-bold text-foreground">
+                          {order.subOrderCode || order.subOrderId}
+                        </h3>
+                        <ClickToCopy text={order.subOrderCode || order.subOrderId} display="" />
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span>Đơn cha:</span>
+                        <ClickToCopy text={order.orderCode} />
+                        <span>· Đặt lúc {formatSupplierOrderDate(order.createdAt)}</span>
+                      </div>
                     </div>
                     <OrderStatusBadge status={order.status} />
                   </div>
@@ -252,7 +258,16 @@ export function OrderDetailDrawer({
                       value={order.paidAt ? formatSupplierOrderDate(order.paidAt) : "Chưa thanh toán"}
                     />
                     <InfoRow label="Người nhận hàng" value={order.delivery?.recipientName} />
-                    <InfoRow label="Số điện thoại" value={order.delivery?.recipientPhone} />
+                    <InfoRow
+                      label="Số điện thoại"
+                      value={
+                        order.delivery?.recipientPhone ? (
+                          <ClickToCopy text={order.delivery.recipientPhone} />
+                        ) : (
+                          "—"
+                        )
+                      }
+                    />
                     <InfoRow label="Địa chỉ giao máy" value={order.delivery?.address} />
                     {order.delivery?.note && (
                       <InfoRow
