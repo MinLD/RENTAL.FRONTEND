@@ -49,8 +49,8 @@ export function FormDrawer({
           <SheetHeader className="shrink-0 border-b border-border px-6 py-5">
             <SheetTitle className="truncate">{title}</SheetTitle>
             {description ? (
-              <SheetDescription className="truncate">
-                {description}
+              <SheetDescription asChild className="truncate">
+                <div>{description}</div>
               </SheetDescription>
             ) : null}
           </SheetHeader>

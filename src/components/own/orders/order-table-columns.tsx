@@ -1,4 +1,5 @@
 import type { DataTableColumn } from "@/components/data-table";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { SupplierOrderSummary } from "@/types/supplier-orders";
 import { formatEquipmentListingRate } from "@/utils/inventory";
 import { formatSupplierOrderDate } from "@/utils/supplier-orders";
@@ -6,14 +7,29 @@ import { OrderStatusBadge } from "./order-status-badge";
 
 export const orderColumns: DataTableColumn<SupplierOrderSummary>[] = [
   {
-    id: "subOrderCode", header: "Mã đơn con", width: 210,
+    id: "subOrderCode",
+    header: "Mã đơn con",
+    minWidth: 200,
+    width: 220,
     cell: (order) => (
-      <span className="block truncate font-semibold" title={order.subOrderCode ?? order.subOrderId}>
-        {order.subOrderCode || order.subOrderId}
-      </span>
+      <ClickToCopy
+        className="font-semibold text-foreground"
+        text={order.subOrderCode || order.subOrderId}
+      />
     ),
   },
-  { id: "orderCode", header: "Mã đơn thuê", width: 185, cell: (order) => order.orderCode || "—" },
+  {
+    id: "orderCode",
+    header: "Mã đơn thuê",
+    minWidth: 170,
+    width: 190,
+    cell: (order) => (
+      <ClickToCopy
+        className="font-medium text-foreground"
+        text={order.orderCode}
+      />
+    ),
+  },
   { id: "status", header: "Trạng thái", width: 170, cell: (order) => <OrderStatusBadge status={order.status} /> },
   { id: "itemCount", header: "Dòng thiết bị", width: 115, cell: (order) => order.itemCount },
   {

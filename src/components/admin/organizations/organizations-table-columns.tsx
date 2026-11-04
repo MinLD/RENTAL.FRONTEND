@@ -1,4 +1,5 @@
 import type { DataTableColumn } from "@/components/data-table";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import { OrganizationStatusBadge } from "@/components/organization/organization-status-badge";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,11 +39,13 @@ export const organizationColumns: DataTableColumn<AdminOrganizationSummary>[] = 
   {
     id: "slug",
     header: "Slug",
+    minWidth: 170,
     width: 190,
     cell: (organization) => (
-      <span className="block truncate text-muted-foreground" title={organization.slug ?? undefined}>
-        {organization.slug || "—"}
-      </span>
+      <ClickToCopy
+        className="font-mono text-xs text-muted-foreground"
+        text={organization.slug}
+      />
     ),
   },
   {

@@ -114,7 +114,7 @@ export function DataTableRowsSkeleton({
                   "sticky top-0 z-20 bg-[#f8fafc]",
                   showActions &&
                     index === totalColumns - 1 &&
-                    "whitespace-nowrap text-right",
+                    "sticky right-0 z-30 whitespace-nowrap text-right",
                 )}
                 key={index}
               >
@@ -183,7 +183,7 @@ export function DataTableBodySkeletonRows({
             </TableCell>
           ))}
           {showActions ? (
-            <TableCell className="whitespace-nowrap text-right">
+            <TableCell className="sticky right-0 z-10 whitespace-nowrap bg-background text-right">
               <div className="inline-flex w-max items-center justify-end">
                 <Skeleton className="size-8" />
               </div>

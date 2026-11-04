@@ -1,5 +1,6 @@
 import type { DataTableColumn } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { AdminReturnRequestSummary } from "@/types/rental-returns";
 import { formatReturnRequestStatus } from "@/utils/rental-returns";
 
@@ -18,21 +19,27 @@ export const adminReturnRequestColumns: DataTableColumn<AdminReturnRequestSummar
   {
     id: "orderCode",
     header: "Mã đơn hàng",
-    width: 170,
+    minWidth: 170,
+    width: 190,
     cell: (row) => (
-      <span className="block truncate font-bold text-foreground" title={row.orderCode ?? row.orderId}>
-        {row.orderCode || row.orderId.slice(0, 8)}
-      </span>
+      <ClickToCopy
+        className="font-bold text-foreground"
+        display={row.orderCode || row.orderId}
+        text={row.orderCode || row.orderId}
+      />
     ),
   },
   {
     id: "returnRequestId",
     header: "Mã yêu cầu",
-    width: 130,
+    minWidth: 140,
+    width: 150,
     cell: (row) => (
-      <span className="font-mono text-xs text-muted-foreground">
-        {row.returnRequestId.slice(0, 8)}
-      </span>
+      <ClickToCopy
+        className="font-mono text-xs text-muted-foreground"
+        display={row.returnRequestId.slice(0, 8)}
+        text={row.returnRequestId}
+      />
     ),
   },
   {

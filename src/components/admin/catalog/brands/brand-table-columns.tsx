@@ -1,6 +1,7 @@
 import type { DataTableColumn } from "@/components/data-table";
 import { AvatarWithSkeleton } from "@/components/ui/avatar-with-skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import type { CatalogBrand } from "@/types/catalog";
 import { getCatalogBrandStatusLabel } from "@/utils/catalog";
 
@@ -21,9 +22,10 @@ export const brandColumns: DataTableColumn<CatalogBrand>[] = [
           <span className="block truncate font-semibold text-foreground">
             {brand.name}
           </span>
-          <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
-            {brand.id}
-          </span>
+          <ClickToCopy
+            className="mt-0.5 font-mono text-xs font-medium text-muted-foreground"
+            text={brand.id}
+          />
         </div>
       </div>
     ),
@@ -34,9 +36,10 @@ export const brandColumns: DataTableColumn<CatalogBrand>[] = [
   },
   {
     cell: (brand) => (
-      <span className="block truncate font-semibold text-foreground">
-        {brand.code || "-"}
-      </span>
+      <ClickToCopy
+        className="font-semibold text-foreground"
+        text={brand.code}
+      />
     ),
     header: "Code",
     id: "code",
@@ -45,9 +48,10 @@ export const brandColumns: DataTableColumn<CatalogBrand>[] = [
   },
   {
     cell: (brand) => (
-      <span className="block truncate font-medium text-muted-foreground">
-        {brand.slug || "-"}
-      </span>
+      <ClickToCopy
+        className="font-mono text-xs text-muted-foreground"
+        text={brand.slug}
+      />
     ),
     header: "Slug",
     id: "slug",

@@ -1,80 +1,139 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { DataTable } from "@/components/data-table";
-import { getAdminRefunds, type AdminRefundFilters } from "@/services/admin-refunds-service";
-import type { AdminRefundQueueItemResponse } from "@/types/rental-returns";
-import { getAdminRefundColumns } from "./admin-refund-columns";
-import { ConfirmRefundDialog } from "./confirm-refund-dialog";
+import { Button } from "@/components/ui/button";
+import { getAdminManualRefundsAction } from "@/services/actions/admin-refunds-actions";
+import type {
+  AdminManualRefundFilters,
+  AdminManualRefundItem,
+} from "@/types/admin-refunds";
+import { formatEquipmentListingRate } from "@/utils/inventory";
+import { formatSupplierOrderDate } from "@/utils/supplier-orders";
+import { adminManualRefundColumns } from "./admin-refund-columns";
+import { AdminRefundDetailDrawer } from "./admin-refund-detail-drawer";
 
 export function AdminRefundsTable() {
-  const [selectedRefundItem, setSelectedRefundItem] = useState<AdminRefundQueueItemResponse | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedRefundItem, setSelectedRefundItem] =
+    useState<AdminManualRefundItem | null>(null);
   const tableRefreshRef = useRef<(() => void) | null>(null);
 
-  const handleOpenConfirm = useCallback((item: AdminRefundQueueItemResponse) => {
+  const handleOpenDetail = useCallback((item: AdminManualRefundItem) => {
     setSelectedRefundItem(item);
-    setIsDialogOpen(true);
   }, []);
-
-  const handleRefreshTable = useCallback(() => {
-    tableRefreshRef.current?.();
-  }, []);
-
-  const columns = useMemo(() => getAdminRefundColumns(handleOpenConfirm), [handleOpenConfirm]);
 
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden bg-background">
-      <DataTable<AdminRefundQueueItemResponse, AdminRefundFilters>
+      <DataTable<AdminManualRefundItem, AdminManualRefundFilters>
+        actionsHeader="Thao tác"
         bodyClassName="min-h-[260px]"
         className="h-full"
-        columns={columns}
+        columns={adminManualRefundColumns}
         csvColumns={[
-          { header: "Mã đơn thuê", value: (item) => item.orderCode ?? item.orderId },
-          { header: "Khách thuê", value: "renterName" },
-          { header: "SĐT khách", value: "renterPhone" },
-          { header: "Thiết bị", value: "equipmentName" },
-          { header: "Loại hoàn", value: "kind" },
-          { header: "Số tiền hoàn", value: "refundAmount" },
-          { header: "Trạng thái", value: "state" },
-          { header: "Thời điểm yêu cầu", value: "requestedAt" },
+          {
+            header: "Mã hoàn tiền",
+            value: (item) => item.requirementRef ?? item.requirementId,
+          },
+          {
+            header: "Trạng thái",
+            value: (item) => {
+              const str = String(item.status || "").toUpperCase();
+              if (str.includes("COMPLETE") || str.includes("SUCCESS") || str === "2") return "Đã hoàn tất";
+              if (str.includes("PENDING") || str.includes("WAITING") || str === "1") return "Chờ hoàn cọc";
+              return str || "—";
+            },
+          },
+          { header: "Mã quyết toán", value: (item) => item.settlementRef ?? "" },
+          { header: "Khách thuê ID", value: (item) => item.renterId ?? "" },
+          {
+            header: "Số tiền hoàn",
+            value: (item) =>
+              formatEquipmentListingRate(item.amount, item.currency || "VND"),
+          },
+          {
+            header: "Ngân hàng nhận",
+            value: (item) => item.recipientBankCode ?? "",
+          },
+          {
+            header: "Số tài khoản nhận",
+            value: (item) => item.recipientAccountNumber ?? "",
+          },
+          {
+            header: "Chủ tài khoản",
+            value: (item) => item.recipientAccountHolderName ?? "",
+          },
+          { header: "Mã chuyển khoản", value: (item) => item.transferCode ?? "" },
+          {
+            header: "Ngày yêu cầu",
+            value: (item) => formatSupplierOrderDate(item.createdAt),
+          },
+          {
+            header: "Ngày hoàn tất",
+            value: (item) => formatSupplierOrderDate(item.completedAt),
+          },
         ]}
-        csvFilename="danh-sach-hoan-tien-admin.csv"
-        description="Quản trị viên (Admin) xem các đơn yêu cầu hoàn tiền để chuyển khoản cho người thuê"
-        emptyState="Chưa có yêu cầu hoàn tiền nào phù hợp."
-        fetchData={getAdminRefunds}
-        getRowId={(item) => item.rentalItemId}
+        csvFilename="danh-sach-hoan-tien-coc.csv"
+        description="Quản trị viên (Admin) xem và quét mã QR chuyển khoản hoàn cọc cho người thuê"
+        emptyState="Chưa có yêu cầu hoàn cọc nào phù hợp."
+        fetchData={getAdminManualRefundsAction}
+        getRowId={(item) => item.requirementId}
+        initialFilterParams={{ status: "ALL" }}
         initialPageSize={20}
+        onRowDoubleClick={handleOpenDetail}
         pageSizeOptions={[10, 20, 50, 100]}
         renderFilters={({ filters, setFilters }) => (
           <select
             aria-label="Lọc trạng thái hoàn tiền"
-            className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-60"
+            className="h-10 w-full cursor-pointer rounded border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-48"
             onChange={(event) => {
               setFilters({
                 ...filters,
-                status: (event.target.value as "PENDING" | "COMPLETED") || undefined,
+                status: event.target.value || undefined,
               });
             }}
-            value={filters.status ?? ""}
+            value={filters.status ?? "ALL"}
           >
-            <option value="">Tất cả trạng thái hoàn tiền</option>
-            <option value="PENDING">Chờ hoàn tiền (PENDING)</option>
-            <option value="COMPLETED">Đã hoàn tất (COMPLETED)</option>
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="PENDING">Chờ hoàn cọc</option>
+            <option value="COMPLETED">Đã hoàn tất</option>
           </select>
         )}
+        renderRowActions={(row) => {
+          const statusStr = String(row.status || "").toUpperCase();
+          const isPending =
+            statusStr.includes("PENDING") ||
+            statusStr.includes("WAITING") ||
+            statusStr === "1";
+
+          return (
+            <div className="flex justify-end gap-1">
+              <Button
+                aria-label={isPending ? "Chuyển tiền hoàn cọc" : "Xem chi tiết hoàn cọc"}
+                className="h-8 px-3 text-xs font-semibold"
+                onClick={() => handleOpenDetail(row)}
+                size="sm"
+                type="button"
+                variant="default"
+              >
+                {isPending ? "Chuyển tiền" : "Chi tiết"}
+              </Button>
+            </div>
+          );
+        }}
         renderToolbarActions={({ refresh }) => {
           tableRefreshRef.current = refresh;
           return null;
         }}
-        title="Yêu cầu hoàn tiền"
+        searchPlaceholder="Tìm theo mã hoàn tiền hoặc từ khóa..."
+        title="Hoàn tiền cọc"
       />
 
-      <ConfirmRefundDialog
+      <AdminRefundDetailDrawer
         item={selectedRefundItem}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSuccess={handleRefreshTable}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRefundItem(null);
+        }}
+        open={Boolean(selectedRefundItem)}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import {
   Truck,
 } from "lucide-react";
 import { FormDrawer } from "@/components/forms/form-drawer";
+import { ClickToCopy } from "@/components/ui/click-to-copy";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -186,9 +187,12 @@ export function AdminOrderDetailDrawer({
               <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-bold text-foreground">
-                      {order.orderCode || order.orderId}
-                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-base font-bold text-foreground">
+                        {order.orderCode || order.orderId}
+                      </h3>
+                      <ClickToCopy text={order.orderCode || order.orderId} display="" />
+                    </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Đặt lúc {formatSupplierOrderDate(order.createdAt)}
                     </p>
@@ -222,7 +226,16 @@ export function AdminOrderDetailDrawer({
                   ) : null}
                   <InfoRow label="Hạn thanh toán" value={formatSupplierOrderDate(order.paymentDeadline)} />
                   <InfoRow label="Người nhận hàng" value={order.delivery?.recipientName} />
-                  <InfoRow label="Số điện thoại" value={order.delivery?.recipientPhone} />
+                  <InfoRow
+                    label="Số điện thoại"
+                    value={
+                      order.delivery?.recipientPhone ? (
+                        <ClickToCopy text={order.delivery.recipientPhone} />
+                      ) : (
+                        "—"
+                      )
+                    }
+                  />
                   <InfoRow label="Địa chỉ công trình" value={order.delivery?.address} />
                   {order.delivery?.note ? (
                     <InfoRow label="Ghi chú giao hàng" value={order.delivery?.note} />
@@ -274,12 +287,14 @@ export function AdminOrderDetailDrawer({
                       <div>
                         <div className="flex items-center gap-2">
                           <Truck className="size-4 text-primary" />
-                          <h4 className="font-bold text-sm text-foreground">
-                            Đơn con: {subOrder.subOrderCode || subOrder.subOrderId}
+                          <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
+                            <span>Đơn con:</span>
+                            <ClickToCopy text={subOrder.subOrderCode || subOrder.subOrderId} />
                           </h4>
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Nhà cung cấp: <span className="font-mono font-medium text-foreground">{subOrder.supplierId}</span>
+                        <p className="mt-0.5 text-xs text-muted-foreground flex items-center gap-1">
+                          <span>Nhà cung cấp:</span>
+                          <ClickToCopy className="font-mono text-xs text-foreground" text={subOrder.supplierId} />
                         </p>
                       </div>
                       <OrderStatusBadge status={subOrder.status} />
