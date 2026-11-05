@@ -99,6 +99,7 @@ function NotificationProviderInner({
     () => new Set(),
   );
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [allMarkedReadAt, setAllMarkedReadAt] = useState<number | null>(null);
 
   const prevUserIdRef = useRef<string | null>(userId);
   const resolvedHubUrl =
@@ -335,11 +336,16 @@ function NotificationProviderInner({
     if (isGuest || isMarkingAllRead) return;
     setIsMarkingAllRead(true);
 
+    const nowTimestamp = Date.now() + 2000;
+    setAllMarkedReadAt((prev) => Math.max(prev ?? 0, nowTimestamp));
+
     // Optimistic updates
     queryClient.setQueryData<UnreadCountResponse>(
       NOTIFICATION_QUERY_KEYS.unreadCount(userId),
       { unreadCount: 0 },
     );
+
+    const now = new Date().toISOString();
     setLocallyReadIds((prev) => {
       const next = new Set(prev);
       const queries = queryClient.getQueriesData<NotificationListResponse>({
@@ -351,7 +357,6 @@ function NotificationProviderInner({
       return next;
     });
 
-    const now = new Date().toISOString();
     queryClient.setQueriesData<NotificationListResponse>(
       { queryKey: NOTIFICATION_QUERY_KEYS.lists(userId) },
       (prev) => {
@@ -368,7 +373,13 @@ function NotificationProviderInner({
     );
 
     try {
-      await markAllNotificationsAsRead();
+      const res = await markAllNotificationsAsRead();
+      if (res?.cutoffUtc || res?.readAt) {
+        const serverCutoff = new Date(res.cutoffUtc || res.readAt).getTime();
+        if (Number.isFinite(serverCutoff)) {
+          setAllMarkedReadAt((prev) => Math.max(prev ?? 0, serverCutoff));
+        }
+      }
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
@@ -398,9 +409,16 @@ function NotificationProviderInner({
 
   const isItemRead = useCallback(
     (item: NotificationListItem) => {
-      return Boolean(item.isRead || locallyReadIds.has(item.id));
+      if (item.isRead || locallyReadIds.has(item.id)) return true;
+      if (allMarkedReadAt !== null) {
+        const itemTime = new Date(item.occurredAt || item.createdAt).getTime();
+        if (Number.isFinite(itemTime) && itemTime <= allMarkedReadAt) {
+          return true;
+        }
+      }
+      return false;
     },
-    [locallyReadIds],
+    [allMarkedReadAt, locallyReadIds],
   );
 
   const value: NotificationContextType = {
