@@ -1,5 +1,5 @@
-import { API_ENDPOINT_PREFIXES } from "@/config/api-endpoints";
-import { ApiError, readResponseJson } from "@/services/api-error";
+import { API_ENDPOINT_PREFIXES } from "../config/api-endpoints.ts";
+import { ApiError, readResponseJson } from "./api-error.ts";
 
 type ApiClientInit = Omit<RequestInit, "body"> & {
   body?: BodyInit | null;

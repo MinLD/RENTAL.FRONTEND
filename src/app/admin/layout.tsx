@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
+import { NotificationProvider } from "@/providers/notification-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
   ADMIN_NAVIGATION,
@@ -22,8 +23,10 @@ export default async function AdminLayout({
   const user = await getCurrentUser();
 
   return (
-    <DashboardShell navigation={navigation} user={user}>
-      {children}
-    </DashboardShell>
+    <NotificationProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>
+      <DashboardShell navigation={navigation} user={user}>
+        {children}
+      </DashboardShell>
+    </NotificationProvider>
   );
 }

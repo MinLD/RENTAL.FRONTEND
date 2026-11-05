@@ -71,12 +71,15 @@ export class ApiError extends Error {
 }
 
 export class ApiInputError extends Error {
+  readonly fieldErrors: Record<string, string[]>;
+
   constructor(
     message: string,
-    readonly fieldErrors: Record<string, string[]> = {},
+    fieldErrors: Record<string, string[]> = {},
   ) {
     super(message);
     this.name = "ApiInputError";
+    this.fieldErrors = fieldErrors;
   }
 }
 

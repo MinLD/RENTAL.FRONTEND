@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
+import { NotificationProvider } from "@/providers/notification-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { filterDashboardNavigationByPermissions } from "@/config/admin-navigation";
 import { OW_NAVIGATION } from "@/config/ow-navigation";
@@ -18,8 +19,10 @@ export default async function OwLayout({ children }: LayoutProps<"/own">) {
   const user = await getCurrentUser();
 
   return (
-    <DashboardShell homeHref="/own" navigation={navigation} user={user}>
-      {children}
-    </DashboardShell>
+    <NotificationProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>
+      <DashboardShell homeHref="/own" navigation={navigation} user={user}>
+        {children}
+      </DashboardShell>
+    </NotificationProvider>
   );
 }
