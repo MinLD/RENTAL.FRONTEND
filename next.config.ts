@@ -34,6 +34,20 @@ const nextConfig: NextConfig = {
       });
     }
 
+    const analyticsApiBaseUrl =
+      process.env.ANALYTICS_API_BASE_URL?.trim() ||
+      process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (analyticsApiBaseUrl) {
+      const target = new URL(analyticsApiBaseUrl);
+      if (!["http:", "https:"].includes(target.protocol) || target.username || target.password || target.search || target.hash) {
+        throw new Error("ANALYTICS_API_BASE_URL must be an HTTP(S) base URL without credentials, query or fragment.");
+      }
+      rewrites.push({
+        source: "/hubs/analytics/:path*",
+        destination: `${analyticsApiBaseUrl.replace(/\/+$/, "")}/hubs/analytics/:path*`,
+      });
+    }
+
     return rewrites;
   },
   async redirects() {
