@@ -41,7 +41,7 @@ function OrderCancelActionContent({ orderId }: { orderId: string }) {
 
   async function confirmCancel() {
     if (mutation.isPending) return;
-    const currentAttempt = attempt ?? {
+    const currentAttempt = {
       idempotencyKey: crypto.randomUUID(),
       reason: reason.trim(),
     };

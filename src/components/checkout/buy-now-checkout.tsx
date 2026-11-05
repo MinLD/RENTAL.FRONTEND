@@ -148,6 +148,11 @@ export function BuyNowCheckout({
         idempotency.current,
       );
       idempotency.current = attempt;
+      console.log(
+        "[Checkout] 🚀 Sending API POST /api/v1/rental/checkout",
+        "\n• Idempotency-Key:", attempt.key,
+        "\n• Request Body:", request,
+      );
       return submitBuyNowCheckout(request, attempt.key);
     },
   });
@@ -255,12 +260,18 @@ export function BuyNowCheckout({
   const invalidateBankAccounts = () =>
     queryClient.invalidateQueries({ queryKey: bankAccountsQueryKey });
   async function submit(values: BuyNowCheckoutValues) {
-    if (mutation.isPending) return;
+    console.log("[Checkout] 👉 Submit button clicked. Form values:", values);
+    if (mutation.isPending) {
+      console.warn("[Checkout] ⚠️ Blocked: mutation.isPending is true");
+      return;
+    }
     if (!profileCompleted) {
+      console.warn("[Checkout] ⚠️ Blocked: profileCompleted is false");
       toast.error("Vui lòng hoàn thiện hồ sơ người thuê trước khi gửi đơn.");
       return;
     }
     if (addressesQuery.isError || !addresses?.some((address) => address.id === values.addressId)) {
+      console.warn("[Checkout] ⚠️ Blocked: addressId is invalid or not in addresses list:", values.addressId);
       setError("addressId", { message: "Vui lòng chọn địa chỉ nhận thiết bị hợp lệ." });
       return;
     }
@@ -268,6 +279,7 @@ export function BuyNowCheckout({
       bankAccountsQuery.isError ||
       !bankAccounts?.some((account) => account.id === values.bankAccountId)
     ) {
+      console.warn("[Checkout] ⚠️ Blocked: bankAccountId is invalid or not in bankAccounts list:", values.bankAccountId);
       setError("bankAccountId", {
         message: "Vui lòng chọn tài khoản nhận hoàn tiền hợp lệ.",
       });
@@ -281,6 +293,7 @@ export function BuyNowCheckout({
       !selectedBank?.accountNumber ||
       !selectedBank?.accountHolderName
     ) {
+      console.warn("[Checkout] ⚠️ Blocked: selectedBank missing required fields:", selectedBank);
       setError("bankAccountId", {
         message: "Tài khoản nhận hoàn tiền đã chọn thiếu thông tin hợp lệ.",
       });
@@ -301,18 +314,22 @@ export function BuyNowCheckout({
       termsAccepted: true,
       ...(termsVersion ? { termsVersion } : {}),
     };
+    console.log("[Checkout] 📦 Prepared request payload:", request);
     try {
       const result = await mutation.mutateAsync(request);
+      console.log("[Checkout] ✅ API response result:", result);
       rememberCheckoutAttempt(
         result.id,
         idempotency.current?.storageKey ?? null,
       );
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
       if (result.kind === "operation") {
         setOperationId(result.id);
       } else {
         router.push(`/orders/${encodeURIComponent(result.id)}`);
       }
     } catch (error) {
+      console.error("[Checkout] ❌ API call failed with error:", error);
       if (error instanceof ApiError && error.status === 409) {
         try {
           const orders = await getRenterOrders("PENDING_PAYMENT");
@@ -465,7 +482,15 @@ export function BuyNowCheckout({
 
         <form
           className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]"
-          onSubmit={(event) => void handleSubmit(submit)(event)}
+          onSubmit={(event) =>
+            void handleSubmit(
+              submit,
+              (formErrors) => {
+                console.warn("[Checkout] ⚠️ Form validation failed (React Hook Form). Errors:", formErrors);
+                toast.error("Vui lòng kiểm tra lại các thông tin bắt buộc hoặc tích chọn đồng ý điều khoản.");
+              },
+            )(event)
+          }
         >
           <div className="space-y-5">
             <section className="rounded-lg border border-border bg-background p-5 shadow-sm sm:p-6">

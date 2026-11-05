@@ -79,17 +79,7 @@ async function mergeGuestCart(userId: string) {
   const promise = withCrossTabMergeLock(userId, async () => {
     const failures: MergeFailure[] = [];
     for (const item of readGuestCart()) {
-      let idempotencyKey = item.mergeIdempotencyKey;
-      if (!idempotencyKey) {
-        idempotencyKey = crypto.randomUUID();
-        writeGuestCart(
-          readGuestCart().map((saved) =>
-            saved.cartItemId === item.cartItemId
-              ? { ...saved, mergeIdempotencyKey: idempotencyKey }
-              : saved,
-          ),
-        );
-      }
+      const idempotencyKey = crypto.randomUUID();
       try {
         await addRentalCartItem(
           {

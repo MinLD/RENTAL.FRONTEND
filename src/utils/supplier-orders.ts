@@ -61,22 +61,14 @@ export function getSupplierDecisionAttempt(
   subOrderId: string,
   action: SupplierDecisionAction,
   request: SupplierRejectRequest | undefined,
-  previous: SupplierDecisionAttempt | null,
+  _previous?: SupplierDecisionAttempt | null,
 ): SupplierDecisionAttempt {
   const signature = JSON.stringify([userId, subOrderId, action, request ?? null]);
-  if (previous?.signature === signature) return previous;
   const storageKey = `dprental:supplier-decision:${userId}:${subOrderId}:${action}`;
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null") as SupplierDecisionAttempt | null;
-    if (saved?.signature === signature && /^[0-9a-f-]{36}$/i.test(saved.key)) {
-      return { signature, key: saved.key, storageKey };
-    }
-  } catch { /* Retries still share the in-memory attempt when storage is unavailable. */ }
-  const attempt = { signature, key: crypto.randomUUID(), storageKey };
-  try { sessionStorage.setItem(storageKey, JSON.stringify(attempt)); } catch { /* Storage may be unavailable. */ }
-  return attempt;
+  try { sessionStorage.removeItem(storageKey); } catch {}
+  return { signature, key: crypto.randomUUID(), storageKey };
 }
 
 export function clearSupplierDecisionAttempt(attempt: SupplierDecisionAttempt) {
-  try { sessionStorage.removeItem(attempt.storageKey); } catch { /* Storage may be unavailable. */ }
+  try { sessionStorage.removeItem(attempt.storageKey); } catch {}
 }
