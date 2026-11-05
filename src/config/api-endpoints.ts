@@ -595,6 +595,29 @@ export const API_ENDPOINTS = {
     media: {
       upload: "/api/v1/media/uploads",
     },
+    notifications: {
+      list: ({
+        page,
+        pageSize,
+        status,
+        category,
+      }: {
+        page?: number;
+        pageSize?: number;
+        status?: string;
+        category?: string;
+      } = {}) =>
+        buildQueryEndpoint("/api/v1/notifications", {
+          page,
+          pageSize,
+          status,
+          category,
+        }),
+      unreadCount: "/api/v1/notifications/unread-count",
+      markAsRead: (id: string) =>
+        "/api/v1/notifications/" + encodeURIComponent(id) + "/read",
+      markAllAsRead: "/api/v1/notifications/read-all",
+    },
   },
   internal: {
     fallbackHost: "localhost:3000",

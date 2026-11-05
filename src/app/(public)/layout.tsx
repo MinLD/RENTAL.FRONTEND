@@ -6,6 +6,7 @@ import { PartnerHistoryRefresh } from "@/components/partner/partner-history-refr
 import { PublicAreaProvider } from "@/providers/public-area-provider";
 import { CartProvider } from "@/providers/cart-provider";
 import { PaymentHubProvider } from "@/providers/payment-hub-provider";
+import { NotificationProvider } from "@/providers/notification-provider";
 import { getStoredPublicArea } from "@/services/public-area-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import { getRentalCartForServer } from "@/services/rental-cart-server-service";
@@ -25,12 +26,17 @@ export default async function SiteLayout({ children }: SiteLayoutProps) {
         userId={user?.id ?? null}
       >
         <PaymentHubProvider enabled={Boolean(user)}>
-          <div className="flex min-h-screen flex-col">
-            <PartnerHistoryRefresh />
-            <Header />
-            <main className="flex flex-1 flex-col">{children}</main>
-            <Footer />
-          </div>
+          <NotificationProvider
+            key={user?.id ?? "guest"}
+            userId={user?.id ?? null}
+          >
+            <div className="flex min-h-screen flex-col">
+              <PartnerHistoryRefresh />
+              <Header />
+              <main className="flex flex-1 flex-col">{children}</main>
+              <Footer />
+            </div>
+          </NotificationProvider>
         </PaymentHubProvider>
       </CartProvider>
     </PublicAreaProvider>
