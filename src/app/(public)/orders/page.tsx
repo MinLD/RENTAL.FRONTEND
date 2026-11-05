@@ -194,13 +194,34 @@ export default async function RenterOrdersPage({
                     const imageSrc = item.thumbnailMediaId
                       ? `/api/v1/media/${encodeURIComponent(item.thumbnailMediaId)}/content`
                       : null;
+                    const listingId = item.equipmentListingId;
+                    const productHref = listingId ? `/products/${encodeURIComponent(listingId)}` : null;
                     return (
                       <div className="flex items-center gap-3 py-4" key={item.rentalItemId}>
-                        <div className="relative size-16 shrink-0 overflow-hidden rounded border border-border bg-background sm:size-20">
-                          <ProductImage compact name={name} role="thumbnail" sizes="80px" src={imageSrc} />
-                        </div>
+                        {productHref ? (
+                          <Link
+                            className="relative size-16 shrink-0 overflow-hidden rounded border border-border bg-background transition-opacity hover:opacity-90 sm:size-20"
+                            href={productHref}
+                            title={`Xem chi tiết ${name}`}
+                          >
+                            <ProductImage compact name={name} role="thumbnail" sizes="80px" src={imageSrc} />
+                          </Link>
+                        ) : (
+                          <div className="relative size-16 shrink-0 overflow-hidden rounded border border-border bg-background sm:size-20">
+                            <ProductImage compact name={name} role="thumbnail" sizes="80px" src={imageSrc} />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1 text-sm">
-                          <p className="line-clamp-2 font-semibold">{name}</p>
+                          {productHref ? (
+                            <Link
+                              className="line-clamp-2 font-semibold transition-colors hover:text-primary"
+                              href={productHref}
+                            >
+                              {name}
+                            </Link>
+                          ) : (
+                            <p className="line-clamp-2 font-semibold">{name}</p>
+                          )}
                           <p className="mt-1 text-xs text-muted-foreground">{item.quantity} thiết bị · {formatRentalPeriod(item.startDate, item.endDate)}</p>
                         </div>
                       </div>

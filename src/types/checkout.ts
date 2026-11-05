@@ -148,12 +148,15 @@ export type RenterOrderDetail = RenterOrderPayment & {
     totalAmount: number;
     items: Array<{
       rentalItemId: string;
+      equipmentListingId?: string | null;
       name: string | null;
       quantity: number;
       startDate: string;
       endDate: string;
       status: string;
       listing: {
+        id?: string | null;
+        equipmentListingId?: string | null;
         thumbnailMediaId: string | null;
         brandName: string | null;
         model: string | null;

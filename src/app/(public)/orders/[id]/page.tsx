@@ -229,24 +229,56 @@ export default async function RenterOrderPage({
                             const imageSrc = item.listing?.thumbnailMediaId
                               ? `/api/v1/media/${encodeURIComponent(item.listing.thumbnailMediaId)}/content`
                               : null;
+                            const listingId =
+                              item.equipmentListingId ||
+                              item.listing?.equipmentListingId ||
+                              item.listing?.id;
+                            const productHref = listingId
+                              ? `/products/${encodeURIComponent(listingId)}`
+                              : null;
                             return (
                               <li
                                 className="flex gap-4 py-4"
                                 key={item.rentalItemId}
                               >
-                                <div className="relative size-20 shrink-0 overflow-hidden rounded border border-border bg-background sm:size-24">
-                                  <ProductImage
-                                    compact
-                                    name={name}
-                                    role="thumbnail"
-                                    sizes="96px"
-                                    src={imageSrc}
-                                  />
-                                </div>
+                                {productHref ? (
+                                  <Link
+                                    className="relative size-20 shrink-0 overflow-hidden rounded border border-border bg-background transition-opacity hover:opacity-90 sm:size-24"
+                                    href={productHref}
+                                    title={`Xem chi tiết ${name}`}
+                                  >
+                                    <ProductImage
+                                      compact
+                                      name={name}
+                                      role="thumbnail"
+                                      sizes="96px"
+                                      src={imageSrc}
+                                    />
+                                  </Link>
+                                ) : (
+                                  <div className="relative size-20 shrink-0 overflow-hidden rounded border border-border bg-background sm:size-24">
+                                    <ProductImage
+                                      compact
+                                      name={name}
+                                      role="thumbnail"
+                                      sizes="96px"
+                                      src={imageSrc}
+                                    />
+                                  </div>
+                                )}
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-start justify-between gap-2">
                                     <div>
-                                      <h3 className="font-semibold">{name}</h3>
+                                      {productHref ? (
+                                        <Link
+                                          className="transition-colors hover:text-primary"
+                                          href={productHref}
+                                        >
+                                          <h3 className="font-semibold">{name}</h3>
+                                        </Link>
+                                      ) : (
+                                        <h3 className="font-semibold">{name}</h3>
+                                      )}
                                       <p className="mt-1 text-sm text-muted-foreground">
                                         {item.listing?.equipmentTypeName
                                           ? `${item.listing.equipmentTypeName} · `
