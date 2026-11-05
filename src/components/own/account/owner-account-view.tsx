@@ -126,7 +126,7 @@ export function OwnerAccountView({
     <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
       {/* Sidebar Overview & Navigation */}
       <aside className="min-w-0 self-start rounded-lg border border-border bg-background p-6 shadow-sm lg:sticky lg:top-6">
-        <div className="flex flex-col items-center text-center pb-5 border-b border-border">
+        <div className="flex flex-col items-center text-center">
           <AvatarWithSkeleton
             alt={orgDisplayName}
             className="size-20 border-2 border-border/80 shadow-inner"
