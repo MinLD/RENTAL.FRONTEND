@@ -13,8 +13,18 @@ env:
   IMAGE_REPOSITORY: ghcr.io/huutawn/dprental-frontend
 
 jobs:
+  validate-deployment:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate deployment scripts and boundaries
+        run: |
+          bash -n scripts/deploy-frontend.sh scripts/deploy-common.sh
+          python3 -m unittest discover -s tests -p 'test_deploy*.py'
+
   publish:
     name: Publish Frontend image
+    needs: validate-deployment
     runs-on: ubuntu-24.04
     environment: dev
     permissions:
@@ -52,54 +62,50 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
 
-  deploy-dev:
-    name: Deploy Frontend to dev VPS
+  deployment-policy:
     needs: publish
     runs-on: ubuntu-24.04
     environment: dev
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Login to GHCR with read permission
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify published image is readable
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          timeout 60s docker manifest inspect "$IMAGE_REPOSITORY:$RELEASE_SHA" >/dev/null
+
+  deploy-dev:
+    name: Deploy Frontend locally on Ubuntu VM
+    needs: [publish, deployment-policy]
+    if: ${{ github.event_name == 'push' && github.repository == 'huutawn/DPRENTAL.FRONTEND' && github.ref == 'refs/heads/develop-ci-cd' && vars.DEV_DEPLOY_ENABLED == 'true' }}
+    runs-on: [self-hosted, linux, x64, dprental-frontend-deploy]
+    environment: dev
+    timeout-minutes: 30
     concurrency:
       group: dprental-dev
       cancel-in-progress: false
     permissions:
       contents: read
       packages: read
-
     steps:
-      - name: Checkout deployment script
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          sparse-checkout: |
-            scripts/deploy-frontend.sh
-          sparse-checkout-cone-mode: false
-
-      - name: Deploy the published revision
+      - name: Deploy approved Frontend revision through root-managed entrypoint
         env:
-          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEV_VPS_SSH_PRIVATE_KEY }}
-          DEPLOY_VPS_KNOWN_HOSTS: ${{ secrets.DEV_VPS_KNOWN_HOSTS }}
-          DEPLOY_VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
-          DEPLOY_VPS_USER: ${{ secrets.DEV_VPS_USER }}
-          DEPLOY_VPS_PORT: ${{ secrets.DEV_VPS_PORT || '22' }}
           RELEASE_SHA: ${{ github.sha }}
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
         run: |
           set -euo pipefail
-          test -n "$DEPLOY_SSH_PRIVATE_KEY"
-          test -n "$DEPLOY_VPS_KNOWN_HOSTS"
-          test -n "$DEPLOY_VPS_HOST"
-          test -n "$DEPLOY_VPS_USER"
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test -n "$GHCR_USERNAME"
           test -n "$GHCR_TOKEN"
-          install -d -m 0700 "$HOME/.ssh"
-          printf '%s\n' "$DEPLOY_VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 0600 "$HOME/.ssh/known_hosts"
-          eval "$(ssh-agent -s)" >/dev/null
-          trap 'ssh-agent -k >/dev/null' EXIT
-          ssh-add - <<< "$DEPLOY_SSH_PRIVATE_KEY" >/dev/null
-          { printf '%s\n' "$GHCR_USERNAME" "$GHCR_TOKEN"; cat scripts/deploy-frontend.sh; } | ssh \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_VPS_PORT" \
-            "$DEPLOY_VPS_USER@$DEPLOY_VPS_HOST" \
-            "bash -c 'IFS= read -r GHCR_USERNAME; IFS= read -r GHCR_TOKEN; export GHCR_USERNAME GHCR_TOKEN; exec bash -s -- \"\$1\"' -- $RELEASE_SHA"
+          printf '%s\n' "$GHCR_USERNAME" "$GHCR_TOKEN" | sudo -n /usr/local/sbin/dprental-deploy frontend "$RELEASE_SHA"

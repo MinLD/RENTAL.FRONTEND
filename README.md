@@ -157,3 +157,16 @@ Module thông báo tích hợp chuông thông báo, badge chưa đọc realtime,
 ### Biến môi trường
 - `NOTIFICATION_API_BASE_URL`: Địa chỉ Gateway/Notification API (phục vụ rewrite Next.js cho hub endpoint, ví dụ `http://localhost:64837`).
 - `NEXT_PUBLIC_NOTIFICATION_HUB_URL`: Đường dẫn hub tương đối cùng domain (mặc định `/api/v1/notifications/hubs/inbox`).
+Workflow `.github/workflows/frontend-dev.yml` chạy khi push `develop-ci-cd`.
+Build/Buildx và publish GHCR chạy trên `ubuntu-24.04`, giữ nguyên Dockerfile,
+build arguments và image `ghcr.io/huutawn/dprental-frontend:<full-git-sha>`.
+Deploy chạy trên runner `[self-hosted, linux, x64, dprental-frontend-deploy]`
+của Ubuntu VM. Hướng dẫn quyền và recovery ở [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Giữ bốn environment secrets `dev`: `NEXT_PUBLIC_FIREBASE_API_KEY`,
+`NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`,
+`NEXT_PUBLIC_FIREBASE_APP_ID`; giữ các build variables SignalR/Payment hiện có.
+Repository variable `DEV_DEPLOY_ENABLED=true` bật deploy, `false` ngừng nhận deploy mới.
+Các SSH/VPS secrets không còn được workflow dùng; chưa xóa secret trên GitHub.
+
+Kiểm tra deployment: `python3 -m unittest discover -s tests -p 'test_deploy*.py'`.
