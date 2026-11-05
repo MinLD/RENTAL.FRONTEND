@@ -6,7 +6,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     const rewrites = [];
 
-    const paymentApiBaseUrl = process.env.PAYMENT_API_BASE_URL?.trim();
+    const paymentApiBaseUrl =
+      process.env.PAYMENT_API_BASE_URL?.trim() ||
+      process.env.NEXT_PUBLIC_API_URL?.trim();
     if (paymentApiBaseUrl) {
       const target = new URL(paymentApiBaseUrl);
       if (!["http:", "https:"].includes(target.protocol) || target.username || target.password || target.search || target.hash) {
@@ -18,7 +20,9 @@ const nextConfig: NextConfig = {
       });
     }
 
-    const notificationApiBaseUrl = process.env.NOTIFICATION_API_BASE_URL?.trim();
+    const notificationApiBaseUrl =
+      process.env.NOTIFICATION_API_BASE_URL?.trim() ||
+      process.env.NEXT_PUBLIC_API_URL?.trim();
     if (notificationApiBaseUrl) {
       const target = new URL(notificationApiBaseUrl);
       if (!["http:", "https:"].includes(target.protocol) || target.username || target.password || target.search || target.hash) {
