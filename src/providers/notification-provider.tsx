@@ -29,6 +29,11 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "@/services/notification-service";
+import type {
+  NotificationListItem,
+  NotificationListResponse,
+  UnreadCountResponse,
+} from "@/types/notifications";
 
 import { NOTIFICATION_QUERY_KEYS } from "@/services/notification-keys";
 export { NOTIFICATION_QUERY_KEYS };
@@ -48,6 +53,8 @@ export type NotificationContextType = {
   isMarkingAllRead: boolean;
   hasUnreadCountError?: boolean;
   isUnreadCountLoading?: boolean;
+  initialNotifications?: NotificationListResponse | null;
+  isItemRead: (item: NotificationListItem) => boolean;
 };
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -61,6 +68,8 @@ const NotificationContext = createContext<NotificationContextType>({
   isMarkingAllRead: false,
   hasUnreadCountError: false,
   isUnreadCountLoading: false,
+  initialNotifications: null,
+  isItemRead: (item) => item.isRead,
 });
 
 export type NotificationProviderProps = {
@@ -68,6 +77,8 @@ export type NotificationProviderProps = {
   userId?: string | null;
   hubUrl?: string;
   enabled?: boolean;
+  initialUnreadCount?: number | null;
+  initialNotifications?: NotificationListResponse | null;
 };
 
 function NotificationProviderInner({
@@ -75,11 +86,16 @@ function NotificationProviderInner({
   userId = null,
   hubUrl,
   enabled = true,
+  initialUnreadCount = null,
+  initialNotifications = null,
 }: NotificationProviderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [markingReadIds, setMarkingReadIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [locallyReadIds, setLocallyReadIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
@@ -108,11 +124,16 @@ function NotificationProviderInner({
     queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
     queryFn: ({ signal }) => getUnreadCount(signal),
     enabled: !isGuest,
+    initialData:
+      initialUnreadCount !== null && initialUnreadCount !== undefined
+        ? { unreadCount: initialUnreadCount }
+        : undefined,
     staleTime: 10_000,
   });
 
-  const unreadCount = isGuest ? 0 : (unreadCountQuery.data?.unreadCount ?? 0);
-
+  const unreadCount = isGuest
+    ? 0
+    : (unreadCountQuery.data?.unreadCount ?? initialUnreadCount ?? 0);
   const reconcile = useCallback(async () => {
     if (isGuest) return;
     await Promise.all([
@@ -123,10 +144,6 @@ function NotificationProviderInner({
         queryKey: NOTIFICATION_QUERY_KEYS.lists(userId),
       }),
     ]);
-    queryClient.resetQueries({
-      queryKey: NOTIFICATION_QUERY_KEYS.lists(userId),
-      exact: false,
-    });
   }, [isGuest, queryClient, userId]);
 
   // Realtime SignalR lifecycle
@@ -234,6 +251,9 @@ function NotificationProviderInner({
         void queryClient.invalidateQueries({
           queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: NOTIFICATION_QUERY_KEYS.lists(userId),
+        });
       }
     }
 
@@ -259,6 +279,31 @@ function NotificationProviderInner({
     async (id: string) => {
       if (isGuest || markingReadIds.has(id)) return;
       setMarkingReadIds((prev) => new Set(prev).add(id));
+      setLocallyReadIds((prev) => new Set(prev).add(id));
+      // Optimistic updates
+      queryClient.setQueryData<UnreadCountResponse>(
+        NOTIFICATION_QUERY_KEYS.unreadCount(userId),
+        (prev) => ({
+          unreadCount: Math.max(0, (prev?.unreadCount ?? 1) - 1),
+        }),
+      );
+
+      const now = new Date().toISOString();
+      queryClient.setQueriesData<NotificationListResponse>(
+        { queryKey: NOTIFICATION_QUERY_KEYS.lists(userId) },
+        (prev) => {
+          if (!prev?.items) return prev;
+          return {
+            ...prev,
+            items: prev.items.map((item) =>
+              item.id === id
+                ? { ...item, isRead: true, readAt: item.readAt ?? now }
+                : item,
+            ),
+          };
+        },
+      );
+
       try {
         await markNotificationAsRead(id);
         await Promise.all([
@@ -272,7 +317,7 @@ function NotificationProviderInner({
       } catch (error) {
         // Refetch to reconcile in case of partial or failed state
         void queryClient.invalidateQueries({
-          queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
+          queryKey: NOTIFICATION_QUERY_KEYS.all(userId),
         });
         throw error;
       } finally {
@@ -289,6 +334,39 @@ function NotificationProviderInner({
   const markAllAsRead = useCallback(async () => {
     if (isGuest || isMarkingAllRead) return;
     setIsMarkingAllRead(true);
+
+    // Optimistic updates
+    queryClient.setQueryData<UnreadCountResponse>(
+      NOTIFICATION_QUERY_KEYS.unreadCount(userId),
+      { unreadCount: 0 },
+    );
+    setLocallyReadIds((prev) => {
+      const next = new Set(prev);
+      const queries = queryClient.getQueriesData<NotificationListResponse>({
+        queryKey: NOTIFICATION_QUERY_KEYS.lists(userId),
+      });
+      for (const [, qData] of queries) {
+        qData?.items?.forEach((it) => next.add(it.id));
+      }
+      return next;
+    });
+
+    const now = new Date().toISOString();
+    queryClient.setQueriesData<NotificationListResponse>(
+      { queryKey: NOTIFICATION_QUERY_KEYS.lists(userId) },
+      (prev) => {
+        if (!prev?.items) return prev;
+        return {
+          ...prev,
+          items: prev.items.map((item) => ({
+            ...item,
+            isRead: true,
+            readAt: item.readAt ?? now,
+          })),
+        };
+      },
+    );
+
     try {
       await markAllNotificationsAsRead();
       await Promise.all([
@@ -301,14 +379,13 @@ function NotificationProviderInner({
       ]);
     } catch (error) {
       void queryClient.invalidateQueries({
-        queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
+        queryKey: NOTIFICATION_QUERY_KEYS.all(userId),
       });
       throw error;
     } finally {
       setIsMarkingAllRead(false);
     }
   }, [isGuest, isMarkingAllRead, queryClient, userId]);
-
   const refetchUnreadCount = useCallback(async () => {
     if (isGuest) return;
     await unreadCountQuery.refetch();
@@ -317,6 +394,13 @@ function NotificationProviderInner({
   const isMarkingRead = useCallback(
     (id: string) => markingReadIds.has(id),
     [markingReadIds],
+  );
+
+  const isItemRead = useCallback(
+    (item: NotificationListItem) => {
+      return Boolean(item.isRead || locallyReadIds.has(item.id));
+    },
+    [locallyReadIds],
   );
 
   const value: NotificationContextType = {
@@ -330,8 +414,9 @@ function NotificationProviderInner({
     isMarkingAllRead,
     hasUnreadCountError: unreadCountQuery.isError,
     isUnreadCountLoading: unreadCountQuery.isLoading,
+    initialNotifications,
+    isItemRead,
   };
-
   return (
     <NotificationContext.Provider value={value}>
       {children}

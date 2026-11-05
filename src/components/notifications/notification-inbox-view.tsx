@@ -26,11 +26,13 @@ import { getNotifications } from "@/services/notification-service";
 import type {
   NotificationCategoryFilter,
   NotificationListItem,
+  NotificationListResponse,
   NotificationSeverity,
   NotificationStatusFilter,
 } from "@/types/notifications";
 import { cn } from "@/utils/cn";
 import {
+  formatNotificationBody,
   formatVietnameseNotificationTime,
   NOTIFICATION_CATEGORY_LABELS,
   NOTIFICATION_SEVERITY_LABELS,
@@ -56,7 +58,11 @@ const STATUS_OPTIONS: Array<{
   { value: "unread", label: "Chưa đọc" },
 ];
 
-function SeverityBadge({ severity }: { severity: NotificationSeverity | string }) {
+function SeverityBadge({
+  severity,
+}: {
+  severity: NotificationSeverity | string;
+}) {
   const norm = severity?.toUpperCase();
   switch (norm) {
     case "SUCCESS":
@@ -97,9 +103,11 @@ function NotificationInboxItem({
   isMarkingRead,
 }: {
   item: NotificationListItem;
-  onItemClick: (item: NotificationListItem, actionUrl?: string) => void;
+  onItemClick: (item: NotificationListItem) => void;
   isMarkingRead: boolean;
 }) {
+  const { isItemRead } = useNotification();
+  const isRead = isItemRead(item);
   const hasSafeAction = Boolean(
     item.isActionable && item.actionUrl && isSafeRelativeUrl(item.actionUrl),
   );
@@ -111,15 +119,16 @@ function NotificationInboxItem({
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between gap-3 rounded-lg border border-border p-4 transition-all sm:flex-row sm:items-start",
-        !item.isRead ? "bg-primary/[0.03] border-primary/30" : "bg-card hover:border-border/80",
-        isNavigable && "cursor-pointer hover:shadow-xs",
+        "group relative flex flex-col justify-between gap-3 rounded-xl border p-5 transition-all cursor-pointer hover:shadow-xs",
+        !isRead
+          ? "bg-primary/[0.03] border-primary/30"
+          : "bg-card border-border hover:border-border/80",
       )}
       onClick={() => onItemClick(item)}
-      role={isNavigable ? "button" : "article"}
-      tabIndex={isNavigable ? 0 : undefined}
+      role="button"
+      tabIndex={0}
       onKeyDown={(e) => {
-        if (isNavigable && (e.key === "Enter" || e.key === " ")) {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onItemClick(item);
         }
@@ -134,7 +143,7 @@ function NotificationInboxItem({
           <span className="text-xs text-muted-foreground">
             {formatVietnameseNotificationTime(item.occurredAt)}
           </span>
-          {!item.isRead && (
+          {!isRead && (
             <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
               Chưa đọc
             </span>
@@ -144,41 +153,46 @@ function NotificationInboxItem({
         <h3
           className={cn(
             "text-base leading-snug",
-            !item.isRead ? "font-bold text-foreground" : "font-semibold text-foreground/90",
+            !isRead
+              ? "font-bold text-foreground"
+              : "font-semibold text-foreground/90",
           )}
         >
           {item.title}
         </h3>
 
         <p className="text-sm leading-relaxed text-muted-foreground">
-          {item.body}
+          {formatNotificationBody(item.body)}
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 sm:self-center">
-        {hasSafeAction && (
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 gap-1.5 text-xs font-medium cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onItemClick(item, item.actionUrl ?? undefined);
-            }}
-          >
-            <span>Thực hiện</span>
-            <ExternalLink className="size-3" aria-hidden="true" />
-          </Button>
-        )}
-        {isMarkingRead && (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" />
-        )}
-      </div>
+      {isMarkingRead && (
+        <div className="flex shrink-0 items-center gap-2 sm:self-center">
+          <Loader2
+            className="size-4 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: string }) {
+type NotificationInboxContentProps = {
+  basePath?: string;
+  initialData?: NotificationListResponse | null;
+  initialParams?: {
+    page?: number;
+    status?: NotificationStatusFilter;
+    category?: string;
+  };
+};
+
+function NotificationInboxContent({
+  basePath = "/notifications",
+  initialData,
+  initialParams,
+}: NotificationInboxContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -193,7 +207,8 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
   } = useNotification();
 
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const statusParam = (searchParams.get("status") ?? "all") as NotificationStatusFilter;
+  const statusParam = (searchParams.get("status") ??
+    "all") as NotificationStatusFilter;
   const currentStatus: NotificationStatusFilter =
     statusParam === "unread" ? "unread" : "all";
   const categoryParam = searchParams.get("category") ?? "all";
@@ -234,33 +249,44 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
       }
 
       const qs = params.toString();
-      router.push(qs ? `${pathname || basePath}?${qs}` : (pathname || basePath));
+      router.push(qs ? `${pathname || basePath}?${qs}` : pathname || basePath);
     },
     [basePath, pathname, router, searchParams],
   );
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: NOTIFICATION_QUERY_KEYS.list(userId, {
-      page,
-      pageSize: 20,
-      status: currentStatus === "all" ? undefined : currentStatus,
-      category: currentCategory === "all" ? undefined : currentCategory,
-    }),
-    queryFn: ({ signal }) =>
-      getNotifications(
-        {
-          page,
-          pageSize: 20,
-          status: currentStatus === "all" ? undefined : currentStatus,
-          category: currentCategory === "all" ? undefined : currentCategory,
-        },
-        signal,
-      ),
-    enabled: Boolean(userId),
-    staleTime: 5_000,
-  });
+  const isMatchInitial =
+    initialData &&
+    page === (initialParams?.page ?? 1) &&
+    currentStatus === (initialParams?.status ?? "all") &&
+    currentCategory === (initialParams?.category ?? "all");
+  const { data, isLoading, isError, refetch } =
+    useQuery<NotificationListResponse>({
+      queryKey: NOTIFICATION_QUERY_KEYS.list(userId, {
+        page,
+        pageSize: 20,
+        status: currentStatus === "all" ? undefined : currentStatus,
+        category: currentCategory === "all" ? undefined : currentCategory,
+      }),
+      queryFn: ({ signal }) =>
+        getNotifications(
+          {
+            page,
+            pageSize: 20,
+            status: currentStatus === "all" ? undefined : currentStatus,
+            category: currentCategory === "all" ? undefined : currentCategory,
+          },
+          signal,
+        ),
+      enabled: Boolean(userId),
+      initialData: isMatchInitial ? initialData : undefined,
+      initialDataUpdatedAt: 0,
+      staleTime: 5_000,
+    });
 
-  const handleItemClick = async (item: NotificationListItem, explicitUrl?: string) => {
+  const handleItemClick = async (
+    item: NotificationListItem,
+    explicitUrl?: string,
+  ) => {
     const url =
       explicitUrl ??
       (item.isActionable && item.actionUrl && isSafeRelativeUrl(item.actionUrl)
@@ -294,7 +320,7 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Hộp thư thông báo
@@ -305,12 +331,11 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            variant="secondary"
+          <button
+            type="button"
             disabled={unreadCount === 0 || isMarkingAllRead}
             onClick={() => void handleMarkAllRead()}
-            className="gap-1.5 cursor-pointer"
+            className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-foreground hover:text-primary transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isMarkingAllRead ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -318,14 +343,14 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
               <CheckCheck className="size-4 text-primary" aria-hidden="true" />
             )}
             <span>Đánh dấu tất cả đã đọc</span>
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3.5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Status tabs */}
-        <div className="flex items-center gap-1.5 rounded-md bg-muted p-1">
+        <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted p-1">
           {STATUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -371,7 +396,11 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
       {/* Content list */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="space-y-3" aria-busy="true" aria-label="Đang tải thông báo">
+          <div
+            className="space-y-3"
+            aria-busy="true"
+            aria-label="Đang tải thông báo"
+          >
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
@@ -429,16 +458,6 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
                 ? "Không có thông báo nào phù hợp với bộ lọc hiện tại."
                 : "Hộp thư thông báo của bạn đang trống."}
             </p>
-            {(currentStatus !== "all" || currentCategory !== "all") && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="mt-4"
-                onClick={() => updateFilters({ status: "all", category: "all" })}
-              >
-                Đặt lại bộ lọc
-              </Button>
-            )}
           </div>
         )}
       </div>
@@ -477,7 +496,9 @@ function NotificationInboxContent({ basePath = "/notifications" }: { basePath?: 
   );
 }
 
-export function NotificationInboxView({ basePath = "/notifications" }: { basePath?: string }) {
+export type NotificationInboxViewProps = NotificationInboxContentProps;
+
+export function NotificationInboxView(props: NotificationInboxViewProps) {
   return (
     <Suspense
       fallback={
@@ -486,7 +507,7 @@ export function NotificationInboxView({ basePath = "/notifications" }: { basePat
         </div>
       }
     >
-      <NotificationInboxContent basePath={basePath} />
+      <NotificationInboxContent {...props} />
     </Suspense>
   );
 }

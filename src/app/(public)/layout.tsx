@@ -10,6 +10,10 @@ import { NotificationProvider } from "@/providers/notification-provider";
 import { getStoredPublicArea } from "@/services/public-area-server-service";
 import { getCurrentUser } from "@/services/session-service";
 import { getRentalCartForServer } from "@/services/rental-cart-server-service";
+import {
+  getInitialNotificationsForServer,
+  getUnreadCountForServer,
+} from "@/services/notification-server-service";
 
 type SiteLayoutProps = Readonly<{
   children: ReactNode;
@@ -17,7 +21,11 @@ type SiteLayoutProps = Readonly<{
 
 export default async function SiteLayout({ children }: SiteLayoutProps) {
   const [initialArea, user] = await Promise.all([getStoredPublicArea(), getCurrentUser()]);
-  const initialCart = user ? await getRentalCartForServer() : undefined;
+  const [initialCart, initialUnreadCount, initialNotifications] = await Promise.all([
+    user ? getRentalCartForServer() : undefined,
+    user ? getUnreadCountForServer() : null,
+    user ? getInitialNotificationsForServer() : null,
+  ]);
   return (
     <PublicAreaProvider initialArea={initialArea}>
       <CartProvider
@@ -29,6 +37,8 @@ export default async function SiteLayout({ children }: SiteLayoutProps) {
           <NotificationProvider
             key={user?.id ?? "guest"}
             userId={user?.id ?? null}
+            initialUnreadCount={initialUnreadCount}
+            initialNotifications={initialNotifications}
           >
             <div className="flex min-h-screen flex-col">
               <PartnerHistoryRefresh />

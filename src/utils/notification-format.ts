@@ -43,3 +43,12 @@ export const NOTIFICATION_SEVERITY_LABELS: Record<string, string> = {
   WARNING: "Cảnh báo",
   ERROR: "Lỗi",
 };
+
+export function formatNotificationBody(body?: string | null): string {
+  if (!body) return "";
+  return body
+    .replace(/\s*trước\s*\{paymentDeadline:[^}]+\}/gi, "")
+    .replace(/\{[a-zA-Z0-9_]+(?::[^}]+)?\}/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}

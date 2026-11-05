@@ -9,6 +9,10 @@ import {
 import { AUTH_COOKIE_NAMES } from "@/services/auth-cookie";
 import { getJwtPermissions } from "@/services/auth-token";
 import { getCurrentUser } from "@/services/session-service";
+import {
+  getInitialNotificationsForServer,
+  getUnreadCountForServer,
+} from "@/services/notification-server-service";
 
 export default async function AdminLayout({
   children,
@@ -20,10 +24,19 @@ export default async function AdminLayout({
     ADMIN_NAVIGATION,
     permissions,
   );
-  const user = await getCurrentUser();
+  const [user, initialUnreadCount, initialNotifications] = await Promise.all([
+    getCurrentUser(),
+    getUnreadCountForServer(),
+    getInitialNotificationsForServer(),
+  ]);
 
   return (
-    <NotificationProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>
+    <NotificationProvider
+      key={user?.id ?? "guest"}
+      userId={user?.id ?? null}
+      initialUnreadCount={initialUnreadCount}
+      initialNotifications={initialNotifications}
+    >
       <DashboardShell navigation={navigation} user={user}>
         {children}
       </DashboardShell>

@@ -14,17 +14,22 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Popover } from "radix-ui";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   NOTIFICATION_QUERY_KEYS,
   useNotification,
 } from "@/providers/notification-provider";
 import { getNotifications } from "@/services/notification-service";
-import type { NotificationListItem } from "@/types/notifications";
+import type {
+  NotificationListItem,
+  NotificationListResponse,
+} from "@/types/notifications";
 import { cn } from "@/utils/cn";
 import {
+  formatNotificationBody,
   formatVietnameseNotificationTime,
   NOTIFICATION_CATEGORY_LABELS,
 } from "@/utils/notification-format";
@@ -67,6 +72,8 @@ export function NotificationDropdown({
     markAllAsRead,
     isMarkingAllRead,
     hasUnreadCountError,
+    initialNotifications,
+    isItemRead,
   } = useNotification();
 
   const inboxHref = pathname?.startsWith("/admin")
@@ -75,19 +82,31 @@ export function NotificationDropdown({
       ? "/own/notifications"
       : "/notifications";
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery<NotificationListResponse>({
     queryKey: NOTIFICATION_QUERY_KEYS.list(userId, { page: 1, pageSize: 10 }),
     queryFn: ({ signal }) => getNotifications({ page: 1, pageSize: 10 }, signal),
-    enabled: isAuthenticated && isOpen,
+    enabled: isAuthenticated && Boolean(userId),
+    initialData: initialNotifications ?? undefined,
+    initialDataUpdatedAt: 0,
     staleTime: 5_000,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      void refetch();
+    }
+  }, [isOpen, refetch]);
 
   const showBadge = isAuthenticated && !hasUnreadCountError && unreadCount > 0;
   const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
 
-  const handleItemClick = (item: NotificationListItem) => {
-    if (!item.isRead) {
-      void markAsRead(item.id).catch(() => {});
+  const handleItemClick = async (item: NotificationListItem) => {
+    if (!isItemRead(item)) {
+      try {
+        await markAsRead(item.id);
+      } catch {
+        // Continue navigation
+      }
     }
 
     const targetUrl =
@@ -121,8 +140,8 @@ export function NotificationDropdown({
           <Bell aria-hidden="true" className={cn("size-5", iconClassName)} />
           {showBadge && (
             <span
-              className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
               aria-hidden="true"
+              className="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 text-primary-foreground"
             >
               {badgeText}
             </span>
@@ -181,15 +200,25 @@ export function NotificationDropdown({
           <div className="flex-1 overflow-y-auto">
             {isAuthenticated ? (
               isLoading ? (
-                <div className="space-y-3 p-4" aria-busy="true" aria-label="Đang tải thông báo">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="flex animate-pulse flex-col gap-2 rounded-md border border-border/50 p-3"
-                    >
-                      <div className="h-4 w-3/4 rounded bg-muted" />
-                      <div className="h-3 w-full rounded bg-muted/70" />
-                      <div className="h-3 w-1/3 rounded bg-muted/50" />
+                <div
+                  className="divide-y divide-border/60"
+                  aria-busy="true"
+                  aria-label="Đang tải thông báo"
+                >
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-start gap-3 p-3.5">
+                      <div className="mt-0.5">
+                        <Skeleton className="size-4 rounded-full" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <Skeleton className="h-3 w-16" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
+                        <Skeleton className="h-4 w-4/5" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-2/3" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -211,6 +240,7 @@ export function NotificationDropdown({
               ) : data?.items?.length ? (
                 <ul className="divide-y divide-border/60" role="list">
                   {data.items.map((item) => {
+                    const isRead = isItemRead(item);
                     const isClickable = Boolean(
                       (item.isActionable && item.actionUrl && isSafeRelativeUrl(item.actionUrl)) ||
                         (item.deepLinkUrl && isSafeRelativeUrl(item.deepLinkUrl)),
@@ -230,7 +260,7 @@ export function NotificationDropdown({
                           }}
                           className={cn(
                             "flex cursor-pointer items-start gap-3 p-3.5 transition-colors hover:bg-muted/40 text-left",
-                            !item.isRead && "bg-primary/5",
+                            !isRead && "bg-primary/5",
                           )}
                         >
                           <div className="mt-0.5">
@@ -248,16 +278,16 @@ export function NotificationDropdown({
                             <p
                               className={cn(
                                 "mt-0.5 text-sm leading-snug line-clamp-1",
-                                !item.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90",
+                                !isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90",
                               )}
                             >
                               {item.title}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                              {item.body}
+                              {formatNotificationBody(item.body)}
                             </p>
                           </div>
-                          {!item.isRead && (
+                          {!isRead && (
                             <span
                               className="mt-2 size-2 shrink-0 rounded-full bg-primary"
                               title="Chưa đọc"
