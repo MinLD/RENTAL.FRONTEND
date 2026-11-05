@@ -33,6 +33,7 @@ import type {
 import { cn } from "@/utils/cn";
 import {
   formatNotificationBody,
+  formatNotificationTitle,
   formatVietnameseNotificationTime,
   NOTIFICATION_CATEGORY_LABELS,
   NOTIFICATION_SEVERITY_LABELS,
@@ -158,7 +159,7 @@ function NotificationInboxItem({
               : "font-semibold text-foreground/90",
           )}
         >
-          {item.title}
+          {formatNotificationTitle(item.title)}
         </h3>
 
         <p className="text-sm leading-relaxed text-muted-foreground">

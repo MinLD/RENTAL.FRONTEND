@@ -30,6 +30,7 @@ import type {
 import { cn } from "@/utils/cn";
 import {
   formatNotificationBody,
+  formatNotificationTitle,
   formatVietnameseNotificationTime,
   NOTIFICATION_CATEGORY_LABELS,
 } from "@/utils/notification-format";
@@ -281,7 +282,7 @@ export function NotificationDropdown({
                                 !isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90",
                               )}
                             >
-                              {item.title}
+                              {formatNotificationTitle(item.title)}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                               {formatNotificationBody(item.body)}

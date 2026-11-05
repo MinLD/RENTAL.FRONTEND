@@ -43,12 +43,47 @@ export const NOTIFICATION_SEVERITY_LABELS: Record<string, string> = {
   WARNING: "Cảnh báo",
   ERROR: "Lỗi",
 };
+const GUID_PATTERN =
+  /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g;
+
+export const NOTIFICATION_REASON_LABELS: Record<string, string> = {
+  RENTER_CANCELLED: "Người thuê yêu cầu hủy",
+  CUSTOMER_CANCELLED: "Khách hàng yêu cầu hủy",
+  PAYMENT_EXPIRED: "Quá hạn thanh toán",
+  ORDER_EXPIRED: "Đơn hàng đã hết hạn",
+  SUPPLIER_REJECTED: "Nhà cung cấp từ chối",
+  SUPPLIER_TIMEOUT: "Nhà cung cấp quá hạn xác nhận",
+  SYSTEM_CANCELLED: "Hệ thống tự động hủy",
+  ADMIN_CANCELLED: "Quản trị viên hủy",
+};
+
+export function formatNotificationTitle(title?: string | null): string {
+  if (!title) return "";
+  return title.replace(GUID_PATTERN, (match) => `${match.slice(0, 8)}...`);
+}
 
 export function formatNotificationBody(body?: string | null): string {
   if (!body) return "";
-  return body
+  let text = body;
+
+  // Clean unparsed backend template placeholders
+  text = text
     .replace(/\s*trước\s*\{paymentDeadline:[^}]+\}/gi, "")
-    .replace(/\{[a-zA-Z0-9_]+(?::[^}]+)?\}/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+    .replace(/\{[a-zA-Z0-9_]+(?::[^}]+)?\}/g, "");
+
+  // Remove redundant backend enum tags in parentheses like (PAYMENT_EXPIRED)
+  text = text.replace(
+    /\s*\((?:PAYMENT_EXPIRED|ORDER_EXPIRED|RENTER_CANCELLED|SUPPLIER_TIMEOUT)\)/gi,
+    "",
+  );
+
+  // Translate reason enum codes into Vietnamese
+  for (const [code, label] of Object.entries(NOTIFICATION_REASON_LABELS)) {
+    text = text.replace(new RegExp(`\\b${code}\\b`, "g"), label);
+  }
+
+  // Shorten raw database GUIDs
+  text = text.replace(GUID_PATTERN, (match) => `${match.slice(0, 8)}...`);
+
+  return text.replace(/\s{2,}/g, " ").trim();
 }
