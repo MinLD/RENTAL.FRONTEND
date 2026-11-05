@@ -135,3 +135,25 @@ triển khai sau khi merge PR, có thể tiếp tục yêu cầu PR và chặn p
 cho nhánh `develop-ci-cd`.
 
 Kiểm tra script deploy tại chỗ bằng `bash tests/deploy-frontend.sh`.
+
+## Module Thông báo (Notification Integration)
+
+Module thông báo tích hợp chuông thông báo, badge chưa đọc realtime, và trang hộp thư cá nhân cho mọi đối tượng người dùng (Khách thuê, Nhà cung cấp, Quản trị viên).
+
+### Tính năng
+- **Chuông thông báo & Dropdown**: Hiển thị badge số lượng chưa đọc (tối đa 99+), tải 10 thông báo mới nhất khi mở, đánh dấu đã đọc từng mục hoặc tất cả.
+- **Hộp thư cá nhân**:
+  - `/notifications`: Hộp thư dành cho khách thuê (yêu cầu đăng nhập, tự động chuyển hướng kèm `returnTo`).
+  - `/own/notifications`: Hộp thư dành cho nhà cung cấp trong dashboard NCC.
+  - `/admin/notifications`: Hộp thư dành cho quản trị viên trong dashboard Admin.
+  - Bộ lọc: "Tất cả / Chưa đọc", lọc theo danh mục (`ORDER`, `PAYMENT`, `HANDOVER`, `RETURN`), phân trang 20 mục lưu trạng thái trên URL searchParams.
+  - CTA an toàn: Chỉ render CTA nội bộ hợp lệ (`/orders/{orderId}`, `/own/orders`), ngăn chặn URL độc hại / external.
+- **Realtime SignalR Hub**:
+  - Hub endpoint: `/api/v1/notifications/hubs/inbox`.
+  - Sự kiện: `NotificationInboxChanged` đóng vai trò tín hiệu vô hiệu hóa cache (invalidation signal), gom dồn các sự kiện trong 250ms để tối ưu số lần gọi API REST.
+  - Xác thực qua HttpOnly cookie với `withCredentials: true`, hỗ trợ WebSockets và Long Polling.
+  - Cơ chế tự phục hồi: Tự động reconcile qua REST khi kết nối lại, fallback polling mỗi 30s khi mất kết nối trong tab hiển thị.
+
+### Biến môi trường
+- `NOTIFICATION_API_BASE_URL`: Địa chỉ Gateway/Notification API (phục vụ rewrite Next.js cho hub endpoint, ví dụ `http://localhost:64837`).
+- `NEXT_PUBLIC_NOTIFICATION_HUB_URL`: Đường dẫn hub tương đối cùng domain (mặc định `/api/v1/notifications/hubs/inbox`).
