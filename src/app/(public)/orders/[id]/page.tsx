@@ -381,6 +381,8 @@ export default async function RenterOrderPage({
                                     </span>
                                   </div>
                                   <RenterItemActions
+                                    orderId={order.orderId}
+                                    listingId={listingId ?? undefined}
                                     currency={currency}
                                     handover={item.handover}
                                     itemId={item.rentalItemId}

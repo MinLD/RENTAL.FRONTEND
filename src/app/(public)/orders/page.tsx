@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/empty-state";
 import { NoResultsIllustration } from "@/components/illustrations/no-results-illustration";
 import { OrderCancelAction } from "@/components/orders/order-cancel-action";
 import { OrderPaymentUpdates } from "@/components/orders/order-payment-updates";
+import { OrderReviewButton } from "@/components/orders/order-review-button";
 import { Container } from "@/components/layout/container";
 import { ProductImage } from "@/components/products/product-image";
 import { Button } from "@/components/ui/button";
@@ -224,6 +225,16 @@ export default async function RenterOrdersPage({
                           )}
                           <p className="mt-1 text-xs text-muted-foreground">{item.quantity} thiết bị · {formatRentalPeriod(item.startDate, item.endDate)}</p>
                         </div>
+                        {order.status === "COMPLETED" && (
+                          <div className="shrink-0">
+                            <OrderReviewButton
+                              orderId={order.orderId}
+                              itemId={item.rentalItemId}
+                              itemName={name}
+                              listingId={listingId ?? undefined}
+                            />
+                          </div>
+                        )}
                       </div>
                     );
                   }) : (

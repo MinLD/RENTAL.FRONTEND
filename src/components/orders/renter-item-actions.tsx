@@ -18,6 +18,7 @@ import { AcknowledgeReceiptDialog } from "./acknowledge-receipt-dialog";
 import { CancelNotDeliveredDialog } from "./cancel-not-delivered-dialog";
 import { ItemDeductionCard } from "./item-deduction-card";
 import { ReturnRequestDialog } from "./return-request-dialog";
+import { OrderReviewButton } from "./order-review-button";
 
 type AvailableUnit = {
   assignmentId: string;
@@ -38,9 +39,11 @@ type SettlementInfo = {
 };
 
 type RenterItemActionsProps = {
+  orderId?: string;
   itemId: string;
   itemName: string;
   itemStatus: string;
+  listingId?: string;
   startDate?: string | null;
   handover?: {
     actualHandoverAt?: string | null;
@@ -73,9 +76,11 @@ function canCancelNotDelivered(startDate?: string | null, status?: string | null
 }
 
 export function RenterItemActions({
+  orderId,
   itemId,
   itemName,
   itemStatus,
+  listingId,
   startDate,
   handover,
   units,
@@ -107,6 +112,13 @@ export function RenterItemActions({
         !u.status.startsWith("RETURNED"),
     );
 
+
+  // Condition 4: Can review if completed/returned/settled
+  const canReview = Boolean(orderId) && (
+    itemStatus === "COMPLETED" ||
+    itemStatus === "RETURNED" ||
+    Boolean(settlement?.settledAt)
+  );
   const requests = returnRequests ?? [];
 
   return (
@@ -152,6 +164,16 @@ export function RenterItemActions({
             <ArrowDownLeft className="mr-1.5 size-4" />
             Khai báo trả thiết bị
           </Button>
+        )}
+
+        {/* Review Button for completed items */}
+        {canReview && orderId && (
+          <OrderReviewButton
+            orderId={orderId}
+            itemId={itemId}
+            itemName={itemName}
+            listingId={listingId}
+          />
         )}
       </div>
 

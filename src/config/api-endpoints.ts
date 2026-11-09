@@ -618,6 +618,79 @@ export const API_ENDPOINTS = {
         "/api/v1/notifications/" + encodeURIComponent(id) + "/read",
       markAllAsRead: "/api/v1/notifications/read-all",
     },
+    reviews: {
+      summary: (targetType: string, targetId: string) =>
+        buildQueryEndpoint("/api/v1/reviews/summary", {
+          targetType,
+          targetId,
+        }),
+      byListing: (
+        listingId: string,
+        params?: { page?: number; pageSize?: number },
+      ) =>
+        buildQueryEndpoint(
+          `/api/v1/reviews/listings/${encodeURIComponent(listingId)}`,
+          {
+            page: params?.page,
+            pageSize: params?.pageSize,
+          },
+        ),
+      bySupplier: (
+        supplierId: string,
+        params?: { page?: number; pageSize?: number },
+      ) =>
+        buildQueryEndpoint(
+          `/api/v1/reviews/suppliers/${encodeURIComponent(supplierId)}`,
+          {
+            page: params?.page,
+            pageSize: params?.pageSize,
+          },
+        ),
+      detail: (reviewId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}`,
+      create: "/api/v1/reviews",
+      update: (reviewId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}`,
+      withdraw: (reviewId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}/withdraw`,
+      my: (params?: { page?: number; pageSize?: number }) =>
+        buildQueryEndpoint("/api/v1/reviews/my", {
+          page: params?.page,
+          pageSize: params?.pageSize,
+        }),
+      myReceived: (params?: { page?: number; pageSize?: number }) =>
+        buildQueryEndpoint("/api/v1/reviews/my/received", {
+          page: params?.page,
+          pageSize: params?.pageSize,
+        }),
+      myReputation: "/api/v1/reviews/my/reputation",
+      pending: (params?: { page?: number; pageSize?: number }) =>
+        buildQueryEndpoint("/api/v1/reviews/pending", {
+          page: params?.page,
+          pageSize: params?.pageSize,
+        }),
+      report: (reviewId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}/reports`,
+      media: (reviewId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}/media`,
+      deleteMedia: (reviewId: string, mediaId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}/media/${encodeURIComponent(mediaId)}`,
+      mediaAccess: (reviewId: string, mediaId: string) =>
+        `/api/v1/reviews/${encodeURIComponent(reviewId)}/media/${encodeURIComponent(mediaId)}/access`,
+      admin: {
+        reports: (params?: { page?: number; pageSize?: number }) =>
+          buildQueryEndpoint("/api/v1/reviews/admin/reports", {
+            page: params?.page,
+            pageSize: params?.pageSize,
+          }),
+        resolveReport: (reportId: string) =>
+          `/api/v1/reviews/admin/reports/${encodeURIComponent(reportId)}/resolve`,
+        hide: (reviewId: string) =>
+          `/api/v1/reviews/admin/${encodeURIComponent(reviewId)}/hide`,
+        restore: (reviewId: string) =>
+          `/api/v1/reviews/admin/${encodeURIComponent(reviewId)}/restore`,
+      },
+    },
   },
   internal: {
     fallbackHost: "localhost:3000",

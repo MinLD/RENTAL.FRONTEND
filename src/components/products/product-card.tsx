@@ -10,6 +10,7 @@ import {
   formatWarehouseArea,
 } from "@/utils/inventory";
 import { ProductImage } from "./product-image";
+import { ProductCardRating } from "@/components/reviews/product-card-rating";
 
 export function ProductCard({
   product,
@@ -42,9 +43,12 @@ export function ProductCard({
           />
         </div>
         <div className="flex flex-1 flex-col p-3.5">
-          <h3 className="mb-3 min-h-10 line-clamp-2 text-sm font-bold leading-5">
+          <h3 className="mb-2 min-h-10 line-clamp-2 text-sm font-bold leading-5">
             {name}
           </h3>
+          <div className="mb-2">
+            <ProductCardRating listingId={product.id} />
+          </div>
           <p
             className="mb-1 flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground"
             title={formatWarehouseArea(product.warehouseArea)}

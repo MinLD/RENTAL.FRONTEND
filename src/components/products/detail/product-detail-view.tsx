@@ -22,6 +22,7 @@ import type { PublicEquipmentListing } from "@/types/inventory";
 import { ProductRelatedCarousel } from "./product-related-carousel";
 import type { SupplierContactResponse } from "@/types/organization";
 import { ProductOrganizationCard } from "./product-organization-card";
+import { ProductHeaderRating } from "@/components/reviews/product-header-rating";
 
 export function ProductDetailView({
   isAuthenticated,
@@ -67,7 +68,9 @@ export function ProductDetailView({
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 {name}
               </h1>
-              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                <ProductHeaderRating listingId={product.id} />
+                <span aria-hidden="true" className="text-muted-foreground/40">•</span>
                 {product.model ? (
                   <span className="flex items-center gap-1.5">
                     <Tag aria-hidden="true" className="size-3.5" />
@@ -117,6 +120,8 @@ export function ProductDetailView({
               <ProductOrganizationCard organization={organization} />
             ) : null}
             <ProductDetailTabs
+              listingId={product.id}
+              isAuthenticated={isAuthenticated}
               description={product.description}
               name={name}
               thumbnailUrl={product.thumbnailUrl}
