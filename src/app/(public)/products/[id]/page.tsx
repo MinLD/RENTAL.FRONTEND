@@ -8,6 +8,7 @@ import {
 import { getCatalogEquipmentTypeSchemaVersion } from "@/services/queries/catalog-queries";
 import { getCurrentUser } from "@/services/session-service";
 import { getOrganizationSupplierContact } from "@/services/organization-server-service";
+import { getInitialProductReviewsOnServer } from "@/services/review-server-service";
 
 export default async function ProductDetailPage({
   params,
@@ -25,18 +26,23 @@ export default async function ProductDetailPage({
   }
   const primaryCategoryId = result.data.categoryIds?.[0];
 
-  const [schema, relatedListingsResult, organization] = await Promise.all([
-    getCatalogEquipmentTypeSchemaVersion(
-      result.data.equipmentTypeId,
-      result.data.schemaVersion,
-    ),
-    getPublicEquipmentListings(
-      primaryCategoryId
-        ? { categoryId: primaryCategoryId, pageSize: 12 }
-        : { equipmentTypeId: result.data.equipmentTypeId, pageSize: 12 },
-    ),
-    getOrganizationSupplierContact(result.data.organizationId),
-  ]);
+  const [schema, relatedListingsResult, organization, initialReviewsData] =
+    await Promise.all([
+      getCatalogEquipmentTypeSchemaVersion(
+        result.data.equipmentTypeId,
+        result.data.schemaVersion,
+      ),
+      getPublicEquipmentListings(
+        primaryCategoryId
+          ? { categoryId: primaryCategoryId, pageSize: 12 }
+          : { equipmentTypeId: result.data.equipmentTypeId, pageSize: 12 },
+      ),
+      getOrganizationSupplierContact(result.data.organizationId),
+      getInitialProductReviewsOnServer(
+        result.data.id,
+        result.data.organizationId,
+      ),
+    ]);
 
   const relatedProducts = relatedListingsResult.success
     ? relatedListingsResult.data.items.filter((item) => item.id !== result.data.id)
@@ -48,6 +54,7 @@ export default async function ProductDetailPage({
       organization={organization}
       product={result.data}
       relatedProducts={relatedProducts}
+      initialReviewsData={initialReviewsData}
       specificationFields={schema.success ? schema.data.fields : undefined}
     />
   );

@@ -11,7 +11,11 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ReviewItem, ReviewSummaryResponse } from "@/types/review";
+import type {
+  ReviewItem,
+  ReviewListPage,
+  ReviewSummaryResponse,
+} from "@/types/review";
 import {
   DEFAULT_REVIEW_PAGE_SIZE,
   createEmptyReviewSummary,
@@ -27,23 +31,37 @@ type ProductReviewsTabProps = {
   listingId: string;
   listingName: string;
   isAuthenticated: boolean;
+  initialSummary?: ReviewSummaryResponse | null;
+  initialReviews?: ReviewListPage | null;
 };
 
 export function ProductReviewsTab({
   listingId,
   listingName,
   isAuthenticated,
+  initialSummary = null,
+  initialReviews = null,
 }: ProductReviewsTabProps) {
   const [summary, setSummary] = useState<ReviewSummaryResponse>(() =>
-    createEmptyReviewSummary("listing", listingId),
+    initialSummary ?? createEmptyReviewSummary("listing", listingId),
   );
-  const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [reviews, setReviews] = useState<ReviewItem[]>(
+    initialReviews?.items ?? [],
+  );
   const [page, setPage] = useState(1);
   const [pageSize] = useState(DEFAULT_REVIEW_PAGE_SIZE);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(
+    initialReviews && initialReviews.totalPages > 0
+      ? initialReviews.totalPages
+      : 1,
+  );
+  const [totalCount, setTotalCount] = useState(
+    initialReviews?.totalCount ?? initialSummary?.reviewCount ?? 0,
+  );
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(
+    Boolean(!initialSummary || !initialReviews),
+  );
   const [selectedStar, setSelectedStar] = useState<number | null>(null);
   const [selectedSort, setSelectedSort] = useState<ReviewSortOption>("newest");
   const [isWriteDialogOpen, setIsWriteDialogOpen] = useState(false);
@@ -55,7 +73,18 @@ export function ProductReviewsTab({
   }, []);
 
   useEffect(() => {
+    // Skip client fetch on initial page 1 mount if SSR data was already provided
+    if (
+      initialSummary &&
+      initialReviews &&
+      page === 1 &&
+      refreshTrigger === 0
+    ) {
+      return;
+    }
+
     let isCancelled = false;
+    setIsLoading(true);
 
     async function fetchData() {
       try {
@@ -87,7 +116,14 @@ export function ProductReviewsTab({
     return () => {
       isCancelled = true;
     };
-  }, [listingId, page, pageSize, refreshTrigger]);
+  }, [
+    initialReviews,
+    initialSummary,
+    listingId,
+    page,
+    pageSize,
+    refreshTrigger,
+  ]);
 
   // Client-side filtering & sorting for the active page
   const displayedReviews = useMemo(() => {

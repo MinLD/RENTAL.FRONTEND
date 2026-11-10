@@ -5,10 +5,19 @@ import { Star } from "lucide-react";
 import { getReviewSummary } from "@/services/review-service";
 import type { ReviewSummaryResponse } from "@/types/review";
 
-export function ProductHeaderRating({ listingId }: { listingId: string }) {
-  const [summary, setSummary] = useState<ReviewSummaryResponse | null>(null);
+export function ProductHeaderRating({
+  listingId,
+  initialSummary = null,
+}: {
+  listingId: string;
+  initialSummary?: ReviewSummaryResponse | null;
+}) {
+  const [summary, setSummary] = useState<ReviewSummaryResponse | null>(
+    initialSummary,
+  );
 
   useEffect(() => {
+    if (initialSummary) return;
     let isMounted = true;
     getReviewSummary("listing", listingId)
       .then((res) => {
@@ -19,7 +28,7 @@ export function ProductHeaderRating({ listingId }: { listingId: string }) {
     return () => {
       isMounted = false;
     };
-  }, [listingId]);
+  }, [initialSummary, listingId]);
 
   if (!summary || summary.reviewCount === 0) {
     return (

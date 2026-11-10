@@ -23,6 +23,7 @@ import { ProductRelatedCarousel } from "./product-related-carousel";
 import type { SupplierContactResponse } from "@/types/organization";
 import { ProductOrganizationCard } from "./product-organization-card";
 import { ProductHeaderRating } from "@/components/reviews/product-header-rating";
+import type { InitialProductReviewsData } from "@/services/review-server-service";
 
 export function ProductDetailView({
   isAuthenticated,
@@ -31,6 +32,7 @@ export function ProductDetailView({
   specificationFields,
   organization,
   relatedProducts,
+  initialReviewsData,
 }: {
   isAuthenticated: boolean;
   isProfileCompleted: boolean;
@@ -38,6 +40,7 @@ export function ProductDetailView({
   specificationFields?: CatalogSpecField[] | null;
   organization?: SupplierContactResponse | null;
   relatedProducts?: PublicEquipmentListing[];
+  initialReviewsData?: InitialProductReviewsData | null;
 }) {
   const name = getEquipmentListingName(product);
   return (
@@ -69,7 +72,10 @@ export function ProductDetailView({
                 {name}
               </h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                <ProductHeaderRating listingId={product.id} />
+                <ProductHeaderRating
+                  listingId={product.id}
+                  initialSummary={initialReviewsData?.summary}
+                />
                 <span aria-hidden="true" className="text-muted-foreground/40">•</span>
                 {product.model ? (
                   <span className="flex items-center gap-1.5">
@@ -117,7 +123,11 @@ export function ProductDetailView({
           </QueryProvider>
           <div className="min-w-0 space-y-6 lg:col-start-1">
             {organization ? (
-              <ProductOrganizationCard organization={organization} />
+              <ProductOrganizationCard
+                organization={organization}
+                supplierId={product.organizationId}
+                initialSummary={initialReviewsData?.supplierSummary}
+              />
             ) : null}
             <ProductDetailTabs
               listingId={product.id}
@@ -126,6 +136,8 @@ export function ProductDetailView({
               name={name}
               thumbnailUrl={product.thumbnailUrl}
               rentalRate={product.rentalRate}
+              initialReviewSummary={initialReviewsData?.summary}
+              initialReviews={initialReviewsData?.reviews}
               specifications={getProductSpecifications(
                 product,
                 specificationFields,

@@ -1,7 +1,81 @@
-import type { ReviewItem, ReviewMediaItem } from "@/types/review";
+import type {
+  ReviewItem,
+  ReviewListPage,
+  ReviewMediaItem,
+} from "@/types/review";
 
 export function getReviewId(review: ReviewItem): string {
   return review.reviewId || review.id || "";
+}
+
+export function formatReviewEtag(
+  etag?: string | number | null,
+  version?: number | string | null,
+): string {
+  if (etag !== undefined && etag !== null && String(etag).trim() !== "") {
+    const match = String(etag).match(/([1-9]\d*)/);
+    if (match?.[1]) {
+      return `"${match[1]}"`;
+    }
+  }
+  if (
+    version !== undefined &&
+    version !== null &&
+    String(version).trim() !== ""
+  ) {
+    const match = String(version).match(/([1-9]\d*)/);
+    if (match?.[1]) {
+      return `"${match[1]}"`;
+    }
+  }
+  return '"1"';
+}
+
+export function incrementReviewEtag(etag?: string | null): string {
+  const match = String(etag ?? "").match(/([1-9]\d*)/);
+  const currentVersion = match?.[1] ? Number.parseInt(match[1], 10) : 1;
+  return `"${currentVersion + 1}"`;
+}
+
+export function normalizeReviewItem(item: ReviewItem): ReviewItem {
+  const id = item.id || item.reviewId || "";
+  const etag =
+    item.etag !== undefined || item.version !== undefined
+      ? formatReviewEtag(item.etag, item.version)
+      : undefined;
+  return {
+    ...item,
+    id,
+    reviewId: item.reviewId || id,
+    ...(item.authorName || item.authorMaskedName
+      ? { authorName: item.authorName || item.authorMaskedName }
+      : {}),
+    ...(etag ? { etag } : {}),
+  };
+}
+
+export function normalizeReviewListPage(
+  data: ReviewListPage | null | undefined,
+  page: number,
+  pageSize: number,
+): ReviewListPage {
+  if (!data || !Array.isArray(data.items)) {
+    return {
+      items: [],
+      page,
+      pageSize,
+      totalCount: 0,
+      totalPages: 0,
+    };
+  }
+  return {
+    ...data,
+    page: data.page ?? page,
+    pageSize: data.pageSize ?? pageSize,
+    totalCount: data.totalCount ?? data.items.length,
+    totalPages: data.totalPages ?? (data.items.length > 0 ? 1 : 0),
+    items: data.items.map(normalizeReviewItem),
+  };
 }
 
 export function getReviewAuthorName(review: ReviewItem): string {

@@ -28,6 +28,9 @@ export type ReviewItem = {
   orderId?: string;
   itemId?: string;
   listingId?: string;
+  equipmentListingId?: string;
+  listingName?: string | null;
+  equipmentName?: string | null;
   supplierId?: string;
   authorId?: string;
   userId?: string;
@@ -45,10 +48,40 @@ export type ReviewItem = {
   createdAtUtc?: string | null;
   updatedAt?: string | null;
   updatedAtUtc?: string | null;
+  editDeadlineUtc?: string | null;
+  canEdit?: boolean;
+  canWithdraw?: boolean;
+  version?: number | null;
+  etag?: string | null;
   media?: ReviewMediaItem[] | string[] | null;
   attachments?: ReviewMediaItem[] | null;
   mediaUrls?: string[] | null;
   helpfulCount?: number;
+};
+
+export type RenterReputationResponse = {
+  renterId?: string;
+  userId?: string;
+  averageRating?: number | null;
+  score?: number | null;
+  reputationScore?: number | null;
+  totalReviews?: number;
+  reviewCount?: number;
+  completedRentals?: number;
+  tier?: string | null;
+  level?: string | null;
+  status?: string | null;
+  updatedAt?: string | null;
+  updatedAtUtc?: string | null;
+};
+
+export type ReviewMediaAccessResponse = {
+  url?: string | null;
+  accessUrl?: string | null;
+  previewUrl?: string | null;
+  signedUrl?: string | null;
+  expiresAt?: string | null;
+  expiresAtUtc?: string | null;
 };
 
 export type ReviewListPage = {

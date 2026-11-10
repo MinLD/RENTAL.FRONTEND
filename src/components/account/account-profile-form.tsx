@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Landmark, LockKeyhole, MapPin, UserRound } from "lucide-react";
+import { Landmark, LockKeyhole, MapPin, Star, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,9 +10,11 @@ import { AccountBankAccounts } from "@/components/account/account-bank-accounts"
 import { AccountEditForm } from "@/components/account/account-edit-form";
 import { AccountExternalLoginCard } from "@/components/account/account-external-login-card";
 import { AccountProfileSummary } from "@/components/account/account-profile-summary";
+import { AccountReviewsSection } from "@/components/account/account-reviews-section";
 import { QueryProvider } from "@/providers/query-provider";
 import type { InitialRenterAddresses } from "@/services/renter-address-server-service";
 import type { InitialRenterBankAccounts } from "@/services/renter-bank-account-server-service";
+import type { InitialAccountReviewsData } from "@/services/review-server-service";
 import type { AccountProfileInitialData } from "@/components/account/account-types";
 import type {
   AuthUser,
@@ -27,13 +29,15 @@ export type AccountSection =
   | "profile"
   | "security"
   | "addresses"
-  | "bank-accounts";
+  | "bank-accounts"
+  | "reviews";
 
 type AccountProfileFormProps = {
   initialAddresses: InitialRenterAddresses;
   initialBankAccounts: InitialRenterBankAccounts;
   initialExternalLogins: ExternalLoginResponse[];
   initialProfile: AccountProfileInitialData;
+  initialReviews?: InitialAccountReviewsData | null;
   initialSection: AccountSection;
   returnTo?: string;
   user: AuthUser;
@@ -49,6 +53,7 @@ export function AccountProfileForm({
   initialBankAccounts,
   initialExternalLogins,
   initialProfile,
+  initialReviews,
   initialSection,
   returnTo,
   user,
@@ -85,6 +90,7 @@ export function AccountProfileForm({
     { section: "security", label: "Bảo mật", icon: LockKeyhole },
     { section: "addresses", label: "Sổ địa chỉ", icon: MapPin },
     { section: "bank-accounts", label: "Tài khoản ngân hàng", icon: Landmark },
+    { section: "reviews", label: "Đánh giá của tôi", icon: Star },
   ] as const;
 
   return (
@@ -152,6 +158,9 @@ export function AccountProfileForm({
               userId={user.id}
             />
           </QueryProvider>
+        )}
+        {initialSection === "reviews" && (
+          <AccountReviewsSection initialData={initialReviews} />
         )}
       </div>
     </div>

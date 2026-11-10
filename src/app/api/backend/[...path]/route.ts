@@ -23,6 +23,7 @@ const FORWARDED_REQUEST_HEADERS = [
   "content-type",
   "cookie",
   "Idempotency-Key",
+  "If-Match",
 ];
 const BODYLESS_RESPONSE_STATUSES = new Set([204, 205, 304]);
 
@@ -50,6 +51,8 @@ function createProxyResponse(
 ) {
   const responseHeaders = new Headers();
   const contentType = backendResponse.headers.get("content-type");
+  const etag = backendResponse.headers.get("etag");
+  const location = backendResponse.headers.get("location");
 
   if (preventCaching) {
     responseHeaders.set("Cache-Control", "private, no-store");
@@ -57,6 +60,14 @@ function createProxyResponse(
 
   if (contentType) {
     responseHeaders.set("content-type", contentType);
+  }
+
+  if (etag) {
+    responseHeaders.set("etag", etag);
+  }
+
+  if (location) {
+    responseHeaders.set("location", location);
   }
 
   if (BODYLESS_RESPONSE_STATUSES.has(backendResponse.status)) {

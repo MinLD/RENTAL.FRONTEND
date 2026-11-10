@@ -7,10 +7,19 @@ import {
 import type {
   CreateReviewRequest,
   PendingReviewsPage,
+  RenterReputationResponse,
   ReviewItem,
   ReviewListPage,
+  ReviewMediaAccessResponse,
   ReviewSummaryResponse,
+  UpdateReviewRequest,
 } from "@/types/review";
+import {
+  formatReviewEtag,
+  incrementReviewEtag,
+  normalizeReviewItem,
+  normalizeReviewListPage,
+} from "@/utils/review";
 
 export const DEFAULT_REVIEW_PAGE_SIZE = 10;
 
@@ -73,39 +82,6 @@ export function createEmptyReviewSummary(
       "2": 0,
       "1": 0,
     },
-  };
-}
-
-function normalizeReviewItem(item: ReviewItem): ReviewItem {
-  const id = item.id || item.reviewId || "";
-  return {
-    ...item,
-    id,
-    reviewId: item.reviewId || id,
-  };
-}
-
-function normalizeReviewListPage(
-  data: ReviewListPage | null | undefined,
-  page: number,
-  pageSize: number,
-): ReviewListPage {
-  if (!data || !Array.isArray(data.items)) {
-    return {
-      items: [],
-      page,
-      pageSize,
-      totalCount: 0,
-      totalPages: 0,
-    };
-  }
-  return {
-    ...data,
-    page: data.page ?? page,
-    pageSize: data.pageSize ?? pageSize,
-    totalCount: data.totalCount ?? data.items.length,
-    totalPages: data.totalPages ?? (data.items.length > 0 ? 1 : 0),
-    items: data.items.map(normalizeReviewItem),
   };
 }
 
@@ -186,17 +162,146 @@ export async function getMyReviews(
   page = 1,
   pageSize = DEFAULT_REVIEW_PAGE_SIZE,
 ): Promise<ReviewListPage> {
-  const data = await authApiClientJson<ReviewListPage>(
-    API_ENDPOINTS.backend.reviews.my({ page, pageSize }),
+  try {
+    const data = await authApiClientJson<ReviewListPage>(
+      API_ENDPOINTS.backend.reviews.my({ page, pageSize }),
+      { cache: "no-store" },
+    );
+    return normalizeReviewListPage(data, page, pageSize);
+  } catch {
+    return {
+      items: [],
+      page,
+      pageSize,
+      totalCount: 0,
+      totalPages: 0,
+    };
+  }
+}
+
+export async function getMyReputation(): Promise<RenterReputationResponse | null> {
+  try {
+    const data = await authApiClientJson<RenterReputationResponse>(
+      API_ENDPOINTS.backend.reviews.myReputation,
+      { cache: "no-store" },
+    );
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getReviewDetail(
+  reviewId: string,
+): Promise<{ review: ReviewItem; etag: string }> {
+  const response = await authApiClient(
+    API_ENDPOINTS.backend.reviews.detail(reviewId),
     { cache: "no-store" },
   );
-  return normalizeReviewListPage(data, page, pageSize);
+  const rawHeaderEtag =
+    response.headers.get("ETag") || response.headers.get("etag");
+  const data = (await response.json()) as ReviewItem;
+  const normalized = normalizeReviewItem(data);
+  const formattedEtag = formatReviewEtag(
+    rawHeaderEtag ?? normalized.etag,
+    normalized.version,
+  );
+  normalized.etag = formattedEtag;
+  return { review: normalized, etag: formattedEtag };
+}
+
+export async function updateReview(
+  reviewId: string,
+  payload: UpdateReviewRequest,
+  etag?: string | null,
+  idempotencyKey?: string,
+): Promise<{ etag: string }> {
+  const previousEtag = formatReviewEtag(etag);
+  const headers: Record<string, string> = {
+    "Idempotency-Key": idempotencyKey || crypto.randomUUID(),
+    "If-Match": previousEtag,
+  };
+
+  const response = await authApiClient(
+    API_ENDPOINTS.backend.reviews.update(reviewId),
+    {
+      method: "PUT",
+      headers,
+      json: payload,
+    },
+  );
+
+  invalidateReviewSummaryCache();
+  const nextRawEtag =
+    response.headers.get("ETag") || response.headers.get("etag");
+  return {
+    etag: nextRawEtag
+      ? formatReviewEtag(nextRawEtag)
+      : incrementReviewEtag(previousEtag),
+  };
+}
+
+export async function withdrawReview(
+  reviewId: string,
+  reason?: string | null,
+  etag?: string | null,
+  idempotencyKey?: string,
+): Promise<void> {
+  let resolvedEtag = etag;
+  if (!resolvedEtag) {
+    try {
+      const detail = await getReviewDetail(reviewId);
+      resolvedEtag = detail.etag;
+    } catch {
+      // Proceed with fallback version 1
+    }
+  }
+
+  const headers: Record<string, string> = {
+    "Idempotency-Key": idempotencyKey || crypto.randomUUID(),
+    "If-Match": formatReviewEtag(resolvedEtag),
+  };
+
+  await authApiClient(API_ENDPOINTS.backend.reviews.withdraw(reviewId), {
+    method: "POST",
+    headers,
+    json: { reason: reason?.trim() || null },
+  });
+
+  invalidateReviewSummaryCache();
+}
+
+export async function getReviewMediaAccess(
+  reviewId: string,
+  mediaId: string,
+): Promise<string | null> {
+  try {
+    const data = await authApiClientJson<ReviewMediaAccessResponse | string>(
+      API_ENDPOINTS.backend.reviews.mediaAccess(reviewId, mediaId),
+      { cache: "no-store" },
+    );
+    if (typeof data === "string") {
+      return data;
+    }
+    if (data && typeof data === "object") {
+      return (
+        data.url ||
+        data.accessUrl ||
+        data.previewUrl ||
+        data.signedUrl ||
+        null
+      );
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function createReview(
   payload: CreateReviewRequest,
   idempotencyKey?: string,
-): Promise<{ reviewId: string; etag: string | null }> {
+): Promise<{ reviewId: string; etag: string }> {
   const response = await authApiClient(API_ENDPOINTS.backend.reviews.create, {
     method: "POST",
     headers: {
@@ -205,10 +310,21 @@ export async function createReview(
     json: payload,
   });
 
-  const etag = response.headers.get("ETag");
-  let bodyJson: { id?: string; reviewId?: string } | null = null;
+  const rawEtag =
+    response.headers.get("ETag") || response.headers.get("etag");
+  let bodyJson: {
+    id?: string;
+    reviewId?: string;
+    version?: number;
+    etag?: string;
+  } | null = null;
   try {
-    bodyJson = (await response.json()) as { id?: string; reviewId?: string };
+    bodyJson = (await response.json()) as {
+      id?: string;
+      reviewId?: string;
+      version?: number;
+      etag?: string;
+    };
   } catch {
     // some endpoints return 200 without json body
   }
@@ -219,6 +335,11 @@ export async function createReview(
     response.headers.get("Location")?.split("/").pop() ||
     "";
 
+  const etag = formatReviewEtag(
+    rawEtag ?? bodyJson?.etag,
+    bodyJson?.version ?? 1,
+  );
+
   return { reviewId, etag };
 }
 
@@ -227,11 +348,11 @@ export async function attachReviewMedia(
   mediaId: string,
   etag?: string | null,
   mediaType = "IMAGE",
-): Promise<{ etag: string | null }> {
-  const headers: Record<string, string> = {};
-  if (etag) {
-    headers["If-Match"] = etag;
-  }
+): Promise<{ etag: string }> {
+  const previousEtag = formatReviewEtag(etag);
+  const headers: Record<string, string> = {
+    "If-Match": previousEtag,
+  };
 
   const response = await authApiClient(
     API_ENDPOINTS.backend.reviews.media(reviewId),
@@ -242,18 +363,24 @@ export async function attachReviewMedia(
     },
   );
 
-  return { etag: response.headers.get("ETag") || etag || null };
+  const nextRawEtag =
+    response.headers.get("ETag") || response.headers.get("etag");
+  return {
+    etag: nextRawEtag
+      ? formatReviewEtag(nextRawEtag)
+      : incrementReviewEtag(previousEtag),
+  };
 }
 
 export async function deleteReviewMedia(
   reviewId: string,
   mediaId: string,
   etag?: string | null,
-): Promise<{ etag: string | null }> {
-  const headers: Record<string, string> = {};
-  if (etag) {
-    headers["If-Match"] = etag;
-  }
+): Promise<{ etag: string }> {
+  const previousEtag = formatReviewEtag(etag);
+  const headers: Record<string, string> = {
+    "If-Match": previousEtag,
+  };
 
   const response = await authApiClient(
     API_ENDPOINTS.backend.reviews.deleteMedia(reviewId, mediaId),
@@ -263,7 +390,13 @@ export async function deleteReviewMedia(
     },
   );
 
-  return { etag: response.headers.get("ETag") || etag || null };
+  const nextRawEtag =
+    response.headers.get("ETag") || response.headers.get("etag");
+  return {
+    etag: nextRawEtag
+      ? formatReviewEtag(nextRawEtag)
+      : incrementReviewEtag(previousEtag),
+  };
 }
 
 export async function reportReview(
@@ -318,4 +451,75 @@ export async function submitReviewWithMedia(
 
   invalidateReviewSummaryCache();
   return { reviewId };
+}
+
+export type UpdateReviewWithMediaParams = {
+  reviewId: string;
+  rating: number;
+  comment?: string | null;
+  etag?: string | null;
+  addedMediaIds?: string[];
+  removedMediaIds?: string[];
+};
+
+export async function updateReviewWithMedia(
+  params: UpdateReviewWithMediaParams,
+): Promise<void> {
+  let currentEtag = params.etag;
+  if (!currentEtag) {
+    try {
+      const detail = await getReviewDetail(params.reviewId);
+      currentEtag = detail.etag;
+    } catch {
+      // Proceed even if detail fetch fails
+    }
+  }
+
+  const updateRes = await updateReview(
+    params.reviewId,
+    {
+      rating: params.rating,
+      comment: params.comment?.trim() || null,
+    },
+    currentEtag,
+  );
+  if (updateRes.etag) {
+    currentEtag = updateRes.etag;
+  }
+
+  if (params.removedMediaIds?.length) {
+    for (const mediaId of params.removedMediaIds) {
+      try {
+        const delRes = await deleteReviewMedia(
+          params.reviewId,
+          mediaId,
+          currentEtag,
+        );
+        if (delRes.etag) {
+          currentEtag = delRes.etag;
+        }
+      } catch (err) {
+        console.error("Failed to remove media from review", mediaId, err);
+      }
+    }
+  }
+
+  if (params.addedMediaIds?.length) {
+    for (const mediaId of params.addedMediaIds) {
+      try {
+        const attachRes = await attachReviewMedia(
+          params.reviewId,
+          mediaId,
+          currentEtag,
+        );
+        if (attachRes.etag) {
+          currentEtag = attachRes.etag;
+        }
+      } catch (err) {
+        console.error("Failed to attach media to review", mediaId, err);
+      }
+    }
+  }
+
+  invalidateReviewSummaryCache();
 }

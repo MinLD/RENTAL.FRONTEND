@@ -9,6 +9,7 @@ import { Container } from "@/components/layout/container";
 import { API_ENDPOINTS } from "@/config/api-endpoints";
 import { getRenterAddressesForServer } from "@/services/renter-address-server-service";
 import { getRenterBankAccountsForServer } from "@/services/renter-bank-account-server-service";
+import { getInitialAccountReviewsOnServer } from "@/services/review-server-service";
 import { serverApi } from "@/services/server-api";
 import { getCurrentUser } from "@/services/session-service";
 import type {
@@ -43,22 +44,31 @@ export default async function AccountPage({
   const initialSection: AccountSection =
     requestedSection === "security" ||
     requestedSection === "addresses" ||
-    requestedSection === "bank-accounts"
+    requestedSection === "bank-accounts" ||
+    requestedSection === "reviews"
       ? requestedSection
       : "profile";
-  const [currentUser, externalLogins, initialAddresses, initialBankAccounts] =
-    await Promise.all([
-      getCurrentUser(),
-      initialSection === "security"
-        ? getInitialExternalLogins()
-        : Promise.resolve([]),
-      initialSection === "addresses"
-        ? getRenterAddressesForServer()
-        : Promise.resolve({ addresses: [], error: null }),
-      initialSection === "bank-accounts"
-        ? getRenterBankAccountsForServer()
-        : Promise.resolve({ bankAccounts: [], error: null }),
-    ]);
+  const [
+    currentUser,
+    externalLogins,
+    initialAddresses,
+    initialBankAccounts,
+    initialReviews,
+  ] = await Promise.all([
+    getCurrentUser(),
+    initialSection === "security"
+      ? getInitialExternalLogins()
+      : Promise.resolve([]),
+    initialSection === "addresses"
+      ? getRenterAddressesForServer()
+      : Promise.resolve({ addresses: [], error: null }),
+    initialSection === "bank-accounts"
+      ? getRenterBankAccountsForServer()
+      : Promise.resolve({ bankAccounts: [], error: null }),
+    initialSection === "reviews"
+      ? getInitialAccountReviewsOnServer()
+      : Promise.resolve(null),
+  ]);
   const user =
     currentUser ??
     ({
@@ -107,6 +117,7 @@ export default async function AccountPage({
           initialBankAccounts={initialBankAccounts}
           initialExternalLogins={externalLogins}
           initialProfile={initialProfile}
+          initialReviews={initialReviews}
           initialSection={initialSection}
           returnTo={returnTo ?? undefined}
           user={user}

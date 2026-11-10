@@ -7,6 +7,7 @@ import { PRODUCT_DESCRIPTION_IMAGE_SIZES } from "@/config/product-images";
 import type { ProductSpecification } from "@/utils/product-detail";
 import { ProductImage } from "../product-image";
 import type { EquipmentListingRentalRateResponse } from "@/types/inventory";
+import type { ReviewListPage, ReviewSummaryResponse } from "@/types/review";
 import { ProductRentalRateTable } from "./product-rental-rate-table";
 import { ProductReviewsTab } from "@/components/reviews/product-reviews-tab";
 
@@ -18,6 +19,8 @@ export function ProductDetailTabs({
   specifications,
   rentalRate,
   isAuthenticated = false,
+  initialReviewSummary = null,
+  initialReviews = null,
 }: {
   listingId: string;
   description: string | null;
@@ -26,6 +29,8 @@ export function ProductDetailTabs({
   specifications: ProductSpecification[];
   rentalRate: EquipmentListingRentalRateResponse | null;
   isAuthenticated?: boolean;
+  initialReviewSummary?: ReviewSummaryResponse | null;
+  initialReviews?: ReviewListPage | null;
 }) {
   const [tab, setTab] = useState("description");
   return (
@@ -87,6 +92,8 @@ export function ProductDetailTabs({
               listingId={listingId}
               listingName={name}
               isAuthenticated={isAuthenticated}
+              initialSummary={initialReviewSummary}
+              initialReviews={initialReviews}
             />
           ),
         },
